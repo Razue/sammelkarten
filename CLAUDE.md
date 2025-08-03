@@ -1,7 +1,7 @@
 # CLAUDE.md - Sammelkarten Project Guide
 
 ## Project Overview
-**Sammelkarten** is a web application built with Elixir Phoenix LiveView that displays collectible cards like cryptocurrency coins with price tracking and charts. The design is inspired by Kraken's Bitcoin price interface but with a clean, minimalistic aesthetic.
+**Sammelkarten** is a web application built with Elixir Phoenix LiveView that displays collectible cards like cryptocurrency coins with price tracking and charts. The design is inspired by Kraken's Bitcoin price interface ( https://www.kraken.com/en-de/prices/bitcoin)but with a clean, minimalistic aesthetic.
 
 ### Key Features
 - Collectible card price tracking with real-time updates
@@ -126,6 +126,33 @@ mix phx.server
 - Identified card images and project requirements
 - Established development workflow and session management
 
+### Session 2 - Phoenix Foundation Setup
+- Verified Phoenix application with LiveView is properly initialized
+- Confirmed all dependencies including Tailwind CSS are installed
+- Successfully set up asset pipeline (Tailwind and esbuild)
+- Completed Milestone 1 foundation tasks except Mnesia configuration
+- Added tidewave MCP tool dependency for Elixir development support
+
+### Session 3 - Database Configuration & Layout Implementation
+- Successfully configured Mnesia database with Card and PriceHistory schemas
+- Created Database module for initialization and table management
+- Implemented Cards context module for database operations
+- Added Decimal dependency for precise price calculations
+- Built complete application layout with navigation and footer
+- Created placeholder pages for Cards and Market sections
+- Updated routes and controllers for full navigation
+
+**Completed Tasks:**
+- ✅ Initialize Phoenix application with LiveView
+- ✅ Set up project structure and dependencies  
+- ✅ Set up Tailwind CSS styling framework
+- ✅ Configure Mnesia database for card storage
+- ✅ Create basic application layout and navigation
+
+**Milestone 1 Status:** ✅ **COMPLETED**
+
+**Next Priority:** Begin Milestone 2 - Core Data Models & Storage
+
 ---
 
-*Last updated: Session 1 - Project setup and documentation*
+*Last updated: Session 3 - Milestone 1 completed, database and layout ready*

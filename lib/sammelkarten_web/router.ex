@@ -18,6 +18,8 @@ defmodule SammelkartenWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+    get "/cards", PageController, :cards
+    get "/market", PageController, :market
   end
 
   # Other scopes may use custom stacks.

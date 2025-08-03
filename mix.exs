@@ -19,7 +19,7 @@ defmodule Sammelkarten.MixProject do
   def application do
     [
       mod: {Sammelkarten.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :mnesia]
     ]
   end
 
@@ -54,7 +54,9 @@ defmodule Sammelkarten.MixProject do
       {:gettext, "~> 0.26"},
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.1.1"},
-      {:bandit, "~> 1.5"}
+      {:bandit, "~> 1.5"},
+      {:decimal, "~> 2.0"},
+      {:tidewave, "~> 0.2", only: [:dev]}
     ]
   end
 

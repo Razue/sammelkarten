@@ -7,6 +7,9 @@ defmodule Sammelkarten.Application do
 
   @impl true
   def start(_type, _args) do
+    # Initialize Mnesia database before starting other services
+    Sammelkarten.Database.init()
+
     children = [
       SammelkartenWeb.Telemetry,
       {DNSCluster, query: Application.get_env(:sammelkarten, :dns_cluster_query) || :ignore},

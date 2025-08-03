@@ -65,8 +65,8 @@ defmodule Sammelkarten.PriceEngine do
 
     # Apply percentage change to current price
     price_change = trunc(card.current_price * total_change_percentage / 100)
-    # Minimum price of €1.00
-    new_price = max(card.current_price + price_change, 100)
+    # Minimum price of 1 sat
+    new_price = max(card.current_price + price_change, 1)
 
     new_price
   end
@@ -247,7 +247,7 @@ defmodule Sammelkarten.PriceEngine do
           # Each card is affected slightly differently
           # ±3% variation
           card_crash = crash_percentage + (:rand.uniform(600) - 300) / 100
-          new_price = max(trunc(card.current_price * (1 + card_crash / 100)), 50)
+          new_price = max(trunc(card.current_price * (1 + card_crash / 100)), 1)
 
           Cards.update_card_price(card.id, new_price)
         end)

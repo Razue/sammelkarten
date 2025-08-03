@@ -73,7 +73,7 @@ defmodule SammelkartenWeb.MarketLive do
   end
 
   defp calculate_market_stats(cards) do
-    total_market_cap = 
+    total_market_cap =
       cards
       |> Enum.map(& &1.current_price)
       |> Enum.sum()
@@ -82,7 +82,7 @@ defmodule SammelkartenWeb.MarketLive do
     volume_24h = Decimal.mult(total_market_cap, Decimal.new("0.1"))
 
     # Calculate market cap change based on average price change
-    avg_change = 
+    avg_change =
       cards
       |> Enum.map(& &1.price_change_percentage)
       |> Enum.sum()
@@ -92,52 +92,63 @@ defmodule SammelkartenWeb.MarketLive do
       market_cap: total_market_cap,
       market_cap_change: avg_change,
       volume_24h: volume_24h,
-      volume_change: avg_change * 2, # Volume typically more volatile
+      # Volume typically more volatile
+      volume_change: avg_change * 2,
       active_cards: length(cards)
     }
   end
 
   defp get_top_movers(cards, type, limit) do
     cards
-    |> Enum.sort_by(& &1.price_change_percentage, 
-        case type do
-          :gainers -> :desc
-          :losers -> :asc
-        end)
+    |> Enum.sort_by(
+      & &1.price_change_percentage,
+      case type do
+        :gainers -> :desc
+        :losers -> :asc
+      end
+    )
     |> Enum.take(limit)
   end
 
   defp get_market_chart_data(time_range) do
     # Get aggregated market data for the chart
     # This simulates market overview data points
-    hours_back = case time_range do
-      "24h" -> 24
-      "7d" -> 24 * 7
-      "30d" -> 24 * 30
-      _ -> 24
-    end
+    hours_back =
+      case time_range do
+        "24h" -> 24
+        "7d" -> 24 * 7
+        "30d" -> 24 * 30
+        _ -> 24
+      end
 
-    interval = case time_range do
-      "24h" -> 1 # hourly
-      "7d" -> 4 # every 4 hours  
-      "30d" -> 24 # daily
-      _ -> 1
-    end
+    interval =
+      case time_range do
+        # hourly
+        "24h" -> 1
+        # every 4 hours
+        "7d" -> 4
+        # daily
+        "30d" -> 24
+        _ -> 1
+      end
 
     now = DateTime.utc_now()
-    
+
     0..hours_back
     |> Enum.take_every(interval)
     |> Enum.map(fn hours_ago ->
       timestamp = DateTime.add(now, -hours_ago * 3600, :second)
-      
+
       # Simulate market value over time with some volatility
-      base_value = 20_000_00 # €200,000 in cents
-      volatility = :rand.uniform() * 0.1 - 0.05 # ±5%
-      trend = -hours_ago * 10 # slight upward trend
-      
-      value = base_value + (base_value * volatility) + trend
-      
+      # 200,000 sats
+      base_value = 200_000
+      # ±5%
+      volatility = :rand.uniform() * 0.1 - 0.05
+      # slight upward trend
+      trend = -hours_ago * 10
+
+      value = base_value + base_value * volatility + trend
+
       %{
         timestamp: timestamp,
         value: trunc(value)
@@ -149,7 +160,6 @@ defmodule SammelkartenWeb.MarketLive do
   defp format_currency(amount) when is_integer(amount) do
     amount
     |> Decimal.new()
-    |> Decimal.div(100)
     |> format_currency()
   end
 
@@ -157,15 +167,43 @@ defmodule SammelkartenWeb.MarketLive do
     amount
     |> Decimal.round(2)
     |> Sammelkarten.Formatter.format_german_decimal()
-    |> then(&"€#{&1}")
+    |> then(&"#{&1} sats")
   end
+
+  # defp format_currency_bitcoin(amount) when is_integer(amount) do
+  #   amount
+  #   |> Decimal.new()
+  #   |> format_currency_bitcoin()
+  # end
+
+  # defp format_currency_bitcoin(%Decimal{} = amount) do
+  #   amount
+  #   |> Decimal.round(2)
+  #   # Convert sats to BTC
+  #   |> Decimal.div(100_000_000)
+  #   |> Decimal.to_string()
+  #   |> add_thousands_separator()
+  #   |> then(&"#{&1} BTC")
+  # end
+
+  # defp add_thousands_separator(integer_string) do
+  #   integer_string
+  #   |> String.reverse()
+  #   |> String.to_charlist()
+  #   |> Enum.chunk_every(3)
+  #   |> Enum.map(&List.to_string/1)
+  #   |> Enum.join(".")
+  #   |> String.reverse()
+  # end
 
   defp format_percentage(percentage) when is_float(percentage) do
     sign = if percentage >= 0, do: "+", else: ""
-    formatted_number = 
+
+    formatted_number =
       percentage
       |> :erlang.float_to_binary(decimals: 1)
       |> String.replace(".", ",")
+
     "#{sign}#{formatted_number}%"
   end
 

@@ -8,14 +8,14 @@
     <div class="flex items-center space-x-4">
       <form phx-change="change_time_range">
         <select name="time_range" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
-          <option value="24h" selected={@time_range == "24h"}>Last 24h</option>
-          <option value="7d" selected={@time_range == "7d"}>Last 7d</option>
-          <option value="30d" selected={@time_range == "30d"}>Last 30d</option>
+          <option value="24h" selected={@time_range=="24h" }>Last 24h</option>
+          <option value="7d" selected={@time_range=="7d" }>Last 7d</option>
+          <option value="30d" selected={@time_range=="30d" }>Last 30d</option>
         </select>
       </form>
     </div>
   </div>
-  
+
   <!-- Market Summary -->
   <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
     <%= if @loading do %>
@@ -38,31 +38,37 @@
           </div>
         </div>
       </div>
-    <% else %>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="text-center">
-          <p class="text-sm font-medium text-gray-600">Market Cap</p>
-          <p class="text-3xl font-bold text-gray-900"><%= format_currency(@market_stats.market_cap) %></p>
-          <p class={"text-sm mt-1 #{percentage_color(@market_stats.market_cap_change)}"}>
-            <%= format_percentage(@market_stats.market_cap_change) %> (24h)
-          </p>
+      <% else %>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="text-center">
+            <p class="text-sm font-medium text-gray-600">Market Cap</p>
+            <p class="text-3xl font-bold text-gray-900">
+              <%= format_currency(@market_stats.market_cap) %>
+            </p>
+            <p class={"text-sm mt-1 #{percentage_color(@market_stats.market_cap_change)}"}>
+              <%= format_percentage(@market_stats.market_cap_change) %> (24h)
+            </p>
+          </div>
+          <div class="text-center">
+            <p class="text-sm font-medium text-gray-600">24h Volume</p>
+            <p class="text-3xl font-bold text-gray-900">
+              <%= format_currency(@market_stats.volume_24h) %>
+            </p>
+            <p class={"text-sm mt-1 #{percentage_color(@market_stats.volume_change)}"}>
+              <%= format_percentage(@market_stats.volume_change) %> (24h)
+            </p>
+          </div>
+          <div class="text-center">
+            <p class="text-sm font-medium text-gray-600">Active Cards</p>
+            <p class="text-3xl font-bold text-gray-900">
+              <%= @market_stats.active_cards %>
+            </p>
+            <p class="text-sm text-gray-500 mt-1">All categories</p>
+          </div>
         </div>
-        <div class="text-center">
-          <p class="text-sm font-medium text-gray-600">24h Volume</p>
-          <p class="text-3xl font-bold text-gray-900"><%= format_currency(@market_stats.volume_24h) %></p>
-          <p class={"text-sm mt-1 #{percentage_color(@market_stats.volume_change)}"}>
-            <%= format_percentage(@market_stats.volume_change) %> (24h)
-          </p>
-        </div>
-        <div class="text-center">
-          <p class="text-sm font-medium text-gray-600">Active Cards</p>
-          <p class="text-3xl font-bold text-gray-900"><%= @market_stats.active_cards %></p>
-          <p class="text-sm text-gray-500 mt-1">All categories</p>
-        </div>
-      </div>
-    <% end %>
+        <% end %>
   </div>
-  
+
   <!-- Top Movers -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
@@ -80,30 +86,37 @@
                 <div class="h-3 bg-gray-200 rounded w-12"></div>
               </div>
             </div>
-          <% end %>
+            <% end %>
         </div>
-      <% else %>
-        <div class="space-y-3">
-          <%= for card <- @top_gainers do %>
-            <.link navigate={~p"/cards/#{card.id}"} class="block hover:bg-gray-50 rounded-lg p-2 -m-2 transition-colors">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                  <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                    <span class="text-xs font-medium text-purple-800"><%= card_initials(card.name) %></span>
+        <% else %>
+          <div class="space-y-3">
+            <%= for card <- @top_gainers do %>
+              <.link navigate={~p"/cards/#{card.id}"}
+                class="block hover:bg-gray-50 rounded-lg p-2 -m-2 transition-colors">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                      <span class="text-xs font-medium text-purple-800">
+                        <%= card_initials(card.name) %>
+                      </span>
+                    </div>
+                    <span class="font-medium text-gray-900">
+                      <%= card.name %>
+                    </span>
                   </div>
-                  <span class="font-medium text-gray-900"><%= card.name %></span>
+                  <div class="text-right">
+                    <p class="font-semibold text-gray-900">
+                      <%= format_currency(card.current_price) %>
+                    </p>
+                    <p class={"text-sm #{percentage_color(card.price_change_percentage)}"}>
+                      <%= format_percentage(card.price_change_percentage) %>
+                    </p>
+                  </div>
                 </div>
-                <div class="text-right">
-                  <p class="font-semibold text-gray-900"><%= format_currency(card.current_price) %></p>
-                  <p class={"text-sm #{percentage_color(card.price_change_percentage)}"}>
-                    <%= format_percentage(card.price_change_percentage) %>
-                  </p>
-                </div>
-              </div>
-            </.link>
+              </.link>
+              <% end %>
+          </div>
           <% end %>
-        </div>
-      <% end %>
     </div>
 
     <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
@@ -121,47 +134,49 @@
                 <div class="h-3 bg-gray-200 rounded w-12"></div>
               </div>
             </div>
-          <% end %>
+            <% end %>
         </div>
-      <% else %>
-        <div class="space-y-3">
-          <%= for card <- @top_losers do %>
-            <.link navigate={~p"/cards/#{card.id}"} class="block hover:bg-gray-50 rounded-lg p-2 -m-2 transition-colors">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                  <div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
-                    <span class="text-xs font-medium text-yellow-800"><%= card_initials(card.name) %></span>
+        <% else %>
+          <div class="space-y-3">
+            <%= for card <- @top_losers do %>
+              <.link navigate={~p"/cards/#{card.id}"}
+                class="block hover:bg-gray-50 rounded-lg p-2 -m-2 transition-colors">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                      <span class="text-xs font-medium text-yellow-800">
+                        <%= card_initials(card.name) %>
+                      </span>
+                    </div>
+                    <span class="font-medium text-gray-900">
+                      <%= card.name %>
+                    </span>
                   </div>
-                  <span class="font-medium text-gray-900"><%= card.name %></span>
+                  <div class="text-right">
+                    <p class="font-semibold text-gray-900">
+                      <%= format_currency(card.current_price) %>
+                    </p>
+                    <p class={"text-sm #{percentage_color(card.price_change_percentage)}"}>
+                      <%= format_percentage(card.price_change_percentage) %>
+                    </p>
+                  </div>
                 </div>
-                <div class="text-right">
-                  <p class="font-semibold text-gray-900"><%= format_currency(card.current_price) %></p>
-                  <p class={"text-sm #{percentage_color(card.price_change_percentage)}"}>
-                    <%= format_percentage(card.price_change_percentage) %>
-                  </p>
-                </div>
-              </div>
-            </.link>
+              </.link>
+              <% end %>
+          </div>
           <% end %>
-        </div>
-      <% end %>
     </div>
   </div>
-  
+
   <!-- Market Chart -->
   <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
     <h3 class="text-lg font-semibold text-gray-900 mb-4">Market Overview</h3>
     <%= if @loading do %>
       <div class="h-64 animate-pulse bg-gray-200 rounded-lg"></div>
-    <% else %>
-      <canvas 
-        id="market-chart" 
-        class="h-64 w-full border rounded-lg"
-        phx-hook="MarketChart"
-        data-chart-data={Jason.encode!(@chart_data)}
-        data-time-range={@time_range}
-      >
-      </canvas>
-    <% end %>
+      <% else %>
+        <canvas id="market-chart" class="h-64 w-full border rounded-lg" phx-hook="MarketChart"
+          data-chart-data={Jason.encode!(@chart_data)} data-time-range={@time_range}>
+        </canvas>
+        <% end %>
   </div>
 </div>

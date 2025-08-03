@@ -41,7 +41,7 @@ defmodule SammelkartenWeb.Components.PriceTicker do
                 <div class="flex items-center space-x-2 text-sm">
                   <span class="font-medium text-blue-300">{card.name}</span>
                   <span class="font-bold">
-                    €{format_price(card.current_price)}
+                    {format_price(card.current_price)}
                   </span>
                   <span class={[
                     "flex items-center space-x-1 text-xs font-medium",
@@ -76,7 +76,7 @@ defmodule SammelkartenWeb.Components.PriceTicker do
                 <div class="flex items-center space-x-2 text-sm">
                   <span class="font-medium text-blue-300">{card.name}</span>
                   <span class="font-bold">
-                    €{format_price(card.current_price)}
+                    {format_price(card.current_price)}
                   </span>
                   <span class={[
                     "flex items-center space-x-1 text-xs font-medium",
@@ -126,14 +126,13 @@ defmodule SammelkartenWeb.Components.PriceTicker do
 
   # Helper functions
 
-  defp format_price(price_in_cents) when is_integer(price_in_cents) do
-    price_cents = price_in_cents
-    Sammelkarten.Formatter.format_german_price(price_cents) |> String.replace("€", "")
+  defp format_price(price_in_sats) when is_integer(price_in_sats) do
+    Sammelkarten.Formatter.format_german_price(price_in_sats) |> String.replace(" sats", "")
   end
 
   defp format_price(price) when is_float(price) do
-    price_cents = trunc(price * 100)
-    Sammelkarten.Formatter.format_german_price(price_cents) |> String.replace("€", "")
+    price_sats = trunc(price)
+    Sammelkarten.Formatter.format_german_price(price_sats) |> String.replace(" sats", "")
   end
 
   defp format_percentage_change(change) when is_integer(change) do

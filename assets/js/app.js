@@ -311,6 +311,10 @@ Hooks.PriceChart = {
     const chartWidth = rect.width - (padding * 2)
     const chartHeight = rect.height - (padding * 2)
     
+    // Draw background first (before transformations)
+    ctx.fillStyle = '#f9fafb'
+    ctx.fillRect(0, 0, rect.width, rect.height)
+    
     // Apply zoom and pan transformations
     ctx.save()
     ctx.translate(this.panX, this.panY)
@@ -322,20 +326,22 @@ Hooks.PriceChart = {
     const maxPrice = Math.max(...prices)
     const priceRange = maxPrice - minPrice || 1
     
-    // Draw background
-    ctx.fillStyle = '#f9fafb'
-    ctx.fillRect(-this.panX / this.zoom, -this.panY / this.zoom, rect.width / this.zoom, rect.height / this.zoom)
-    
     // Draw grid lines
     ctx.strokeStyle = '#e5e7eb'
     ctx.lineWidth = 1 / this.zoom
+    
+    // Calculate visible area after transformations
+    const visibleLeft = Math.max(0, -this.panX / this.zoom)
+    const visibleRight = Math.min(rect.width, (rect.width - this.panX) / this.zoom)
+    const visibleTop = Math.max(0, -this.panY / this.zoom)
+    const visibleBottom = Math.min(rect.height, (rect.height - this.panY) / this.zoom)
     
     // Horizontal grid lines
     for (let i = 0; i <= 5; i++) {
       const y = padding + (chartHeight / 5) * i
       ctx.beginPath()
-      ctx.moveTo(padding, y)
-      ctx.lineTo(rect.width - padding, y)
+      ctx.moveTo(visibleLeft, y)
+      ctx.lineTo(visibleRight, y)
       ctx.stroke()
     }
     
@@ -343,8 +349,8 @@ Hooks.PriceChart = {
     for (let i = 0; i <= 4; i++) {
       const x = padding + (chartWidth / 4) * i
       ctx.beginPath()
-      ctx.moveTo(x, padding)
-      ctx.lineTo(x, rect.height - padding)
+      ctx.moveTo(x, visibleTop)
+      ctx.lineTo(x, visibleBottom)
       ctx.stroke()
     }
     
@@ -389,7 +395,7 @@ Hooks.PriceChart = {
     for (let i = 0; i <= 5; i++) {
       const price = minPrice + (priceRange / 5) * (5 - i)
       const y = padding + (chartHeight / 5) * i + 4
-      ctx.fillText(`€${(price / 100).toFixed(2)}`, padding - 10, y)
+      ctx.fillText(`${Math.floor(price)} sats`, padding - 10, y)
     }
     
     // Draw X-axis labels (simplified - just show first and last) - always visible
@@ -686,7 +692,7 @@ Hooks.MarketChart = {
     for (let i = 0; i <= 4; i++) {
       const value = minValue + (valueRange / 4) * (4 - i)
       const y = padding + (chartHeight / 4) * i + 3
-      ctx.fillText(`€${(value / 100).toFixed(0)}k`, padding - 5, y)
+      ctx.fillText(`${Math.floor(value / 1000)}k sats`, padding - 5, y)
     }
     
     // Draw time range indicator

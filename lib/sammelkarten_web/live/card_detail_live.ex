@@ -296,32 +296,33 @@ defmodule SammelkartenWeb.CardDetailLive do
 
   # Helper functions
 
-  defp format_price(price_in_cents) when is_integer(price_in_cents) do
-    Sammelkarten.Formatter.format_german_price(price_in_cents)
+  defp format_price(price_in_sats) when is_integer(price_in_sats) do
+    Sammelkarten.Formatter.format_german_price(price_in_sats)
   end
 
   defp format_price(price) when is_float(price) do
-    price_cents = trunc(price * 100)
-    Sammelkarten.Formatter.format_german_price(price_cents)
+    price_sats = trunc(price)
+    Sammelkarten.Formatter.format_german_price(price_sats)
   end
 
-  defp format_price_change(change_in_cents) when is_integer(change_in_cents) do
-    sign = if change_in_cents >= 0, do: "+", else: ""
+  defp format_price_change(change_in_sats) when is_integer(change_in_sats) do
+    sign = if change_in_sats >= 0, do: "+", else: ""
 
     formatted_amount =
-      Sammelkarten.Formatter.format_german_price(abs(change_in_cents)) |> String.replace("€", "")
+      Sammelkarten.Formatter.format_german_price(abs(change_in_sats))
+      |> String.replace(" sats", "")
 
-    "#{sign}€#{formatted_amount}"
+    "#{sign}#{formatted_amount} sats"
   end
 
   defp format_price_change(change) when is_float(change) do
     sign = if change >= 0, do: "+", else: ""
-    change_cents = trunc(abs(change) * 100)
+    change_sats = trunc(abs(change))
 
     formatted_amount =
-      Sammelkarten.Formatter.format_german_price(change_cents) |> String.replace("€", "")
+      Sammelkarten.Formatter.format_german_price(change_sats) |> String.replace(" sats", "")
 
-    "#{sign}€#{formatted_amount}"
+    "#{sign}#{formatted_amount} sats"
   end
 
   defp format_percentage(percentage) when is_float(percentage) do

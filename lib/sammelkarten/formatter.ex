@@ -1,6 +1,6 @@
 defmodule Sammelkarten.Formatter do
   @moduledoc """
-  Number formatting utilities for German locale.
+  Number formatting utilities for German locale with Bitcoin sats currency.
   Converts American decimal point format (1,234.00) to German comma format (1.234,00).
   """
 
@@ -44,17 +44,16 @@ defmodule Sammelkarten.Formatter do
   end
 
   @doc """
-  Format price in cents to German currency format without decimals.
+  Format price in sats to German sats format without decimals.
   
   ## Examples
   
-      iex> Sammelkarten.Formatter.format_german_price(123450)
-      "€1.234"
+      iex> Sammelkarten.Formatter.format_german_price(1234)
+      "1.234 sats"
   """
-  def format_german_price(price_cents) when is_integer(price_cents) do
-    # Convert cents to euros and truncate decimals (no rounding)
-    price_euros = div(price_cents, 100)
-    "€" <> add_thousands_separator(Integer.to_string(price_euros))
+  def format_german_price(price_sats) when is_integer(price_sats) do
+    # Format full sats number with thousands separator
+    add_thousands_separator(Integer.to_string(price_sats)) <> " sats"
   end
 
   @doc """

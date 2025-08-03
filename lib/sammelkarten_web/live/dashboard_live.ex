@@ -230,8 +230,7 @@ defmodule SammelkartenWeb.DashboardLive do
   defp sort_cards(cards, "change", "desc"), do: Enum.sort_by(cards, & &1.price_change_24h, :desc)
 
   defp format_price(price) when is_integer(price) do
-    price_decimal = Decimal.div(price, 100)
-    Sammelkarten.Formatter.format_german_decimal(price_decimal)
+    Sammelkarten.Formatter.format_german_price(price)
   end
 
   defp format_price(price) do

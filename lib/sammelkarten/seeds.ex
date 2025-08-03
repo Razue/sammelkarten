@@ -32,8 +32,8 @@ defmodule Sammelkarten.Seeds do
       %{
         name: "Satoshi",
         image_path: "/images/cards/SATOSHI.jpg",
-        # €500.00 - Most valuable card
-        current_price: 50000,
+        # 500000 sats - Most valuable card
+        current_price: 79_500,
         rarity: "mythic",
         description:
           "The legendary creator of Bitcoin. A mythic card representing the genesis of the cryptocurrency revolution."
@@ -41,8 +41,8 @@ defmodule Sammelkarten.Seeds do
       %{
         name: "Seed or Chris",
         image_path: "/images/cards/SEED_OR_CHRIS.jpg",
-        # €210.00
-        current_price: 21000,
+        # 210 sats
+        current_price: 21_000,
         rarity: "rare",
         description:
           "Bitcoin security advocate emphasizing proper seed phrase management. A rare card promoting Bitcoin best practices."
@@ -50,8 +50,8 @@ defmodule Sammelkarten.Seeds do
       %{
         name: "Bitcoin Hotel",
         image_path: "/images/cards/BITCOIN_HOTEL.jpg",
-        # €150.00
-        current_price: 15000,
+        # 150 sats
+        current_price: 36000,
         rarity: "legendary",
         description:
           "The world's first Bitcoin-native hotel experience. A legendary card representing the intersection of hospitality and cryptocurrency innovation."
@@ -59,8 +59,8 @@ defmodule Sammelkarten.Seeds do
       %{
         name: "Christian Decker",
         image_path: "/images/cards/CHRISTIAN_DECKER.jpg",
-        # €120.00
-        current_price: 12000,
+        # 120 sats
+        current_price: 21000,
         rarity: "legendary",
         description:
           "Bitcoin Core developer and Lightning Network researcher. A legendary card representing technical excellence in Bitcoin development."
@@ -68,8 +68,8 @@ defmodule Sammelkarten.Seeds do
       %{
         name: "Der Gigi",
         image_path: "/images/cards/DER_GIGI.jpg",
-        # €110.00
-        current_price: 11000,
+        # 110 sats
+        current_price: 78000,
         rarity: "legendary",
         description:
           "Bitcoin philosopher and author. A legendary card celebrating profound Bitcoin insights and educational content."
@@ -77,8 +77,8 @@ defmodule Sammelkarten.Seeds do
       %{
         name: "Zitadelle",
         image_path: "/images/cards/ZITADELLE.jpg",
-        # €100.00
-        current_price: 10000,
+        # 100 sats
+        current_price: 70000,
         rarity: "epic",
         description:
           "The Bitcoin citadel community. An epic card representing the sovereign Bitcoin lifestyle and community."
@@ -86,8 +86,8 @@ defmodule Sammelkarten.Seeds do
       %{
         name: "Jonas Nick",
         image_path: "/images/cards/JONAS_NICK.jpg",
-        # €95.00
-        current_price: 9500,
+        # 95 sats
+        current_price: 46000,
         rarity: "epic",
         description:
           "Cryptographer and Bitcoin protocol researcher. An epic card showcasing the mathematical foundations of Bitcoin security."
@@ -95,8 +95,8 @@ defmodule Sammelkarten.Seeds do
       %{
         name: "Blocktrainer",
         image_path: "/images/cards/BLOCKTRAINER.jpg",
-        # €85.00
-        current_price: 8500,
+        # 85 sats
+        current_price: 65000,
         rarity: "epic",
         description:
           "Educational pioneer in the Bitcoin space. An epic card honoring those who teach others about cryptocurrency fundamentals."
@@ -104,8 +104,8 @@ defmodule Sammelkarten.Seeds do
       %{
         name: "Markus Turm",
         image_path: "/images/cards/MARKUS_TURM.jpg",
-        # €80.00
-        current_price: 8000,
+        # 80 sats
+        current_price: 81000,
         rarity: "epic",
         description:
           "Bitcoin educator and podcast host. An epic card representing German Bitcoin education and community building."
@@ -113,8 +113,8 @@ defmodule Sammelkarten.Seeds do
       %{
         name: "Niko Jilch",
         image_path: "/images/cards/NIKO_JILCH.jpg",
-        # €75.00
-        current_price: 7500,
+        # 75 sats
+        current_price: 64000,
         rarity: "rare",
         description:
           "Austrian journalist and Bitcoin advocate. A rare card highlighting Bitcoin journalism and financial education."
@@ -122,8 +122,8 @@ defmodule Sammelkarten.Seeds do
       %{
         name: "Einundzwanzig Magazin",
         image_path: "/images/cards/EINUNDZWANZIG_MAGAZIN.jpg",
-        # €70.00
-        current_price: 7000,
+        # 70 sats
+        current_price: 62000,
         rarity: "rare",
         description:
           "German Bitcoin magazine promoting education. A rare card celebrating Bitcoin journalism and community media."
@@ -131,8 +131,8 @@ defmodule Sammelkarten.Seeds do
       %{
         name: "Maurice Effekt",
         image_path: "/images/cards/MAURICE_EFFEKT.jpg",
-        # €65.00
-        current_price: 6500,
+        # 65 sats
+        current_price: 54000,
         rarity: "rare",
         description:
           "Bitcoin content creator and educator. A rare card representing creative Bitcoin education and community engagement."
@@ -140,8 +140,8 @@ defmodule Sammelkarten.Seeds do
       %{
         name: "Node Signal",
         image_path: "/images/cards/NODESIGNAL.jpg",
-        # €60.00
-        current_price: 6000,
+        # 60 sats
+        current_price: 52000,
         rarity: "rare",
         description:
           "Representing the Bitcoin node network infrastructure. A rare card symbolizing decentralized network participation."
@@ -149,8 +149,8 @@ defmodule Sammelkarten.Seeds do
       %{
         name: "Einundzwanzig Stammtisch",
         image_path: "/images/cards/EINUNDZWANZIG_STAMMTISCH.jpg",
-        # €55.00
-        current_price: 5500,
+        # 55 sats
+        current_price: 51000,
         rarity: "rare",
         description:
           "Local Bitcoin meetup community. A rare card celebrating grassroots Bitcoin adoption and local communities."
@@ -158,8 +158,8 @@ defmodule Sammelkarten.Seeds do
       %{
         name: "Der Pleb",
         image_path: "/images/cards/DER_PLEB.jpg",
-        # €50.00
-        current_price: 5000,
+        # 50 sats
+        current_price: 48000,
         rarity: "uncommon",
         description:
           "The everyday Bitcoin enthusiast. An uncommon card representing the grassroots Bitcoin community spirit."
@@ -167,8 +167,8 @@ defmodule Sammelkarten.Seeds do
       %{
         name: "Pleb Rap",
         image_path: "/images/cards/PLEBRAP.jpg",
-        # €45.00
-        current_price: 4500,
+        # 45 sats
+        current_price: 45000,
         rarity: "uncommon",
         description:
           "Bitcoin culture meets music. An uncommon card celebrating the creative expression within the Bitcoin community."
@@ -176,8 +176,8 @@ defmodule Sammelkarten.Seeds do
       %{
         name: "Pioniere Münzweg",
         image_path: "/images/cards/PIONIERE_MUENZWEG.jpg",
-        # €42.00
-        current_price: 4200,
+        # 42 sats
+        current_price: 42000,
         rarity: "uncommon",
         description:
           "Bitcoin pioneers paving the way. An uncommon card honoring early adopters and Bitcoin pathway creators."
@@ -185,8 +185,8 @@ defmodule Sammelkarten.Seeds do
       %{
         name: "FAB",
         image_path: "/images/cards/FAB.jpg",
-        # €40.00
-        current_price: 4000,
+        # 40 sats
+        current_price: 40000,
         rarity: "uncommon",
         description:
           "Bitcoin community builder and advocate. An uncommon card representing dedication to Bitcoin adoption."
@@ -194,8 +194,8 @@ defmodule Sammelkarten.Seeds do
       %{
         name: "Dennis",
         image_path: "/images/cards/DENNIS.jpg",
-        # €38.00
-        current_price: 3800,
+        # 38 sats
+        current_price: 38000,
         rarity: "uncommon",
         description:
           "Bitcoin enthusiast and community member. An uncommon card celebrating individual Bitcoin journey stories."
@@ -203,8 +203,8 @@ defmodule Sammelkarten.Seeds do
       %{
         name: "Paddepadde",
         image_path: "/images/cards/PADDEPADDE.jpg",
-        # €35.00
-        current_price: 3500,
+        # 35 sats
+        current_price: 35000,
         rarity: "common",
         description:
           "Creative Bitcoin community contributor. A common card representing artistic expression in the Bitcoin space."
@@ -212,8 +212,8 @@ defmodule Sammelkarten.Seeds do
       %{
         name: "Netdiver",
         image_path: "/images/cards/NETDIVER.jpg",
-        # €32.00
-        current_price: 3200,
+        # 32 sats
+        current_price: 32000,
         rarity: "common",
         description:
           "Bitcoin technical enthusiast. A common card representing the technical exploration of Bitcoin."
@@ -221,8 +221,8 @@ defmodule Sammelkarten.Seeds do
       %{
         name: "Toxic Booster",
         image_path: "/images/cards/TOXIC_BOOSTER.jpg",
-        # €30.00
-        current_price: 3000,
+        # 30 sats
+        current_price: 30000,
         rarity: "common",
         description:
           "The passionate Bitcoin maximalist energy. A common card representing the fierce dedication to Bitcoin principles."
@@ -237,8 +237,8 @@ defmodule Sammelkarten.Seeds do
       varied_price = trunc(card_attrs.current_price * (1 + price_variation / 100))
 
       # Calculate initial price change (simulate previous 24h movement)
-      # -500 to +500 cents
-      initial_change_24h = :rand.uniform(1001) - 501
+      # -5 to +5 sats
+      initial_change_24h = :rand.uniform(11) - 6
 
       initial_change_percentage =
         if varied_price > 0 do

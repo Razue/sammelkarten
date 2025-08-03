@@ -59,6 +59,8 @@
 ### Status: In Progress
 - [x] Implement Market page with interactive charts
 - [x] Implement German number formatting (€1.234,50 format)
+- [x] Admin Interface for the Database
+- [x] Admin access only with Password
 - [ ] Refine color scheme and typography
 - [ ] Add smooth animations and transitions
 - [ ] Implement dark/light theme toggle

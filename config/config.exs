@@ -8,7 +8,8 @@
 import Config
 
 config :sammelkarten,
-  generators: [timestamp_type: :utc_datetime]
+  generators: [timestamp_type: :utc_datetime],
+  admin_password: "ZitterDelle!25"
 
 # Configures the endpoint
 config :sammelkarten, SammelkartenWeb.Endpoint,

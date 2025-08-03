@@ -10,6 +10,10 @@ defmodule SammelkartenWeb.Router do
     plug :put_secure_browser_headers
   end
 
+  pipeline :admin_auth do
+    plug :ensure_admin_authenticated
+  end
+
   pipeline :api do
     plug :accepts, ["json"]
   end
@@ -22,6 +26,29 @@ defmodule SammelkartenWeb.Router do
     live "/cards/:id", CardDetailLive, :show
     live "/preferences", PreferencesLive, :index
     live "/market", MarketLive, :index
+    
+    # Admin authentication routes
+    live "/admin/login", AdminLoginLive, :index
+    post "/admin/session", AdminSessionController, :create
+    delete "/admin/session", AdminSessionController, :delete
+  end
+
+  scope "/admin", SammelkartenWeb do
+    pipe_through [:browser, :admin_auth]
+    
+    live "/", AdminLive, :index
+  end
+
+  # Admin authentication helper
+  defp ensure_admin_authenticated(conn, _opts) do
+    if get_session(conn, :admin_authenticated) do
+      conn
+    else
+      conn
+      |> Phoenix.Controller.put_flash(:error, "Admin access required")
+      |> Phoenix.Controller.redirect(to: "/admin/login")
+      |> halt()
+    end
   end
 
   # Other scopes may use custom stacks.

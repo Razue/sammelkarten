@@ -12,15 +12,15 @@
 - [x] Create basic application layout and navigation
 
 ## Milestone 2: Core Data Models & Storage 📊
-### Status: Pending
-- [ ] Design and implement Card schema/struct
-- [ ] Design and implement PriceHistory schema/struct
-- [ ] Create Mnesia table definitions
-- [ ] Implement basic CRUD operations for cards
-- [ ] Set up card image asset pipeline
-- [ ] Create seed data from existing card_images/
-- [ ] Implement price simulation engine
-- [ ] Set up background job for price updates
+### Status: Completed ✅
+- [x] Design and implement Card schema/struct
+- [x] Design and implement PriceHistory schema/struct
+- [x] Create Mnesia table definitions
+- [x] Implement basic CRUD operations for cards
+- [x] Set up card image asset pipeline
+- [x] Create seed data from existing card_images/
+- [x] Implement price simulation engine
+- [x] Set up background job for price updates
 
 ## Milestone 3: Card Dashboard & Listing 🎯
 ### Status: Pending

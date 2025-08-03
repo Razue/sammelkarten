@@ -151,8 +151,42 @@ mix phx.server
 
 **Milestone 1 Status:** ✅ **COMPLETED**
 
-**Next Priority:** Begin Milestone 2 - Core Data Models & Storage
+**Next Priority:** Begin Milestone 3 - Card Dashboard & Listing
+
+### Session 4 - Core Data Models & Price Engine Implementation
+- Verified existing Card and PriceHistory schema implementations were well-designed
+- Confirmed Mnesia database configuration and CRUD operations were functional
+- Set up card image asset pipeline by copying images to `priv/static/images/cards/`
+- Created comprehensive Seeds module for populating initial card data from available images
+- Successfully seeded database with 8 collectible cards with realistic pricing and metadata
+- Implemented sophisticated PriceEngine with market simulation features:
+  - Rarity-based volatility calculations
+  - Market trend influences and momentum factors
+  - Random walk price movements with event-driven spikes
+  - Market crash and boom simulation capabilities
+- Created PriceUpdater GenServer for background price updates:
+  - Automatic price updates every 2 minutes
+  - PubSub integration for real-time UI notifications
+  - Configurable intervals and pause/resume functionality
+  - Comprehensive status monitoring and error handling
+- Added PriceUpdater to application supervision tree
+- Enhanced application startup with automatic database seeding
+
+**Completed Tasks:**
+- ✅ All Milestone 1 tasks (from previous sessions)
+- ✅ Design and implement Card schema/struct
+- ✅ Design and implement PriceHistory schema/struct  
+- ✅ Create Mnesia table definitions
+- ✅ Implement basic CRUD operations for cards
+- ✅ Set up card image asset pipeline
+- ✅ Create seed data from existing card_images/
+- ✅ Implement price simulation engine
+- ✅ Set up background job for price updates
+
+**Milestone 2 Status:** ✅ **COMPLETED**
+
+**Next Priority:** Begin Milestone 3 - Card Dashboard & Listing
 
 ---
 
-*Last updated: Session 3 - Milestone 1 completed, database and layout ready*
+*Last updated: Session 4 - Milestone 2 completed, core data models and price engine ready*

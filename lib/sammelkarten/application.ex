@@ -9,6 +9,9 @@ defmodule Sammelkarten.Application do
   def start(_type, _args) do
     # Initialize Mnesia database before starting other services
     Sammelkarten.Database.init()
+    
+    # Seed database if empty
+    Sammelkarten.Seeds.seed_if_empty()
 
     children = [
       SammelkartenWeb.Telemetry,
@@ -16,8 +19,8 @@ defmodule Sammelkarten.Application do
       {Phoenix.PubSub, name: Sammelkarten.PubSub},
       # Start the Finch HTTP client for sending emails
       {Finch, name: Sammelkarten.Finch},
-      # Start a worker by calling: Sammelkarten.Worker.start_link(arg)
-      # {Sammelkarten.Worker, arg},
+      # Start the price updater for background price simulation
+      Sammelkarten.PriceUpdater,
       # Start to serve requests, typically the last entry
       SammelkartenWeb.Endpoint
     ]

@@ -32,6 +32,9 @@ defmodule Sammelkarten.PriceEngine do
             update_card_price(card, new_price)
           end)
 
+        # Ensure Markus Turm always has the highest price
+        ensure_markus_turm_highest_price()
+
         successes = Enum.count(results, &match?({:ok, _}, &1))
         Logger.info("Price update completed: #{successes}/#{length(cards)} cards updated")
 
@@ -288,6 +291,57 @@ defmodule Sammelkarten.PriceEngine do
         {:ok, boom_percentage}
 
       {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  # Ensure Markus Turm always has the highest price among all cards.
+  defp ensure_markus_turm_highest_price do
+    case Cards.list_cards() do
+      {:ok, cards} ->
+        # Find Markus Turm card
+        markus_card = Enum.find(cards, fn card -> card.name == "Markus Turm" end)
+
+        if markus_card do
+          # Find the highest price among all cards (excluding Markus Turm)
+          other_cards = Enum.reject(cards, fn card -> card.name == "Markus Turm" end)
+          
+          if Enum.any?(other_cards) do
+            highest_other_price = 
+              other_cards
+              |> Enum.map(& &1.current_price)
+              |> Enum.max()
+
+            # If Markus Turm's price is not the highest, update it
+            if markus_card.current_price <= highest_other_price do
+              # Set Markus Turm's price to be 5-15% higher than the current highest
+              price_boost_percentage = 5 + :rand.uniform(11) # 5% to 15%
+              new_markus_price = trunc(highest_other_price * (1 + price_boost_percentage / 100))
+              
+              case Cards.update_card_price(markus_card.id, new_markus_price) do
+                {:ok, updated_card} ->
+                  Logger.info("Markus Turm price adjusted to maintain highest position: #{Card.format_price(markus_card.current_price)} → #{Card.format_price(new_markus_price)}")
+                  {:ok, updated_card}
+                
+                {:error, reason} ->
+                  Logger.error("Failed to adjust Markus Turm price: #{inspect(reason)}")
+                  {:error, reason}
+              end
+            else
+              # Markus Turm already has the highest price
+              {:ok, markus_card}
+            end
+          else
+            # No other cards to compare against
+            {:ok, markus_card}
+          end
+        else
+          Logger.warning("Markus Turm card not found for price adjustment")
+          {:error, :markus_turm_not_found}
+        end
+
+      {:error, reason} ->
+        Logger.error("Failed to fetch cards for Markus Turm price adjustment: #{inspect(reason)}")
         {:error, reason}
     end
   end

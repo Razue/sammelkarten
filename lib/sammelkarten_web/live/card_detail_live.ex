@@ -222,7 +222,12 @@ defmodule SammelkartenWeb.CardDetailLive do
                 
     <!-- Price History Chart -->
                 <div class="bg-white rounded-lg shadow-sm p-6">
-                  <h3 class="text-lg font-semibold text-gray-900 mb-4">Price History</h3>
+                  <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Price History</h3>
+                    <div class="text-xs text-gray-500">
+                      <div>📈 Scroll to zoom • Drag to pan • Double-click to reset</div>
+                    </div>
+                  </div>
 
                   <%= if length(@price_history) > 0 do %>
                     <div class="relative">
@@ -230,7 +235,7 @@ defmodule SammelkartenWeb.CardDetailLive do
                         id="price-chart"
                         phx-hook="PriceChart"
                         data-chart-data={prepare_chart_data(@price_history)}
-                        class="w-full"
+                        class="w-full border border-gray-200 rounded"
                         style="height: 300px;"
                       >
                       </canvas>

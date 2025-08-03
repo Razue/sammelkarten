@@ -51,7 +51,7 @@
 - [ ] Add price alert notifications
 - [x] Implement auto-refresh mechanisms
 - [x] Add user preferences (refresh rates, etc.)
-- [ ] Create interactive chart zooming/panning
+- [x] Create interactive chart zooming/panning
 - [x] Add keyboard shortcuts for navigation
 - [x] Implement error recovery for connection issues
 

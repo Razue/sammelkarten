@@ -230,16 +230,18 @@ defmodule SammelkartenWeb.DashboardLive do
   defp sort_cards(cards, "change", "desc"), do: Enum.sort_by(cards, & &1.price_change_24h, :desc)
 
   defp format_price(price) when is_integer(price) do
-    (price / 100)
-    |> Decimal.from_float()
-    |> Decimal.round(2)
-    |> Decimal.to_string()
+    price_decimal = Decimal.div(price, 100)
+    Sammelkarten.Formatter.format_german_decimal(price_decimal)
   end
 
   defp format_price(price) do
     price
     |> Decimal.round(2)
-    |> Decimal.to_string()
+    |> Sammelkarten.Formatter.format_german_decimal()
+  end
+
+  defp format_percentage(percentage) when is_float(percentage) do
+    Sammelkarten.Formatter.format_german_percentage(percentage)
   end
 
   defp price_change_class(change) when is_integer(change) do

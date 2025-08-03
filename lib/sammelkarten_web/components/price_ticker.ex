@@ -127,28 +127,30 @@ defmodule SammelkartenWeb.Components.PriceTicker do
   # Helper functions
 
   defp format_price(price_in_cents) when is_integer(price_in_cents) do
-    :erlang.float_to_binary(price_in_cents / 100, decimals: 2)
+    price_cents = price_in_cents
+    Sammelkarten.Formatter.format_german_price(price_cents) |> String.replace("€", "")
   end
 
   defp format_price(price) when is_float(price) do
-    :erlang.float_to_binary(price, decimals: 2)
+    price_cents = trunc(price * 100)
+    Sammelkarten.Formatter.format_german_price(price_cents) |> String.replace("€", "")
   end
 
   defp format_percentage_change(change) when is_integer(change) do
     decimal_change = change / 100
 
     case decimal_change do
-      change when change > 0 -> "+#{:erlang.float_to_binary(change, decimals: 2)}%"
-      change when change < 0 -> "#{:erlang.float_to_binary(change, decimals: 2)}%"
-      _ -> "0.00%"
+      change when change > 0 -> "+#{:erlang.float_to_binary(change, decimals: 2) |> String.replace(".", ",")}%"
+      change when change < 0 -> "#{:erlang.float_to_binary(change, decimals: 2) |> String.replace(".", ",")}%"
+      _ -> "0,00%"
     end
   end
 
   defp format_percentage_change(change) when is_float(change) do
     case change do
-      change when change > 0 -> "+#{:erlang.float_to_binary(change, decimals: 2)}%"
-      change when change < 0 -> "#{:erlang.float_to_binary(change, decimals: 2)}%"
-      _ -> "0.00%"
+      change when change > 0 -> "+#{:erlang.float_to_binary(change, decimals: 2) |> String.replace(".", ",")}%"
+      change when change < 0 -> "#{:erlang.float_to_binary(change, decimals: 2) |> String.replace(".", ",")}%"
+      _ -> "0,00%"
     end
   end
 

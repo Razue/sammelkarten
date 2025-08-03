@@ -156,13 +156,17 @@ defmodule SammelkartenWeb.MarketLive do
   defp format_currency(%Decimal{} = amount) do
     amount
     |> Decimal.round(2)
-    |> Decimal.to_string()
+    |> Sammelkarten.Formatter.format_german_decimal()
     |> then(&"€#{&1}")
   end
 
   defp format_percentage(percentage) when is_float(percentage) do
     sign = if percentage >= 0, do: "+", else: ""
-    "#{sign}#{:erlang.float_to_binary(percentage, decimals: 1)}%"
+    formatted_number = 
+      percentage
+      |> :erlang.float_to_binary(decimals: 1)
+      |> String.replace(".", ",")
+    "#{sign}#{formatted_number}%"
   end
 
   defp percentage_color(percentage) when percentage >= 0, do: "text-green-600"

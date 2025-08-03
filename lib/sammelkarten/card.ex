@@ -77,11 +77,10 @@ defmodule Sammelkarten.Card do
   end
 
   @doc """
-  Format price for display with currency symbol.
+  Format price for display with currency symbol in German format.
   """
   def format_price(price_cents) when is_integer(price_cents) do
-    price_decimal = price_to_decimal(price_cents)
-    "€#{price_decimal}"
+    Sammelkarten.Formatter.format_german_price(price_cents)
   end
 
   @doc """
@@ -110,10 +109,9 @@ defmodule Sammelkarten.Card do
   end
 
   @doc """
-  Format price change percentage for display.
+  Format price change percentage for display in German format.
   """
   def format_price_change(change_percentage) when is_float(change_percentage) do
-    sign = if change_percentage >= 0, do: "+", else: ""
-    "#{sign}#{:erlang.float_to_binary(change_percentage, decimals: 2)}%"
+    Sammelkarten.Formatter.format_german_percentage(change_percentage)
   end
 end

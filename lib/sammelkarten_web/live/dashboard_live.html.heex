@@ -259,9 +259,7 @@
                       "text-sm font-medium",
                       price_change_class(card.price_change_percentage)
                     ]}>
-                      {if card.price_change_percentage > 0,
-                        do: "+#{Float.round(card.price_change_percentage, 2)}%",
-                        else: "#{Float.round(card.price_change_percentage, 2)}%"}
+                      {format_percentage(card.price_change_percentage)}
                     </span>
                   </div>
                   

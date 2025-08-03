@@ -289,26 +289,29 @@ defmodule SammelkartenWeb.CardDetailLive do
   # Helper functions
 
   defp format_price(price_in_cents) when is_integer(price_in_cents) do
-    "€#{:erlang.float_to_binary(price_in_cents / 100, decimals: 2)}"
+    Sammelkarten.Formatter.format_german_price(price_in_cents)
   end
 
   defp format_price(price) when is_float(price) do
-    "€#{:erlang.float_to_binary(price, decimals: 2)}"
+    price_cents = trunc(price * 100)
+    Sammelkarten.Formatter.format_german_price(price_cents)
   end
 
   defp format_price_change(change_in_cents) when is_integer(change_in_cents) do
     sign = if change_in_cents >= 0, do: "+", else: ""
-    "#{sign}€#{:erlang.float_to_binary(change_in_cents / 100, decimals: 2)}"
+    formatted_amount = Sammelkarten.Formatter.format_german_price(abs(change_in_cents)) |> String.replace("€", "")
+    "#{sign}€#{formatted_amount}"
   end
 
   defp format_price_change(change) when is_float(change) do
     sign = if change >= 0, do: "+", else: ""
-    "#{sign}€#{:erlang.float_to_binary(change, decimals: 2)}"
+    change_cents = trunc(abs(change) * 100)
+    formatted_amount = Sammelkarten.Formatter.format_german_price(change_cents) |> String.replace("€", "")
+    "#{sign}€#{formatted_amount}"
   end
 
   defp format_percentage(percentage) when is_float(percentage) do
-    sign = if percentage >= 0, do: "+", else: ""
-    "#{sign}#{:erlang.float_to_binary(percentage, decimals: 2)}%"
+    Sammelkarten.Formatter.format_german_percentage(percentage)
   end
 
   defp price_change_color(change) when change > 0, do: "text-green-600"

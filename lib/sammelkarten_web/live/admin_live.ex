@@ -23,7 +23,6 @@ defmodule SammelkartenWeb.AdminLive do
           form_data: %{},
           show_add_form: false,
           show_edit_form: false,
-          show_price_form: false,
           error_message: nil,
           success_message: nil
         )
@@ -34,12 +33,12 @@ defmodule SammelkartenWeb.AdminLive do
 
   @impl true
   def handle_event("show_add_form", _params, socket) do
-    {:noreply, assign(socket, show_add_form: true, show_edit_form: false, show_price_form: false)}
+    {:noreply, assign(socket, show_add_form: true, show_edit_form: false)}
   end
 
   @impl true
   def handle_event("hide_forms", _params, socket) do
-    {:noreply, assign(socket, show_add_form: false, show_edit_form: false, show_price_form: false, selected_card: nil)}
+    {:noreply, assign(socket, show_add_form: false, show_edit_form: false, selected_card: nil)}
   end
 
   @impl true
@@ -57,8 +56,7 @@ defmodule SammelkartenWeb.AdminLive do
         
         {:noreply, assign(socket, 
           show_edit_form: true, 
-          show_add_form: false, 
-          show_price_form: false,
+          show_add_form: false,
           selected_card: card,
           form_data: form_data
         )}
@@ -67,21 +65,6 @@ defmodule SammelkartenWeb.AdminLive do
     end
   end
 
-  @impl true
-  def handle_event("show_price_form", %{"id" => id}, socket) do
-    case Cards.get_card(id) do
-      {:ok, card} ->
-        {:noreply, assign(socket, 
-          show_price_form: true, 
-          show_add_form: false, 
-          show_edit_form: false,
-          selected_card: card,
-          form_data: %{"price" => format_price_for_form(card.current_price)}
-        )}
-      {:error, _} ->
-        {:noreply, assign(socket, error_message: "Card not found")}
-    end
-  end
 
   @impl true
   def handle_event("delete_card", %{"id" => id}, socket) do
@@ -122,32 +105,6 @@ defmodule SammelkartenWeb.AdminLive do
     end
   end
 
-  @impl true
-  def handle_event("update_price", %{"price" => price_str}, socket) do
-    card = socket.assigns.selected_card
-    
-    case parse_price(price_str) do
-      {:ok, price} when not is_nil(card) ->
-        case Cards.update_card_price(card.id, price) do
-          {:ok, _updated_card} ->
-            cards = case Cards.list_cards() do
-              {:ok, cards_list} -> cards_list
-              {:error, _} -> []
-            end
-            {:noreply, assign(socket, 
-              cards: cards,
-              show_price_form: false,
-              selected_card: nil,
-              success_message: "Price updated successfully",
-              error_message: nil
-            )}
-          {:error, reason} ->
-            {:noreply, assign(socket, error_message: "Failed to update price: #{reason}")}
-        end
-      _ ->
-        {:noreply, assign(socket, error_message: "Invalid price format")}
-    end
-  end
 
   @impl true
   def handle_event("clear_messages", _params, socket) do

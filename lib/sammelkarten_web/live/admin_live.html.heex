@@ -84,7 +84,7 @@
   <!-- Forms -->
   <%= if @show_add_form or @show_edit_form do %>
     <div class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-      <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+      <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full">
         <div class="px-6 py-4 border-b border-gray-200">
           <h3 class="text-lg font-medium text-gray-900">
             <%= if @show_add_form, do: "Add New Card", else: "Edit Card" %>
@@ -182,48 +182,6 @@
     </div>
   <% end %>
 
-  <!-- Price Update Form -->
-  <%= if @show_price_form do %>
-    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-      <div class="bg-white rounded-lg shadow-xl max-w-sm w-full">
-        <div class="px-6 py-4 border-b border-gray-200">
-          <h3 class="text-lg font-medium text-gray-900">Update Price</h3>
-          <p class="text-sm text-gray-600"><%= @selected_card.name %></p>
-        </div>
-        
-        <form phx-submit="update_price" class="px-6 py-4">
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-1">New Price (sats)</label>
-            <input 
-              type="number" 
-              step="1"
-              name="price" 
-              value={@form_data["price"] || ""}
-              required
-              autofocus
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          
-          <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-            <button 
-              type="button" 
-              phx-click="hide_forms"
-              class="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button 
-              type="submit"
-              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Update Price
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  <% end %>
 
   <!-- Cards Table -->
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -277,13 +235,6 @@
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                   <button 
-                    phx-click="show_price_form"
-                    phx-value-id={card.id}
-                    class="text-green-600 hover:text-green-900 transition-colors"
-                  >
-                    Update Price
-                  </button>
-                  <button 
                     phx-click="edit_card"
                     phx-value-id={card.id}
                     class="text-blue-600 hover:text-blue-900 transition-colors"
@@ -318,7 +269,7 @@
   </div>
 </div>
 
-<%= if @show_add_form or @show_edit_form or @show_price_form do %>
+<%= if @show_add_form or @show_edit_form do %>
   <script>
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') {

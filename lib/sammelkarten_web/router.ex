@@ -17,8 +17,8 @@ defmodule SammelkartenWeb.Router do
   scope "/", SammelkartenWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
-    get "/cards", PageController, :cards
+    # get "/", PageController, :home
+    live "/cards", DashboardLive, :index
     get "/market", PageController, :market
   end
 

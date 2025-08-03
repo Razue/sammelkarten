@@ -23,14 +23,14 @@
 - [x] Set up background job for price updates
 
 ## Milestone 3: Card Dashboard & Listing 🎯
-### Status: Pending
-- [ ] Create main dashboard LiveView page
-- [ ] Implement card grid/list component
-- [ ] Add real-time price updates via LiveView
-- [ ] Create search and filter functionality
-- [ ] Implement card sorting (price, name, change%)
-- [ ] Add responsive design for mobile/tablet
-- [ ] Style dashboard with minimalistic design
+### Status: Completed ✅
+- [x] Create main dashboard LiveView page
+- [x] Implement card grid/list component
+- [x] Add real-time price updates via LiveView
+- [x] Create search and filter functionality
+- [x] Implement card sorting (price, name, change%)
+- [x] Add responsive design for mobile/tablet
+- [x] Style dashboard with minimalistic design
 - [ ] Add loading states and error handling
 
 ## Milestone 4: Individual Card Pages 🃏
@@ -91,9 +91,9 @@
 ---
 
 ## Current Sprint Focus
-**Active Milestone**: Milestone 1 - Project Setup & Foundation
+**Active Milestone**: Milestone 4 - Individual Card Pages
 
-**Next Task**: Configure Mnesia database for card storage
+**Next Task**: Create card detail LiveView page
 
 ## Task Management Rules
 - Mark tasks as completed immediately: `[x]`

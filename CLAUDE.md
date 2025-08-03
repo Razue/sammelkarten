@@ -185,8 +185,32 @@ mix phx.server
 
 **Milestone 2 Status:** ✅ **COMPLETED**
 
-**Next Priority:** Begin Milestone 3 - Card Dashboard & Listing
+**Next Priority:** Begin Milestone 4 - Individual Card Pages
+
+### Session 5 - Dashboard & Real-time Features Implementation
+- Successfully implemented main dashboard LiveView with comprehensive functionality
+- Created responsive card grid layout using Tailwind CSS breakpoints
+- Implemented real-time price updates via Phoenix PubSub integration
+- Added search functionality for card names and rarity filtering
+- Built interactive sorting system (name, price, change percentage)
+- Enhanced price formatting to handle integer storage (cents conversion)
+- Fixed responsive design for mobile, tablet, and desktop layouts
+- Integrated live price update indicator and clean minimalistic styling
+- Updated router to use LiveView for `/cards` route
+- Completed all search, filter, and sort functionality with proper state management
+
+**Completed Tasks:**
+- ✅ All Milestone 1, 2, and 3 tasks completed
+- ✅ Dashboard LiveView with real-time capabilities
+- ✅ Card grid component with responsive design
+- ✅ Search and filter functionality
+- ✅ Price sorting and percentage change indicators
+- ✅ Clean, minimalistic UI following project design principles
+
+**Milestone 3 Status:** ✅ **COMPLETED**
+
+**Next Priority:** Begin Milestone 4 - Individual Card Pages
 
 ---
 
-*Last updated: Session 4 - Milestone 2 completed, core data models and price engine ready*
+*Last updated: Session 5 - Milestone 3 completed, dashboard with real-time features ready*

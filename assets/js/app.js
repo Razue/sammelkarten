@@ -22,8 +22,105 @@ import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
 import topbar from "../vendor/topbar"
 
-// Chart.js hook for price history
+// Chart.js hook for price history and keyboard shortcuts
 let Hooks = {}
+
+// Keyboard shortcuts hook
+Hooks.KeyboardShortcuts = {
+  mounted() {
+    this.handleKeyDown = (e) => {
+      // Only handle shortcuts when not in input fields
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return
+      }
+      
+      switch(e.key.toLowerCase()) {
+        case 's':
+          // Focus search input
+          e.preventDefault()
+          const searchInput = document.querySelector('input[name="search[term]"]')
+          if (searchInput) {
+            searchInput.focus()
+          }
+          break
+          
+        case 'h':
+        case '?':
+          // Show help
+          e.preventDefault()
+          this.pushEvent("show_help")
+          break
+          
+        case 'r':
+          // Refresh data
+          e.preventDefault()
+          this.pushEvent("refresh_data")
+          break
+          
+        case 'escape':
+          // Clear search or close modals
+          e.preventDefault()
+          const searchInput2 = document.querySelector('input[name="search[term]"]')
+          if (searchInput2 && searchInput2.value) {
+            searchInput2.value = ''
+            this.pushEvent("search", {search: {term: ''}})
+          }
+          break
+          
+        case '1':
+        case '2':
+        case '3':
+          // Sort shortcuts
+          e.preventDefault()
+          const sortOptions = ['name', 'price', 'change']
+          const sortBy = sortOptions[parseInt(e.key) - 1]
+          if (sortBy) {
+            this.pushEvent("sort", {sort_by: sortBy})
+          }
+          break
+      }
+    }
+    
+    document.addEventListener('keydown', this.handleKeyDown)
+  },
+  
+  destroyed() {
+    document.removeEventListener('keydown', this.handleKeyDown)
+  }
+}
+
+// Card detail keyboard shortcuts hook
+Hooks.CardDetailKeyboardShortcuts = {
+  mounted() {
+    this.handleKeyDown = (e) => {
+      // Only handle shortcuts when not in input fields
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return
+      }
+      
+      switch(e.key.toLowerCase()) {
+        case 'escape':
+        case 'b':
+          // Go back to cards listing
+          e.preventDefault()
+          this.pushEvent("go_back")
+          break
+          
+        case 'h':
+        case '?':
+          // Show help (could implement card-specific help)
+          e.preventDefault()
+          break
+      }
+    }
+    
+    document.addEventListener('keydown', this.handleKeyDown)
+  },
+  
+  destroyed() {
+    document.removeEventListener('keydown', this.handleKeyDown)
+  }
+}
 
 Hooks.PriceChart = {
   mounted() {

@@ -75,9 +75,14 @@ defmodule SammelkartenWeb.CardDetailLive do
   end
   
   @impl true
+  def handle_event("go_back", _params, socket) do
+    {:noreply, push_navigate(socket, to: "/cards")}
+  end
+
+  @impl true
   def render(assigns) do
     ~H"""
-    <div class="min-h-screen bg-gray-50">
+    <div class="min-h-screen bg-gray-50" id="card-detail-container" phx-hook="CardDetailKeyboardShortcuts">
       <%= if @error do %>
         <div class="max-w-4xl mx-auto px-4 py-8">
           <div class="bg-red-50 border border-red-200 rounded-lg p-6 text-center">

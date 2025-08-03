@@ -135,8 +135,16 @@ defmodule SammelkartenWeb.CardDetailLive do
               <div class="space-y-6">
                 <!-- Card Image -->
                 <div class="bg-white rounded-lg shadow-sm p-6">
-                  <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                    <img src={@card.image_path} alt={@card.name} class="w-full h-full object-cover" />
+                  <div
+                    class="bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center"
+                    style="min-height: 630px;"
+                  >
+                    <img
+                      src={@card.image_path}
+                      alt={@card.name}
+                      class="w-full h-full object-contain"
+                      style="max-height: 600px;"
+                    />
                   </div>
                 </div>
                 
@@ -299,14 +307,20 @@ defmodule SammelkartenWeb.CardDetailLive do
 
   defp format_price_change(change_in_cents) when is_integer(change_in_cents) do
     sign = if change_in_cents >= 0, do: "+", else: ""
-    formatted_amount = Sammelkarten.Formatter.format_german_price(abs(change_in_cents)) |> String.replace("€", "")
+
+    formatted_amount =
+      Sammelkarten.Formatter.format_german_price(abs(change_in_cents)) |> String.replace("€", "")
+
     "#{sign}€#{formatted_amount}"
   end
 
   defp format_price_change(change) when is_float(change) do
     sign = if change >= 0, do: "+", else: ""
     change_cents = trunc(abs(change) * 100)
-    formatted_amount = Sammelkarten.Formatter.format_german_price(change_cents) |> String.replace("€", "")
+
+    formatted_amount =
+      Sammelkarten.Formatter.format_german_price(change_cents) |> String.replace("€", "")
+
     "#{sign}€#{formatted_amount}"
   end
 

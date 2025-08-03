@@ -1,7 +1,7 @@
 defmodule Sammelkarten.PriceUpdater do
   @moduledoc """
   GenServer for handling background price updates.
-  
+
   This process:
   - Runs periodic price updates for all cards
   - Publishes price changes via PubSub for real-time UI updates
@@ -16,7 +16,8 @@ defmodule Sammelkarten.PriceUpdater do
 
   require Logger
 
-  @update_interval :timer.minutes(2)  # Update every 2 minutes
+  # Update every 10 seconds
+  @update_interval :timer.seconds(10)
   @pubsub_topic "price_updates"
 
   ## Client API
@@ -103,6 +104,7 @@ defmodule Sammelkarten.PriceUpdater do
       update_count: state.update_count,
       next_update: if(state.timer_ref, do: "scheduled", else: "none")
     }
+
     {:reply, status, state}
   end
 
@@ -115,12 +117,12 @@ defmodule Sammelkarten.PriceUpdater do
   @impl true
   def handle_cast({:set_interval, new_interval}, state) do
     Logger.info("Updating price update interval to #{new_interval}ms")
-    
+
     # Cancel existing timer and start new one
     state = cancel_timer(state)
     new_state = %{state | interval: new_interval}
     new_state = schedule_next_update(new_state)
-    
+
     {:noreply, new_state}
   end
 
@@ -164,46 +166,45 @@ defmodule Sammelkarten.PriceUpdater do
 
   defp perform_price_update(state) do
     Logger.debug("Performing scheduled price update...")
-    
+
     start_time = System.monotonic_time(:millisecond)
-    
+
     case PriceEngine.update_all_prices() do
       {:ok, updated_count} ->
         duration = System.monotonic_time(:millisecond) - start_time
         Logger.info("Price update completed: #{updated_count} cards updated in #{duration}ms")
-        
+
         # Broadcast price update notification
         PubSub.broadcast(
           Sammelkarten.PubSub,
           @pubsub_topic,
           {:price_update_completed, %{updated_count: updated_count, duration: duration}}
         )
-        
-        %{state | 
-          last_update: DateTime.utc_now(),
-          update_count: state.update_count + 1
-        }
-        
+
+        %{state | last_update: DateTime.utc_now(), update_count: state.update_count + 1}
+
       {:error, reason} ->
         Logger.error("Price update failed: #{inspect(reason)}")
-        
+
         PubSub.broadcast(
           Sammelkarten.PubSub,
           @pubsub_topic,
           {:price_update_failed, %{reason: reason}}
         )
-        
+
         state
     end
   end
 
   defp schedule_next_update(%{paused: true} = state), do: state
+
   defp schedule_next_update(%{interval: interval} = state) do
     timer_ref = Process.send_after(self(), :update_prices, interval)
     %{state | timer_ref: timer_ref}
   end
 
   defp cancel_timer(%{timer_ref: nil} = state), do: state
+
   defp cancel_timer(%{timer_ref: timer_ref} = state) do
     Process.cancel_timer(timer_ref)
     %{state | timer_ref: nil}

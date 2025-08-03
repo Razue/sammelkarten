@@ -121,7 +121,7 @@ defmodule SammelkartenWeb.CardDetailLive do
                 <div class="bg-white rounded-lg shadow-sm p-6">
                   <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden">
                     <img 
-                      src={"/images/cards/" <> @card.image_path} 
+                      src={@card.image_path} 
                       alt={@card.name}
                       class="w-full h-full object-cover"
                     />

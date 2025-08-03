@@ -42,6 +42,11 @@ defmodule SammelkartenWeb.MarketLive do
     {:noreply, load_market_data(socket)}
   end
 
+  @impl true
+  def handle_info({:price_update_completed, _stats}, socket) do
+    {:noreply, load_market_data(socket)}
+  end
+
   defp load_market_data(socket) do
     case Cards.list_cards() do
       {:ok, cards} ->

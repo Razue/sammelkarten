@@ -170,32 +170,6 @@ defmodule SammelkartenWeb.MarketLive do
     |> then(&"#{&1} sats")
   end
 
-  # defp format_currency_bitcoin(amount) when is_integer(amount) do
-  #   amount
-  #   |> Decimal.new()
-  #   |> format_currency_bitcoin()
-  # end
-
-  # defp format_currency_bitcoin(%Decimal{} = amount) do
-  #   amount
-  #   |> Decimal.round(2)
-  #   # Convert sats to BTC
-  #   |> Decimal.div(100_000_000)
-  #   |> Decimal.to_string()
-  #   |> add_thousands_separator()
-  #   |> then(&"#{&1} BTC")
-  # end
-
-  # defp add_thousands_separator(integer_string) do
-  #   integer_string
-  #   |> String.reverse()
-  #   |> String.to_charlist()
-  #   |> Enum.chunk_every(3)
-  #   |> Enum.map(&List.to_string/1)
-  #   |> Enum.join(".")
-  #   |> String.reverse()
-  # end
-
   defp format_percentage(percentage) when is_float(percentage) do
     sign = if percentage >= 0, do: "+", else: ""
 

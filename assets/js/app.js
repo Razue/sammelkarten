@@ -415,6 +415,308 @@ Hooks.PriceChart = {
   }
 }
 
+// Market chart hook - similar to PriceChart but optimized for market overview
+Hooks.MarketChart = {
+  mounted() {
+    this.initChart()
+    this.setupInteractivity()
+  },
+  
+  updated() {
+    this.updateChart()
+  },
+  
+  destroyed() {
+    this.cleanup()
+  },
+  
+  initChart() {
+    // Initialize chart state
+    this.zoom = 1.0
+    this.panX = 0
+    this.panY = 0
+    this.isDragging = false
+    this.lastMouseX = 0
+    this.lastMouseY = 0
+    this.minZoom = 0.5
+    this.maxZoom = 3.0
+    
+    const ctx = this.el.getContext('2d')
+    const data = JSON.parse(this.el.dataset.chartData)
+    
+    this.drawChart(ctx, data)
+  },
+  
+  updateChart() {
+    const ctx = this.el.getContext('2d')
+    const data = JSON.parse(this.el.dataset.chartData)
+    
+    // Clear and redraw
+    ctx.clearRect(0, 0, this.el.width, this.el.height)
+    this.drawChart(ctx, data)
+  },
+  
+  setupInteractivity() {
+    // Mouse wheel for zooming
+    this.handleWheel = (e) => {
+      e.preventDefault()
+      
+      const rect = this.el.getBoundingClientRect()
+      const mouseX = e.clientX - rect.left
+      const mouseY = e.clientY - rect.top
+      
+      // Zoom factor
+      const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1
+      const newZoom = Math.max(this.minZoom, Math.min(this.maxZoom, this.zoom * zoomFactor))
+      
+      if (newZoom !== this.zoom) {
+        // Zoom towards mouse position
+        const zoomRatio = newZoom / this.zoom
+        this.panX = mouseX - (mouseX - this.panX) * zoomRatio
+        this.panY = mouseY - (mouseY - this.panY) * zoomRatio
+        this.zoom = newZoom
+        
+        this.updateChart()
+      }
+    }
+    
+    // Mouse drag for panning
+    this.handleMouseDown = (e) => {
+      this.isDragging = true
+      this.lastMouseX = e.clientX
+      this.lastMouseY = e.clientY
+      this.el.style.cursor = 'grabbing'
+    }
+    
+    this.handleMouseMove = (e) => {
+      if (this.isDragging) {
+        const deltaX = e.clientX - this.lastMouseX
+        const deltaY = e.clientY - this.lastMouseY
+        
+        this.panX += deltaX
+        this.panY += deltaY
+        
+        this.lastMouseX = e.clientX
+        this.lastMouseY = e.clientY
+        
+        this.updateChart()
+      }
+    }
+    
+    this.handleMouseUp = () => {
+      this.isDragging = false
+      this.el.style.cursor = 'grab'
+    }
+    
+    this.handleMouseLeave = () => {
+      this.isDragging = false
+      this.el.style.cursor = 'default'
+    }
+    
+    // Double-click to reset zoom/pan
+    this.handleDoubleClick = () => {
+      this.zoom = 1.0
+      this.panX = 0
+      this.panY = 0
+      this.updateChart()
+    }
+    
+    // Add event listeners
+    this.el.addEventListener('wheel', this.handleWheel)
+    this.el.addEventListener('mousedown', this.handleMouseDown)
+    this.el.addEventListener('mousemove', this.handleMouseMove)
+    this.el.addEventListener('mouseup', this.handleMouseUp)
+    this.el.addEventListener('mouseleave', this.handleMouseLeave)
+    this.el.addEventListener('dblclick', this.handleDoubleClick)
+    
+    // Set initial cursor
+    this.el.style.cursor = 'grab'
+  },
+  
+  cleanup() {
+    if (this.handleWheel) {
+      this.el.removeEventListener('wheel', this.handleWheel)
+      this.el.removeEventListener('mousedown', this.handleMouseDown)
+      this.el.removeEventListener('mousemove', this.handleMouseMove)
+      this.el.removeEventListener('mouseup', this.handleMouseUp)
+      this.el.removeEventListener('mouseleave', this.handleMouseLeave)
+      this.el.removeEventListener('dblclick', this.handleDoubleClick)
+    }
+  },
+  
+  drawChart(ctx, data) {
+    if (!data || data.length === 0) {
+      // Draw empty state
+      const canvas = this.el
+      const rect = canvas.getBoundingClientRect()
+      ctx.fillStyle = '#f3f4f6'
+      ctx.fillRect(0, 0, rect.width, rect.height)
+      
+      ctx.fillStyle = '#6b7280'
+      ctx.font = '14px system-ui'
+      ctx.textAlign = 'center'
+      ctx.fillText('No market data available', rect.width / 2, rect.height / 2)
+      return
+    }
+    
+    const canvas = this.el
+    const padding = 50
+    
+    // Set canvas size for high DPI displays
+    const rect = canvas.getBoundingClientRect()
+    const dpr = window.devicePixelRatio || 1
+    canvas.width = rect.width * dpr
+    canvas.height = rect.height * dpr
+    ctx.scale(dpr, dpr)
+    canvas.style.width = rect.width + 'px'
+    canvas.style.height = rect.height + 'px'
+    
+    const chartWidth = rect.width - (padding * 2)
+    const chartHeight = rect.height - (padding * 2)
+    
+    // Apply zoom and pan transformations
+    ctx.save()
+    ctx.translate(this.panX, this.panY)
+    ctx.scale(this.zoom, this.zoom)
+    
+    // Find min and max values
+    const values = data.map(d => d.value)
+    const minValue = Math.min(...values)
+    const maxValue = Math.max(...values)
+    const valueRange = maxValue - minValue || 1
+    
+    // Draw background
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(-this.panX / this.zoom, -this.panY / this.zoom, rect.width / this.zoom, rect.height / this.zoom)
+    
+    // Draw grid lines
+    ctx.strokeStyle = '#e5e7eb'
+    ctx.lineWidth = 1 / this.zoom
+    
+    // Horizontal grid lines
+    for (let i = 0; i <= 4; i++) {
+      const y = padding + (chartHeight / 4) * i
+      ctx.beginPath()
+      ctx.moveTo(padding, y)
+      ctx.lineTo(rect.width - padding, y)
+      ctx.stroke()
+    }
+    
+    // Vertical grid lines
+    const gridCount = Math.min(6, data.length)
+    for (let i = 0; i <= gridCount; i++) {
+      const x = padding + (chartWidth / gridCount) * i
+      ctx.beginPath()
+      ctx.moveTo(x, padding)
+      ctx.lineTo(x, rect.height - padding)
+      ctx.stroke()
+    }
+    
+    // Draw area fill
+    if (data.length > 1) {
+      const gradient = ctx.createLinearGradient(0, padding, 0, rect.height - padding)
+      gradient.addColorStop(0, 'rgba(59, 130, 246, 0.1)')
+      gradient.addColorStop(1, 'rgba(59, 130, 246, 0.0)')
+      
+      ctx.fillStyle = gradient
+      ctx.beginPath()
+      
+      // Start from bottom left
+      const firstX = padding
+      const firstY = rect.height - padding
+      ctx.moveTo(firstX, firstY)
+      
+      // Draw to first data point
+      const firstDataY = padding + chartHeight - ((data[0].value - minValue) / valueRange) * chartHeight
+      ctx.lineTo(firstX, firstDataY)
+      
+      // Draw line through all data points
+      data.forEach((point, index) => {
+        const x = padding + (chartWidth / (data.length - 1)) * index
+        const y = padding + chartHeight - ((point.value - minValue) / valueRange) * chartHeight
+        ctx.lineTo(x, y)
+      })
+      
+      // Close the area to bottom right
+      const lastX = padding + chartWidth
+      ctx.lineTo(lastX, rect.height - padding)
+      ctx.lineTo(firstX, firstY)
+      
+      ctx.fill()
+    }
+    
+    // Draw main line
+    if (data.length > 1) {
+      ctx.strokeStyle = '#3b82f6'
+      ctx.lineWidth = 2 / this.zoom
+      ctx.beginPath()
+      
+      data.forEach((point, index) => {
+        const x = padding + (chartWidth / (data.length - 1)) * index
+        const y = padding + chartHeight - ((point.value - minValue) / valueRange) * chartHeight
+        
+        if (index === 0) {
+          ctx.moveTo(x, y)
+        } else {
+          ctx.lineTo(x, y)
+        }
+      })
+      
+      ctx.stroke()
+      
+      // Draw data points
+      ctx.fillStyle = '#3b82f6'
+      data.forEach((point, index) => {
+        const x = padding + (chartWidth / (data.length - 1)) * index
+        const y = padding + chartHeight - ((point.value - minValue) / valueRange) * chartHeight
+        
+        ctx.beginPath()
+        ctx.arc(x, y, 3 / this.zoom, 0, 2 * Math.PI)
+        ctx.fill()
+      })
+    }
+    
+    ctx.restore()
+    
+    // Draw Y-axis labels (values) - always visible
+    ctx.fillStyle = '#6b7280'
+    ctx.font = '11px system-ui'
+    ctx.textAlign = 'right'
+    
+    for (let i = 0; i <= 4; i++) {
+      const value = minValue + (valueRange / 4) * (4 - i)
+      const y = padding + (chartHeight / 4) * i + 3
+      ctx.fillText(`€${(value / 100).toFixed(0)}k`, padding - 5, y)
+    }
+    
+    // Draw time range indicator
+    ctx.textAlign = 'center'
+    ctx.fillStyle = '#9ca3af'
+    ctx.font = '10px system-ui'
+    const timeRange = this.el.dataset.timeRange || '24h'
+    ctx.fillText(`Market Cap Over ${timeRange}`, rect.width / 2, rect.height - 5)
+    
+    // Draw interaction hints
+    if (this.zoom !== 1.0 || this.panX !== 0 || this.panY !== 0) {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'
+      ctx.fillRect(10, 10, 140, 40)
+      ctx.fillStyle = '#ffffff'
+      ctx.font = '10px system-ui'
+      ctx.textAlign = 'left'
+      ctx.fillText(`Zoom: ${this.zoom.toFixed(1)}x`, 15, 25)
+      ctx.fillText('Scroll: zoom, Drag: pan', 15, 35)
+      ctx.fillText('Double-click: reset', 15, 45)
+    } else {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.6)'
+      ctx.fillRect(10, rect.height - 35, 160, 25)
+      ctx.fillStyle = '#ffffff'
+      ctx.font = '10px system-ui'
+      ctx.textAlign = 'left'
+      ctx.fillText('Scroll to zoom, drag to pan', 15, rect.height - 20)
+    }
+  }
+}
+
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 let liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,

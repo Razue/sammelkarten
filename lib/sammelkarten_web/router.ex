@@ -21,7 +21,7 @@ defmodule SammelkartenWeb.Router do
     live "/cards", DashboardLive, :index
     live "/cards/:id", CardDetailLive, :show
     live "/preferences", PreferencesLive, :index
-    get "/market", PageController, :market
+    live "/market", MarketLive, :index
   end
 
   # Other scopes may use custom stacks.

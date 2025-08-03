@@ -56,7 +56,8 @@
 - [x] Implement error recovery for connection issues
 
 ## Milestone 6: UI Polish & Advanced Features ✨
-### Status: Pending
+### Status: In Progress
+- [x] Implement Market page with interactive charts
 - [ ] Refine color scheme and typography
 - [ ] Add smooth animations and transitions
 - [ ] Implement dark/light theme toggle

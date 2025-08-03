@@ -1,7 +1,7 @@
 defmodule Sammelkarten.PriceHistory do
   @moduledoc """
   Price history data structure for tracking card price changes over time.
-  
+
   Fields:
   - id: Unique identifier for the price record
   - card_id: Reference to the card this price belongs to
@@ -9,14 +9,14 @@ defmodule Sammelkarten.PriceHistory do
   - timestamp: When this price was recorded
   - volume: Trading volume or activity indicator
   """
-  
+
   @type t :: %__MODULE__{
-    id: String.t(),
-    card_id: String.t(),
-    price: integer(),
-    timestamp: DateTime.t(),
-    volume: integer()
-  }
+          id: String.t(),
+          card_id: String.t(),
+          price: integer(),
+          timestamp: DateTime.t(),
+          volume: integer()
+        }
 
   defstruct [
     :id,
@@ -35,7 +35,7 @@ defmodule Sammelkarten.PriceHistory do
       timestamp: DateTime.utc_now(),
       volume: 0
     }
-    
+
     struct(__MODULE__, Map.merge(defaults, attrs))
   end
 

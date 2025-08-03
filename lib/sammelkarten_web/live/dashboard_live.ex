@@ -2,18 +2,27 @@ defmodule SammelkartenWeb.DashboardLive do
   use SammelkartenWeb, :live_view
 
   alias Sammelkarten.Cards
+  alias Sammelkarten.Preferences
 
   @impl true
   def mount(_params, _session, socket) do
+    # Get user ID (for now, use a default user)
+    user_id = "default_user"
+
+    # Load user preferences
+    {:ok, user_preferences} = Preferences.get_user_preferences(user_id)
+
     socket =
       socket
       |> assign(:cards, [])
       |> assign(:loading, true)
       |> assign(:error, nil)
       |> assign(:search_term, "")
-      |> assign(:sort_by, "name")
-      |> assign(:sort_direction, "asc")
+      |> assign(:sort_by, user_preferences.default_sort)
+      |> assign(:sort_direction, user_preferences.default_sort_direction)
       |> assign(:connection_status, "connecting")
+      |> assign(:user_id, user_id)
+      |> assign(:user_preferences, user_preferences)
 
     if connected?(socket) do
       # Subscribe to price updates
@@ -201,6 +210,7 @@ defmodule SammelkartenWeb.DashboardLive do
     {:noreply, socket}
   end
 
+
   defp filter_cards(cards, ""), do: cards
 
   defp filter_cards(cards, term) do
@@ -269,4 +279,5 @@ defmodule SammelkartenWeb.DashboardLive do
       _ -> "bg-gray-100 text-gray-800"
     end
   end
+
 end

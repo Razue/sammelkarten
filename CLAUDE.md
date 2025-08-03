@@ -1,5 +1,10 @@
 # CLAUDE.md - Sammelkarten Project Guide
 
+## Development Notes
+
+### Server Status Notes
+- The server is already running
+
 ## Project Overview
 **Sammelkarten** is a web application built with Elixir Phoenix LiveView that displays collectible cards like cryptocurrency coins with price tracking and charts. The design is inspired by Kraken's Bitcoin price interface ( https://www.kraken.com/en-de/prices/bitcoin)but with a clean, minimalistic aesthetic.
 
@@ -48,7 +53,7 @@ Please add a session summary to CLAUDE.md summarizing what we've done so far.
 - **CHECK** TASKS.md before starting any work
 - **REVIEW** this CLAUDE.md file for project context
 
-###  Task Management
+###  Task Management
 - **MARK** completed tasks in TASKS.md immediately upon completion
 - **ADD** newly discovered tasks to TASKS.md when found
 - **UPDATE** task status in real-time during development

@@ -13,10 +13,6 @@
 
       <!-- Navigation Links -->
       <div class="hidden md:flex items-center space-x-8">
-        <.link navigate={~p"/"}
-          class="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors">
-          Dashboard
-        </.link>
         <.link navigate={~p"/cards"}
           class="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors">
           Cards
@@ -24,6 +20,10 @@
         <.link navigate={~p"/market"}
           class="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors">
           Market
+        </.link>
+        <.link navigate={~p"/preferences"}
+          class="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors">
+          Preferences
         </.link>
       </div>
 
@@ -54,10 +54,11 @@
         <div class="w-6 h-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded flex items-center justify-center">
           <span class="text-white font-bold text-xs">S</span>
         </div>
-        <span class="text-gray-600 text-sm">© 2025 Sammelkarten. All rights reserved.</span>
+        <span class="text-gray-600 text-sm">© 2025 Sammelkarten - Open Source. All rights reserved.</span>
       </div>
       <div class="flex items-center space-x-6 text-sm text-gray-500">
         <span>Built with love in Bitcoin</span>
+        <span>∞/21</span>
         <span>Real-time updates</span>
       </div>
     </div>

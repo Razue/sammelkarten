@@ -75,8 +75,15 @@ defmodule Sammelkarten.PriceUpdater do
 
   @impl true
   def init(_opts) do
+    # Load user preferences to get initial refresh rate
+    default_interval =
+      case Sammelkarten.Preferences.get_refresh_rate("default_user") do
+        {:ok, refresh_rate} -> refresh_rate
+        {:error, _} -> @update_interval
+      end
+
     state = %{
-      interval: @update_interval,
+      interval: default_interval,
       timer_ref: nil,
       paused: false,
       last_update: nil,

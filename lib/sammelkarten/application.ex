@@ -9,7 +9,7 @@ defmodule Sammelkarten.Application do
   def start(_type, _args) do
     # Initialize Mnesia database before starting other services
     Sammelkarten.Database.init()
-    
+
     # Seed database if empty
     Sammelkarten.Seeds.seed_if_empty()
 

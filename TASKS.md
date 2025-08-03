@@ -50,7 +50,7 @@
 - [x] Create price ticker/streaming component
 - [ ] Add price alert notifications
 - [x] Implement auto-refresh mechanisms
-- [ ] Add user preferences (refresh rates, etc.)
+- [x] Add user preferences (refresh rates, etc.)
 - [ ] Create interactive chart zooming/panning
 - [x] Add keyboard shortcuts for navigation
 - [x] Implement error recovery for connection issues

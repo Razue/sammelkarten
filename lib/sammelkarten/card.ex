@@ -1,7 +1,7 @@
 defmodule Sammelkarten.Card do
   @moduledoc """
   Card data structure representing a collectible card.
-  
+
   Fields:
   - id: Unique identifier for the card
   - name: Display name of the card
@@ -13,18 +13,18 @@ defmodule Sammelkarten.Card do
   - description: Card description or backstory
   - last_updated: Timestamp of last price update
   """
-  
+
   @type t :: %__MODULE__{
-    id: String.t(),
-    name: String.t(),
-    image_path: String.t(),
-    current_price: integer(),
-    price_change_24h: integer(),
-    price_change_percentage: float(),
-    rarity: String.t(),
-    description: String.t(),
-    last_updated: DateTime.t()
-  }
+          id: String.t(),
+          name: String.t(),
+          image_path: String.t(),
+          current_price: integer(),
+          price_change_24h: integer(),
+          price_change_percentage: float(),
+          rarity: String.t(),
+          description: String.t(),
+          last_updated: DateTime.t()
+        }
 
   defstruct [
     :id,
@@ -51,7 +51,7 @@ defmodule Sammelkarten.Card do
       description: "",
       last_updated: DateTime.utc_now()
     }
-    
+
     struct(__MODULE__, Map.merge(defaults, attrs))
   end
 

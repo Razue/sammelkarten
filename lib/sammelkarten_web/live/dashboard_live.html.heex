@@ -1,8 +1,14 @@
 <div class="min-h-screen bg-gray-50" id="dashboard-container" phx-hook="KeyboardShortcuts">
   <!-- Price Ticker -->
-  <.live_component module={SammelkartenWeb.Components.PriceTicker} id="price-ticker" cards={@cards} />
+  <%= if Map.get(@user_preferences, :show_ticker, true) do %>
+    <.live_component
+      module={SammelkartenWeb.Components.PriceTicker}
+      id="price-ticker"
+      cards={@cards}
+    />
+  <% end %>
   
-  <!-- Header Section -->
+<!-- Header Section -->
   <div class="bg-white shadow-sm border-b">
     <div class="max-w-7xl mx-auto px-4 py-6">
       <div class="sm:flex sm:items-center sm:justify-between">
@@ -15,28 +21,49 @@
         <div class="mt-4 sm:mt-0">
           <div class="flex items-center space-x-4">
             <span class="text-sm text-gray-500">
-              <%= length(@cards) %> cards
+              {length(@cards)} cards
             </span>
             <!-- Connection Status Indicator -->
             <div class="flex items-center space-x-2">
               <%= case @connection_status do %>
                 <% "connected" -> %>
-                  <div class="h-2 w-2 bg-green-400 rounded-full animate-pulse" title="Connected - Live updates active"></div>
+                  <div
+                    class="h-2 w-2 bg-green-400 rounded-full animate-pulse"
+                    title="Connected - Live updates active"
+                  >
+                  </div>
                   <span class="text-xs text-green-600 font-medium">Live</span>
                 <% "connecting" -> %>
-                  <div class="h-2 w-2 bg-yellow-400 rounded-full animate-pulse" title="Connecting to live updates"></div>
+                  <div
+                    class="h-2 w-2 bg-yellow-400 rounded-full animate-pulse"
+                    title="Connecting to live updates"
+                  >
+                  </div>
                   <span class="text-xs text-yellow-600 font-medium">Connecting</span>
                 <% "reconnecting" -> %>
-                  <div class="h-2 w-2 bg-orange-400 rounded-full animate-pulse" title="Reconnecting to live updates"></div>
+                  <div
+                    class="h-2 w-2 bg-orange-400 rounded-full animate-pulse"
+                    title="Reconnecting to live updates"
+                  >
+                  </div>
                   <span class="text-xs text-orange-600 font-medium">Reconnecting</span>
                 <% "failed" -> %>
-                  <div class="h-2 w-2 bg-red-400 rounded-full" title="Connection failed - Updates may be delayed"></div>
+                  <div
+                    class="h-2 w-2 bg-red-400 rounded-full"
+                    title="Connection failed - Updates may be delayed"
+                  >
+                  </div>
                   <span class="text-xs text-red-600 font-medium">Offline</span>
                 <% "disconnected" -> %>
-                  <div class="h-2 w-2 bg-gray-400 rounded-full" title="Disconnected - No live updates"></div>
+                  <div
+                    class="h-2 w-2 bg-gray-400 rounded-full"
+                    title="Disconnected - No live updates"
+                  >
+                  </div>
                   <span class="text-xs text-gray-600 font-medium">Offline</span>
                 <% _ -> %>
-                  <div class="h-2 w-2 bg-gray-400 rounded-full" title="Unknown connection status"></div>
+                  <div class="h-2 w-2 bg-gray-400 rounded-full" title="Unknown connection status">
+                  </div>
                   <span class="text-xs text-gray-600 font-medium">Unknown</span>
               <% end %>
             </div>
@@ -45,8 +72,8 @@
       </div>
     </div>
   </div>
-
-  <!-- Search and Filter Section -->
+  
+<!-- Search and Filter Section -->
   <div class="max-w-7xl mx-auto px-4 py-6">
     <div class="bg-white rounded-lg shadow-sm border p-6 mb-6">
       <form phx-change="search" phx-submit="search">
@@ -74,13 +101,16 @@
                   phx-value-sort_by="name"
                   class={[
                     "px-3 py-2 text-sm rounded-md border transition-colors",
-                    if(@sort_by == "name", do: "bg-blue-100 border-blue-300 text-blue-700", else: "bg-white border-gray-300 text-gray-700 hover:bg-gray-50")
+                    if(@sort_by == "name",
+                      do: "bg-blue-100 border-blue-300 text-blue-700",
+                      else: "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                    )
                   ]}
                 >
                   Name
                   <%= if @sort_by == "name" do %>
                     <span class="ml-1">
-                      <%= if @sort_direction == "asc", do: "↑", else: "↓" %>
+                      {if @sort_direction == "asc", do: "↑", else: "↓"}
                     </span>
                   <% end %>
                 </button>
@@ -90,13 +120,16 @@
                   phx-value-sort_by="price"
                   class={[
                     "px-3 py-2 text-sm rounded-md border transition-colors",
-                    if(@sort_by == "price", do: "bg-blue-100 border-blue-300 text-blue-700", else: "bg-white border-gray-300 text-gray-700 hover:bg-gray-50")
+                    if(@sort_by == "price",
+                      do: "bg-blue-100 border-blue-300 text-blue-700",
+                      else: "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                    )
                   ]}
                 >
                   Price
                   <%= if @sort_by == "price" do %>
                     <span class="ml-1">
-                      <%= if @sort_direction == "asc", do: "↑", else: "↓" %>
+                      {if @sort_direction == "asc", do: "↑", else: "↓"}
                     </span>
                   <% end %>
                 </button>
@@ -106,13 +139,16 @@
                   phx-value-sort_by="change"
                   class={[
                     "px-3 py-2 text-sm rounded-md border transition-colors",
-                    if(@sort_by == "change", do: "bg-blue-100 border-blue-300 text-blue-700", else: "bg-white border-gray-300 text-gray-700 hover:bg-gray-50")
+                    if(@sort_by == "change",
+                      do: "bg-blue-100 border-blue-300 text-blue-700",
+                      else: "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                    )
                   ]}
                 >
                   Change
                   <%= if @sort_by == "change" do %>
                     <span class="ml-1">
-                      <%= if @sort_direction == "asc", do: "↑", else: "↓" %>
+                      {if @sort_direction == "asc", do: "↑", else: "↓"}
                     </span>
                   <% end %>
                 </button>
@@ -122,23 +158,33 @@
         </div>
       </form>
     </div>
-
-    <!-- Error State -->
+    
+<!-- Error State -->
     <%= if @error do %>
       <div class="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
         <div class="mx-auto h-12 w-12 text-red-400 mb-4">
           <svg fill="none" stroke="currentColor" viewBox="0 0 48 48">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
           </svg>
         </div>
         <h3 class="text-lg font-medium text-red-900 mb-2">Failed to Load Cards</h3>
-        <p class="text-red-600 mb-4"><%= @error %></p>
+        <p class="text-red-600 mb-4">{@error}</p>
         <button
           phx-click="retry"
           class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
         >
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+            />
           </svg>
           Retry
         </button>
@@ -188,46 +234,48 @@
                 />
               </div>
               
-              <!-- Card Content -->
+<!-- Card Content -->
               <div class="p-4">
                 <!-- Card Name and Rarity -->
                 <div class="flex items-start justify-between mb-3">
                   <h3 class="text-lg font-semibold text-gray-900 truncate flex-1">
-                    <%= card.name %>
+                    {card.name}
                   </h3>
                   <span class={[
                     "ml-2 px-2 py-1 text-xs font-medium rounded-full shrink-0",
                     rarity_color(card.rarity)
                   ]}>
-                    <%= card.rarity %>
+                    {card.rarity}
                   </span>
                 </div>
-
-                <!-- Price Information -->
+                
+<!-- Price Information -->
                 <div class="space-y-2">
                   <div class="flex items-center justify-between">
                     <span class="text-2xl font-bold text-gray-900">
-                      €<%= format_price(card.current_price) %>
+                      €{format_price(card.current_price)}
                     </span>
                     <span class={[
                       "text-sm font-medium",
                       price_change_class(card.price_change_percentage)
                     ]}>
-                      <%= if card.price_change_percentage > 0, do: "+#{Float.round(card.price_change_percentage, 2)}%", else: "#{Float.round(card.price_change_percentage, 2)}%" %>
+                      {if card.price_change_percentage > 0,
+                        do: "+#{Float.round(card.price_change_percentage, 2)}%",
+                        else: "#{Float.round(card.price_change_percentage, 2)}%"}
                     </span>
                   </div>
                   
-                  <!-- Description Preview -->
+<!-- Description Preview -->
                   <p class="text-sm text-gray-600 line-clamp-2">
-                    <%= card.description %>
+                    {card.description}
                   </p>
                 </div>
               </div>
             </.link>
           <% end %>
         </div>
-
-        <!-- Empty State -->
+        
+<!-- Empty State -->
         <%= if length(@cards) == 0 and not @loading and not @error do %>
           <div class="text-center py-12">
             <div class="mx-auto h-12 w-12 text-gray-400">
@@ -253,46 +301,76 @@
       <% end %>
     <% end %>
   </div>
-
-  <!-- Help Modal -->
+  
+<!-- Help Modal -->
   <%= if Map.get(assigns, :show_help, false) do %>
-    <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" phx-click="show_help">
-      <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white" phx-click-away="show_help">
+    <div
+      class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+      phx-click="show_help"
+    >
+      <div
+        class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white"
+        phx-click-away="show_help"
+      >
         <div class="mt-3 text-center">
           <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100">
-            <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <svg
+              class="h-6 w-6 text-blue-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
             </svg>
           </div>
           <h3 class="text-lg leading-6 font-medium text-gray-900 mt-4">Keyboard Shortcuts</h3>
           <div class="mt-4 text-left">
             <div class="space-y-3">
               <div class="flex justify-between">
-                <kbd class="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded">S</kbd>
+                <kbd class="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded">
+                  S
+                </kbd>
                 <span class="text-sm text-gray-600">Focus search</span>
               </div>
               <div class="flex justify-between">
-                <kbd class="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded">R</kbd>
+                <kbd class="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded">
+                  R
+                </kbd>
                 <span class="text-sm text-gray-600">Refresh data</span>
               </div>
               <div class="flex justify-between">
-                <kbd class="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded">1</kbd>
+                <kbd class="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded">
+                  1
+                </kbd>
                 <span class="text-sm text-gray-600">Sort by name</span>
               </div>
               <div class="flex justify-between">
-                <kbd class="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded">2</kbd>
+                <kbd class="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded">
+                  2
+                </kbd>
                 <span class="text-sm text-gray-600">Sort by price</span>
               </div>
               <div class="flex justify-between">
-                <kbd class="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded">3</kbd>
+                <kbd class="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded">
+                  3
+                </kbd>
                 <span class="text-sm text-gray-600">Sort by change</span>
               </div>
               <div class="flex justify-between">
-                <kbd class="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded">Esc</kbd>
+                <kbd class="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded">
+                  Esc
+                </kbd>
                 <span class="text-sm text-gray-600">Clear search</span>
               </div>
               <div class="flex justify-between">
-                <kbd class="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded">H</kbd>
+                <kbd class="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded">
+                  H
+                </kbd>
                 <span class="text-sm text-gray-600">Show this help</span>
               </div>
             </div>

@@ -30,6 +30,15 @@ defmodule Sammelkarten.Seeds do
 
     cards_data = [
       %{
+        name: "Satoshi",
+        image_path: "/images/cards/SATOSHI.jpg",
+        # €500.00 - Most valuable card
+        current_price: 50000,
+        rarity: "mythic",
+        description:
+          "The legendary creator of Bitcoin. A mythic card representing the genesis of the cryptocurrency revolution."
+      },
+      %{
         name: "Seed or Chris",
         image_path: "/images/cards/SEED_OR_CHRIS.jpg",
         # €210.00
@@ -48,15 +57,6 @@ defmodule Sammelkarten.Seeds do
           "The world's first Bitcoin-native hotel experience. A legendary card representing the intersection of hospitality and cryptocurrency innovation."
       },
       %{
-        name: "Blocktrainer",
-        image_path: "/images/cards/BLOCKTRAINER.jpg",
-        # €85.00
-        current_price: 8500,
-        rarity: "epic",
-        description:
-          "Educational pioneer in the Bitcoin space. An epic card honoring those who teach others about cryptocurrency fundamentals."
-      },
-      %{
         name: "Christian Decker",
         image_path: "/images/cards/CHRISTIAN_DECKER.jpg",
         # €120.00
@@ -64,6 +64,24 @@ defmodule Sammelkarten.Seeds do
         rarity: "legendary",
         description:
           "Bitcoin Core developer and Lightning Network researcher. A legendary card representing technical excellence in Bitcoin development."
+      },
+      %{
+        name: "Der Gigi",
+        image_path: "/images/cards/DER_GIGI.jpg",
+        # €110.00
+        current_price: 11000,
+        rarity: "legendary",
+        description:
+          "Bitcoin philosopher and author. A legendary card celebrating profound Bitcoin insights and educational content."
+      },
+      %{
+        name: "Zitadelle",
+        image_path: "/images/cards/ZITADELLE.jpg",
+        # €100.00
+        current_price: 10000,
+        rarity: "epic",
+        description:
+          "The Bitcoin citadel community. An epic card representing the sovereign Bitcoin lifestyle and community."
       },
       %{
         name: "Jonas Nick",
@@ -75,6 +93,51 @@ defmodule Sammelkarten.Seeds do
           "Cryptographer and Bitcoin protocol researcher. An epic card showcasing the mathematical foundations of Bitcoin security."
       },
       %{
+        name: "Blocktrainer",
+        image_path: "/images/cards/BLOCKTRAINER.jpg",
+        # €85.00
+        current_price: 8500,
+        rarity: "epic",
+        description:
+          "Educational pioneer in the Bitcoin space. An epic card honoring those who teach others about cryptocurrency fundamentals."
+      },
+      %{
+        name: "Markus Turm",
+        image_path: "/images/cards/MARKUS_TURM.jpg",
+        # €80.00
+        current_price: 8000,
+        rarity: "epic",
+        description:
+          "Bitcoin educator and podcast host. An epic card representing German Bitcoin education and community building."
+      },
+      %{
+        name: "Niko Jilch",
+        image_path: "/images/cards/NIKO_JILCH.jpg",
+        # €75.00
+        current_price: 7500,
+        rarity: "rare",
+        description:
+          "Austrian journalist and Bitcoin advocate. A rare card highlighting Bitcoin journalism and financial education."
+      },
+      %{
+        name: "Einundzwanzig Magazin",
+        image_path: "/images/cards/EINUNDZWANZIG_MAGAZIN.jpg",
+        # €70.00
+        current_price: 7000,
+        rarity: "rare",
+        description:
+          "German Bitcoin magazine promoting education. A rare card celebrating Bitcoin journalism and community media."
+      },
+      %{
+        name: "Maurice Effekt",
+        image_path: "/images/cards/MAURICE_EFFEKT.jpg",
+        # €65.00
+        current_price: 6500,
+        rarity: "rare",
+        description:
+          "Bitcoin content creator and educator. A rare card representing creative Bitcoin education and community engagement."
+      },
+      %{
         name: "Node Signal",
         image_path: "/images/cards/NODESIGNAL.jpg",
         # €60.00
@@ -84,6 +147,24 @@ defmodule Sammelkarten.Seeds do
           "Representing the Bitcoin node network infrastructure. A rare card symbolizing decentralized network participation."
       },
       %{
+        name: "Einundzwanzig Stammtisch",
+        image_path: "/images/cards/EINUNDZWANZIG_STAMMTISCH.jpg",
+        # €55.00
+        current_price: 5500,
+        rarity: "rare",
+        description:
+          "Local Bitcoin meetup community. A rare card celebrating grassroots Bitcoin adoption and local communities."
+      },
+      %{
+        name: "Der Pleb",
+        image_path: "/images/cards/DER_PLEB.jpg",
+        # €50.00
+        current_price: 5000,
+        rarity: "uncommon",
+        description:
+          "The everyday Bitcoin enthusiast. An uncommon card representing the grassroots Bitcoin community spirit."
+      },
+      %{
         name: "Pleb Rap",
         image_path: "/images/cards/PLEBRAP.jpg",
         # €45.00
@@ -91,6 +172,51 @@ defmodule Sammelkarten.Seeds do
         rarity: "uncommon",
         description:
           "Bitcoin culture meets music. An uncommon card celebrating the creative expression within the Bitcoin community."
+      },
+      %{
+        name: "Pioniere Münzweg",
+        image_path: "/images/cards/PIONIERE_MÜNZWEG.jpg",
+        # €42.00
+        current_price: 4200,
+        rarity: "uncommon",
+        description:
+          "Bitcoin pioneers paving the way. An uncommon card honoring early adopters and Bitcoin pathway creators."
+      },
+      %{
+        name: "FAB",
+        image_path: "/images/cards/FAB.jpg",
+        # €40.00
+        current_price: 4000,
+        rarity: "uncommon",
+        description:
+          "Bitcoin community builder and advocate. An uncommon card representing dedication to Bitcoin adoption."
+      },
+      %{
+        name: "Dennis",
+        image_path: "/images/cards/DENNIS.jpg",
+        # €38.00
+        current_price: 3800,
+        rarity: "uncommon",
+        description:
+          "Bitcoin enthusiast and community member. An uncommon card celebrating individual Bitcoin journey stories."
+      },
+      %{
+        name: "Paddepadde",
+        image_path: "/images/cards/PADDEPADDE.jpg",
+        # €35.00
+        current_price: 3500,
+        rarity: "common",
+        description:
+          "Creative Bitcoin community contributor. A common card representing artistic expression in the Bitcoin space."
+      },
+      %{
+        name: "Netdiver",
+        image_path: "/images/cards/NETDIVER.jpg",
+        # €32.00
+        current_price: 3200,
+        rarity: "common",
+        description:
+          "Bitcoin technical enthusiast. A common card representing the technical exploration of Bitcoin."
       },
       %{
         name: "Toxic Booster",

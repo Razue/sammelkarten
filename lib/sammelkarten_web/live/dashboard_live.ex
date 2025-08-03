@@ -5,7 +5,7 @@ defmodule SammelkartenWeb.DashboardLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    socket = 
+    socket =
       socket
       |> assign(:cards, [])
       |> assign(:loading, true)
@@ -18,18 +18,20 @@ defmodule SammelkartenWeb.DashboardLive do
     if connected?(socket) do
       # Subscribe to price updates
       case Phoenix.PubSub.subscribe(Sammelkarten.PubSub, "price_updates") do
-        :ok -> 
+        :ok ->
           socket = assign(socket, :connection_status, "connected")
           # Start heartbeat monitoring
           Process.send_after(self(), :heartbeat, 30_000)
           # Load cards asynchronously
           send(self(), :load_cards)
           {:ok, socket}
+
         {:error, _reason} ->
-          socket = 
+          socket =
             socket
             |> assign(:connection_status, "failed")
             |> assign(:error, "Failed to connect to real-time updates")
+
           # Still try to load cards
           send(self(), :load_cards)
           {:ok, socket}
@@ -45,11 +47,13 @@ defmodule SammelkartenWeb.DashboardLive do
   def handle_info({:price_update_completed, %{updated_count: _count}}, socket) do
     # Refresh all cards when price updates complete
     {:ok, cards} = Cards.list_cards()
-    
+
     # Apply current filtering and sorting
     filtered_cards = filter_cards(cards, socket.assigns.search_term)
-    sorted_cards = sort_cards(filtered_cards, socket.assigns.sort_by, socket.assigns.sort_direction)
-    
+
+    sorted_cards =
+      sort_cards(filtered_cards, socket.assigns.sort_by, socket.assigns.sort_direction)
+
     {:noreply, assign(socket, :cards, sorted_cards)}
   end
 
@@ -62,7 +66,7 @@ defmodule SammelkartenWeb.DashboardLive do
   @impl true
   def handle_info({:price_updated, card_id, new_price, price_change}, socket) do
     # Legacy handler for individual card updates (if implemented later)
-    updated_cards = 
+    updated_cards =
       Enum.map(socket.assigns.cards, fn card ->
         if card.id == card_id do
           %{card | current_price: new_price, price_change_24h: price_change}
@@ -78,31 +82,32 @@ defmodule SammelkartenWeb.DashboardLive do
   def handle_info(:load_cards, socket) do
     case Cards.list_cards() do
       {:ok, cards} ->
-        socket = 
+        socket =
           socket
           |> assign(:cards, cards)
           |> assign(:loading, false)
           |> assign(:error, nil)
-        
+
         {:noreply, socket}
-        
+
       {:error, reason} ->
-        socket = 
+        socket =
           socket
           |> assign(:cards, [])
           |> assign(:loading, false)
           |> assign(:error, "Failed to load cards: #{inspect(reason)}")
-        
+
         {:noreply, socket}
     end
   end
 
   @impl true
   def handle_info(:retry_load_cards, socket) do
-    socket = 
+    socket =
       socket
       |> assign(:loading, true)
       |> assign(:error, nil)
+
     send(self(), :load_cards)
     {:noreply, socket}
   end
@@ -111,9 +116,10 @@ defmodule SammelkartenWeb.DashboardLive do
   def handle_info(:retry_connection, socket) do
     if connected?(socket) do
       case Phoenix.PubSub.subscribe(Sammelkarten.PubSub, "price_updates") do
-        :ok -> 
+        :ok ->
           socket = assign(socket, :connection_status, "connected")
           {:noreply, socket}
+
         {:error, _reason} ->
           socket = assign(socket, :connection_status, "failed")
           # Retry connection after 5 seconds
@@ -134,7 +140,7 @@ defmodule SammelkartenWeb.DashboardLive do
       # Try a simple operation to verify connection
       send(self(), :verify_connection)
     end
-    
+
     # Schedule next heartbeat in 30 seconds
     Process.send_after(self(), :heartbeat, 30_000)
     {:noreply, socket}
@@ -164,10 +170,14 @@ defmodule SammelkartenWeb.DashboardLive do
   @impl true
   def handle_event("sort", %{"sort_by" => sort_by}, socket) do
     current_sort = socket.assigns.sort_by
-    direction = if current_sort == sort_by and socket.assigns.sort_direction == "asc", do: "desc", else: "asc"
-    
+
+    direction =
+      if current_sort == sort_by and socket.assigns.sort_direction == "asc",
+        do: "desc",
+        else: "asc"
+
     sorted_cards = sort_cards(socket.assigns.cards, sort_by, direction)
-    
+
     {:noreply, assign(socket, cards: sorted_cards, sort_by: sort_by, sort_direction: direction)}
   end
 
@@ -192,11 +202,13 @@ defmodule SammelkartenWeb.DashboardLive do
   end
 
   defp filter_cards(cards, ""), do: cards
+
   defp filter_cards(cards, term) do
     term = String.downcase(term)
+
     Enum.filter(cards, fn card ->
       String.contains?(String.downcase(card.name), term) or
-      String.contains?(String.downcase(card.rarity), term)
+        String.contains?(String.downcase(card.rarity), term)
     end)
   end
 
@@ -213,28 +225,11 @@ defmodule SammelkartenWeb.DashboardLive do
     |> Decimal.round(2)
     |> Decimal.to_string()
   end
-  
+
   defp format_price(price) do
     price
     |> Decimal.round(2)
     |> Decimal.to_string()
-  end
-
-  defp format_percentage_change(change) when is_integer(change) do
-    decimal_change = Decimal.from_float(change / 100)
-    case Decimal.compare(decimal_change, 0) do
-      :gt -> "+#{Decimal.round(decimal_change, 2)}%"
-      :lt -> "#{Decimal.round(decimal_change, 2)}%"
-      :eq -> "0.00%"
-    end
-  end
-  
-  defp format_percentage_change(change) do
-    case Decimal.compare(change, 0) do
-      :gt -> "+#{Decimal.round(change, 2)}%"
-      :lt -> "#{Decimal.round(change, 2)}%"
-      :eq -> "0.00%"
-    end
   end
 
   defp price_change_class(change) when is_integer(change) do
@@ -244,9 +239,19 @@ defmodule SammelkartenWeb.DashboardLive do
       true -> "text-gray-600"
     end
   end
-  
+
+  defp price_change_class(change) when is_float(change) do
+    cond do
+      change > 0.0 -> "text-green-600"
+      change < 0.0 -> "text-red-600"
+      true -> "text-gray-600"
+    end
+  end
+
   defp price_change_class(change) do
-    case Decimal.compare(change, 0) do
+    zero = Decimal.new(0)
+
+    case Decimal.compare(change, zero) do
       :gt -> "text-green-600"
       :lt -> "text-red-600"
       :eq -> "text-gray-600"
@@ -260,6 +265,7 @@ defmodule SammelkartenWeb.DashboardLive do
       "rare" -> "bg-blue-100 text-blue-800"
       "epic" -> "bg-purple-100 text-purple-800"
       "legendary" -> "bg-yellow-100 text-yellow-800"
+      "mythic" -> "bg-red-100 text-red-800"
       _ -> "bg-gray-100 text-gray-800"
     end
   end

@@ -208,9 +208,9 @@
                     </span>
                     <span class={[
                       "text-sm font-medium",
-                      price_change_class(card.price_change_24h)
+                      price_change_class(card.price_change_percentage)
                     ]}>
-                      <%= format_percentage_change(card.price_change_24h) %>
+                      <%= if card.price_change_percentage > 0, do: "+#{Float.round(card.price_change_percentage, 2)}%", else: "#{Float.round(card.price_change_percentage, 2)}%" %>
                     </span>
                   </div>
                   

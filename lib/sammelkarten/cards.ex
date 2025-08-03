@@ -147,7 +147,7 @@ defmodule Sammelkarten.Cards do
     match_spec = [{{:price_history, :_, card_id, :_, :_, :_}, [], [:"$_"]}]
     
     case :mnesia.transaction(fn -> :mnesia.select(:price_history, match_spec, limit, :read) end) do
-      {:atomic, {records, _continuation}} -> 
+      {:atomic, {records, _continuation}} when is_list(records) -> 
         price_history = Enum.map(records, fn {_table, id, card_id, price, timestamp, volume} ->
           %PriceHistory{
             id: id,
@@ -173,6 +173,8 @@ defmodule Sammelkarten.Cards do
         |> Enum.sort_by(& &1.timestamp, {:desc, DateTime})
         
         {:ok, price_history}
+      {:atomic, :"$end_of_table"} ->
+        {:ok, []}
       {:aborted, reason} -> 
         Logger.error("Failed to get price history: #{inspect(reason)}")
         {:error, reason}

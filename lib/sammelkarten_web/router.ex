@@ -19,6 +19,7 @@ defmodule SammelkartenWeb.Router do
 
     # get "/", PageController, :home
     live "/cards", DashboardLive, :index
+    live "/cards/:id", CardDetailLive, :show
     get "/market", PageController, :market
   end
 

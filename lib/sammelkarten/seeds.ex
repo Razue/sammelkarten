@@ -175,7 +175,7 @@ defmodule Sammelkarten.Seeds do
       },
       %{
         name: "Pioniere Münzweg",
-        image_path: "/images/cards/PIONIERE_MÜNZWEG.jpg",
+        image_path: "/images/cards/PIONIERE_MUENZWEG.jpg",
         # €42.00
         current_price: 4200,
         rarity: "uncommon",

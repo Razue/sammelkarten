@@ -170,6 +170,10 @@ This project is licensed under the MIT License.
 - Uses Phoenix LiveView for seamless real-time updates
 - Tailwind CSS for beautiful, responsive styling
 
+## 🏅 Supporters
+
+Thank you for the beautiful photos of the cards: OrangePin21!
+
 ---
 
 **Live Demo**: [samelkarten.fly.dev](https://sammelkarten.fly.dev)

@@ -23,6 +23,10 @@
           class="nav-link text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium">
           Preferences
         </.link>
+        <.link navigate={~p"/donation"}
+          class="nav-link text-orange-600 hover:text-orange-700 px-3 py-2 text-sm font-medium border border-orange-200 rounded-lg hover:bg-orange-50 transition-colors">
+          💝 Donation
+        </.link>
       </div>
 
       <!-- Mobile menu button -->
@@ -54,11 +58,17 @@
         </div>
         <span class="text-gray-600 text-sm">© 2025 Sammelkarten - Open Source. All rights reserved.</span>
       </div>
-      <div class="flex items-center space-x-6 text-sm text-gray-500">
+      <a href="/donation"
+        class="flex items-center space-x-6 text-sm text-gray-500 hover:text-orange-600 transition-colors cursor-pointer">
+        <span class="text-[6px]">●</span>
+        <span>Donate here</span>
+        <span class="text-[6px]">●</span>
         <span>Built with love in Bitcoin</span>
+        <span class="text-[6px]">●</span>
         <span>∞/21</span>
+        <span class="text-[6px]">●</span>
         <span>Sneak Preview - no real prices!</span>
-      </div>
+      </a>
     </div>
   </div>
 </footer>

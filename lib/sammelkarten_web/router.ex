@@ -26,6 +26,7 @@ defmodule SammelkartenWeb.Router do
     live "/cards/:id", CardDetailLive, :show
     live "/preferences", PreferencesLive, :index
     live "/market", MarketLive, :index
+    live "/donation", DonationLive, :index
     
     # Admin authentication routes
     live "/admin/login", AdminLoginLive, :index

@@ -82,7 +82,7 @@ Create a beautiful, minimalistic web application that transforms collectible car
 ## 🛠️ Technology Stack
 
 ### Core Technologies
-- **Language**: Elixir 1.15+
+- **Language**: Elixir 1.16+
 - **Framework**: Phoenix 1.7+
 - **Frontend**: Phoenix LiveView 0.20+
 - **Database**: Mnesia with DETS backend

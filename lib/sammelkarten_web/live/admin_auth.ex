@@ -4,17 +4,17 @@ defmodule SammelkartenWeb.AdminAuth do
   """
   import Phoenix.LiveView
 
-  @admin_password Application.compile_env(:sammelkarten, :admin_password, "admin123")
+  @admin_password Application.compile_env(:sammelkarten, :admin_password)
 
   def on_mount(:ensure_admin, _params, session, socket) do
     if session["admin_password"] == @admin_password do
       {:cont, socket}
     else
-      socket = 
+      socket =
         socket
         |> put_flash(:error, "Admin access required. Please login.")
         |> redirect(to: "/admin/login")
-      
+
       {:halt, socket}
     end
   end

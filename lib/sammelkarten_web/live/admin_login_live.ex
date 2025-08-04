@@ -1,7 +1,7 @@
 defmodule SammelkartenWeb.AdminLoginLive do
   use SammelkartenWeb, :live_view
 
-  @admin_password Application.compile_env(:sammelkarten, :admin_password, "admin123")
+  @admin_password Application.compile_env(:sammelkarten, :admin_password)
 
   @impl true
   def mount(_params, session, socket) do
@@ -25,7 +25,6 @@ defmodule SammelkartenWeb.AdminLoginLive do
   def handle_event("validate", %{"password" => password}, socket) do
     {:noreply, assign(socket, password: password, error_message: nil)}
   end
-
 
   @impl true
   def handle_event("toggle_password", _params, socket) do

@@ -5,13 +5,13 @@ defmodule SammelkartenWeb.Plugs.AdminAuth do
   import Plug.Conn
   import Phoenix.Controller
 
-  @admin_password Application.compile_env(:sammelkarten, :admin_password, "admin123")
+  @admin_password Application.compile_env(:sammelkarten, :admin_password)
 
   def init(opts), do: opts
 
   def call(conn, _opts) do
     password = get_session(conn, :admin_password)
-    
+
     if password == @admin_password do
       # User is authenticated
       conn

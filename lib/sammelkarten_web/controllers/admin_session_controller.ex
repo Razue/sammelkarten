@@ -1,7 +1,7 @@
 defmodule SammelkartenWeb.AdminSessionController do
   use SammelkartenWeb, :controller
 
-  @admin_password Application.compile_env(:sammelkarten, :admin_password, "admin123")
+  @admin_password Application.compile_env(:sammelkarten, :admin_password)
 
   def create(conn, %{"password" => password}) do
     if password == @admin_password do

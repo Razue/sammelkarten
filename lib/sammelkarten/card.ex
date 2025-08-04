@@ -59,7 +59,7 @@ defmodule Sammelkarten.Card do
   Generate a unique ID for a card.
   """
   def generate_id do
-    :crypto.strong_rand_bytes(16) |> Base.encode16(case: :lower)
+    Base.encode16(:crypto.strong_rand_bytes(16), case: :lower)
   end
 
   @doc """
@@ -73,7 +73,7 @@ defmodule Sammelkarten.Card do
   Convert decimal price to cents for storage.
   """
   def decimal_to_price(decimal_price) do
-    Decimal.mult(decimal_price, 100) |> Decimal.to_integer()
+    Decimal.to_integer(Decimal.mult(decimal_price, 100))
   end
 
   @doc """

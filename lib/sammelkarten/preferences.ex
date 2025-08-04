@@ -42,21 +42,7 @@ defmodule Sammelkarten.Preferences do
     case UserPreferences.validate(preferences) do
       {:ok, validated_preferences} ->
         record = struct_to_mnesia_record(validated_preferences)
-
-        case :mnesia.transaction(fn ->
-               :mnesia.write(:user_preferences, record, :write)
-             end) do
-          {:atomic, :ok} ->
-            Logger.info("User preferences saved for user #{preferences.user_id}")
-            {:ok, validated_preferences}
-
-          {:aborted, reason} ->
-            Logger.error(
-              "Failed to save user preferences for #{preferences.user_id}: #{inspect(reason)}"
-            )
-
-            {:error, reason}
-        end
+        write_preferences_to_mnesia(record, validated_preferences)
 
       {:error, reason} ->
         {:error, reason}
@@ -200,6 +186,23 @@ defmodule Sammelkarten.Preferences do
       prefs.created_at,
       prefs.updated_at
     }
+  end
+
+  defp write_preferences_to_mnesia(record, validated_preferences) do
+    case :mnesia.transaction(fn ->
+           :mnesia.write(:user_preferences, record, :write)
+         end) do
+      {:atomic, :ok} ->
+        Logger.info("User preferences saved for user #{validated_preferences.user_id}")
+        {:ok, validated_preferences}
+
+      {:aborted, reason} ->
+        Logger.error(
+          "Failed to save user preferences for #{validated_preferences.user_id}: #{inspect(reason)}"
+        )
+
+        {:error, reason}
+    end
   end
 
   # Convert Mnesia record tuple back to UserPreferences struct

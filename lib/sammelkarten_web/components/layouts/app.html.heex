@@ -31,11 +31,33 @@
 
       <!-- Mobile menu button -->
       <div class="md:hidden">
-        <button type="button" class="text-gray-700 hover:text-gray-900" aria-label="Open menu">
+        <button type="button" id="mobile-menu-button" class="text-gray-700 hover:text-gray-900" aria-label="Open menu">
           <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
+      </div>
+    </div>
+
+    <!-- Mobile menu -->
+    <div id="mobile-menu" class="md:hidden hidden">
+      <div class="px-2 pt-2 pb-3 space-y-1 bg-white border-t border-gray-200">
+        <.link navigate={~p"/cards"}
+          class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-md">
+          Cards
+        </.link>
+        <.link navigate={~p"/market"}
+          class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-md">
+          Market
+        </.link>
+        <.link navigate={~p"/preferences"}
+          class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-md">
+          Preferences
+        </.link>
+        <.link navigate={~p"/donation"}
+          class="block px-3 py-2 text-base font-medium text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded-md border border-orange-200 mx-3 text-left">
+          💝 Donation
+        </.link>
       </div>
     </div>
   </div>

@@ -7,9 +7,6 @@
 [![Last Commit](https://img.shields.io/github/last-commit/razue/sammelkarten.svg)](https://github.com/razue/sammelkarten/commits/master)
 [![Issues](https://img.shields.io/github/issues/razue/sammelkarten.svg)](https://github.com/razue/sammelkarten/issues)
 [![Pull Requests](https://img.shields.io/github/issues-pr/razue/sammelkarten.svg)](https://github.com/razue/sammelkarten/pulls)
-[![Contributors](https://img.shields.io/github/contributors/razue/sammelkarten.svg)](https://github.com/razue/sammelkarten/graphs/contributors)
-[![Sponsor](https://img.shields.io/badge/Sponsor-❤-ff69b4?logo=githubsponsors)](https://github.com/sponsors/razue)
-[![Donate with Cashu](https://img.shields.io/badge/Donate-Cashu.me-green?logo=bitcoin&logoColor=white)](https://cashu.me/) 
 
 > **Sammelkarten** - A beautiful, real-time web application for tracking collectible card values with Bitcoin-style analytics.
 

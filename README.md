@@ -1,5 +1,12 @@
 # 🃏 Sammelkarten - Sneak Preview
 
+[![CI](https://github.com/razue/sammelkarten/actions/workflows/elixir.yml/badge.svg)](https://github.com/razue/sammelkarten/actions/workflows/elixir.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Last Commit](https://img.shields.io/github/last-commit/razue/sammelkarten.svg)](https://github.com/razue/sammelkarten/commits/master)
+[![Issues](https://img.shields.io/github/issues/razue/sammelkarten.svg)](https://github.com/razue/sammelkarten/issues)
+[![Pull Requests](https://img.shields.io/github/issues-pr/razue/sammelkarten.svg)](https://github.com/razue/sammelkarten/pulls)
+[![Contributors](https://img.shields.io/github/contributors/razue/sammelkarten.svg)](https://github.com/razue/sammelkarten/graphs/contributors)
+
 > **Sammelkarten** - A beautiful, real-time web application for tracking collectible card values with Bitcoin-style analytics.
 
 <img src="images/sammelkarten_preview.png" alt="Sammelkarten Preview" height="400">

@@ -8,8 +8,7 @@
 import Config
 
 config :sammelkarten,
-  generators: [timestamp_type: :utc_datetime],
-  admin_password: System.fetch_env!("ADMIN_PASSWORD")
+  generators: [timestamp_type: :utc_datetime]
 
 # Configures the endpoint
 config :sammelkarten, SammelkartenWeb.Endpoint,

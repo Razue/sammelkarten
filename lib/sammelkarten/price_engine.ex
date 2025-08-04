@@ -9,8 +9,8 @@ defmodule Sammelkarten.PriceEngine do
   - Event-driven price spikes
   """
 
-  alias Sammelkarten.Cards
   alias Sammelkarten.Card
+  alias Sammelkarten.Cards
 
   require Logger
 
@@ -108,7 +108,7 @@ defmodule Sammelkarten.PriceEngine do
     case :rand.uniform(10) do
       # 40% chance of positive persistence
       n when n <= 4 -> 0.5
-      # 40% chance of negative persistence  
+      # 40% chance of negative persistence
       n when n <= 8 -> -0.5
       # 20% chance of no persistence
       _ -> 0.0
@@ -198,31 +198,52 @@ defmodule Sammelkarten.PriceEngine do
   Generate random event factor for special price movements.
   """
   def event_factor do
-    case :rand.uniform(1000) do
-      # 0.2% chance of major positive event
-      n when n <= 2 ->
-        # 0.0 to 10.0% boost
-        :rand.uniform(1000) / 100
+    random_value = :rand.uniform(1000)
+    calculate_event_factor(random_value)
+  end
 
-      # 0.2% chance of major negative event  
-      n when n <= 4 ->
-        # -8.0 to 0.0% drop
-        -(:rand.uniform(800) / 100)
+  defp calculate_event_factor(random_value) do
+    cond do
+      # 0.2% chance of major positive event
+      random_value <= 2 ->
+        generate_major_positive_event()
+
+      # 0.2% chance of major negative event
+      random_value <= 4 ->
+        generate_major_negative_event()
 
       # 1.6% chance of minor positive event
-      n when n <= 20 ->
-        # 0.0 to 3.0% boost
-        :rand.uniform(300) / 100
+      random_value <= 20 ->
+        generate_minor_positive_event()
 
       # 2.0% chance of minor negative event
-      n when n <= 40 ->
-        # -3.0 to 0.0% drop
-        -(:rand.uniform(300) / 100)
+      random_value <= 40 ->
+        generate_minor_negative_event()
 
       # 96% chance of no special event
-      _ ->
+      true ->
         0.0
     end
+  end
+
+  defp generate_major_positive_event do
+    # 0.0 to 10.0% boost
+    :rand.uniform(1000) / 100
+  end
+
+  defp generate_major_negative_event do
+    # -8.0 to 0.0% drop
+    -(:rand.uniform(800) / 100)
+  end
+
+  defp generate_minor_positive_event do
+    # 0.0 to 3.0% boost
+    :rand.uniform(300) / 100
+  end
+
+  defp generate_minor_negative_event do
+    # -3.0 to 0.0% drop
+    -(:rand.uniform(300) / 100)
   end
 
   @doc """
@@ -230,28 +251,11 @@ defmodule Sammelkarten.PriceEngine do
   """
   def simulate_market_crash(severity \\ :moderate) do
     Logger.warning("Simulating market crash (#{severity})...")
-
-    crash_percentage =
-      case severity do
-        # -5% to -15%
-        :minor -> -(:rand.uniform(1000) + 500) / 100
-        # -10% to -25%
-        :moderate -> -(:rand.uniform(1500) + 1000) / 100
-        # -20% to -40%
-        :major -> -(:rand.uniform(2000) + 2000) / 100
-      end
+    crash_percentage = calculate_crash_percentage(severity)
 
     case Cards.list_cards() do
       {:ok, cards} ->
-        Enum.each(cards, fn card ->
-          # Each card is affected slightly differently
-          # ±3% variation
-          card_crash = crash_percentage + (:rand.uniform(600) - 300) / 100
-          new_price = max(trunc(card.current_price * (1 + card_crash / 100)), 1)
-
-          Cards.update_card_price(card.id, new_price)
-        end)
-
+        apply_crash_to_cards(cards, crash_percentage)
         Logger.warning("Market crash simulation completed")
         {:ok, crash_percentage}
 
@@ -260,33 +264,40 @@ defmodule Sammelkarten.PriceEngine do
     end
   end
 
+  defp calculate_crash_percentage(severity) do
+    case severity do
+      # -5% to -15%
+      :minor -> -(:rand.uniform(1000) + 500) / 100
+      # -10% to -25%
+      :moderate -> -(:rand.uniform(1500) + 1000) / 100
+      # -20% to -40%
+      :major -> -(:rand.uniform(2000) + 2000) / 100
+    end
+  end
+
+  defp apply_crash_to_cards(cards, crash_percentage) do
+    Enum.each(cards, fn card ->
+      new_price = calculate_crashed_price(card, crash_percentage)
+      Cards.update_card_price(card.id, new_price)
+    end)
+  end
+
+  defp calculate_crashed_price(card, crash_percentage) do
+    # Each card is affected slightly differently (±3% variation)
+    card_crash = crash_percentage + (:rand.uniform(600) - 300) / 100
+    max(trunc(card.current_price * (1 + card_crash / 100)), 1)
+  end
+
   @doc """
   Simulate a market boom affecting all cards.
   """
   def simulate_market_boom(strength \\ :moderate) do
     Logger.info("Simulating market boom (#{strength})...")
-
-    boom_percentage =
-      case strength do
-        # +5% to +15%
-        :minor -> (:rand.uniform(1000) + 500) / 100
-        # +10% to +25%  
-        :moderate -> (:rand.uniform(1500) + 1000) / 100
-        # +20% to +40%
-        :major -> (:rand.uniform(2000) + 2000) / 100
-      end
+    boom_percentage = calculate_boom_percentage(strength)
 
     case Cards.list_cards() do
       {:ok, cards} ->
-        Enum.each(cards, fn card ->
-          # Each card is affected slightly differently
-          # ±3% variation
-          card_boom = boom_percentage + (:rand.uniform(600) - 300) / 100
-          new_price = trunc(card.current_price * (1 + card_boom / 100))
-
-          Cards.update_card_price(card.id, new_price)
-        end)
-
+        apply_boom_to_cards(cards, boom_percentage)
         Logger.info("Market boom simulation completed")
         {:ok, boom_percentage}
 
@@ -295,53 +306,89 @@ defmodule Sammelkarten.PriceEngine do
     end
   end
 
+  defp calculate_boom_percentage(strength) do
+    case strength do
+      # +5% to +15%
+      :minor -> (:rand.uniform(1000) + 500) / 100
+      # +10% to +25%
+      :moderate -> (:rand.uniform(1500) + 1000) / 100
+      # +20% to +40%
+      :major -> (:rand.uniform(2000) + 2000) / 100
+    end
+  end
+
+  defp apply_boom_to_cards(cards, boom_percentage) do
+    Enum.each(cards, fn card ->
+      new_price = calculate_boomed_price(card, boom_percentage)
+      Cards.update_card_price(card.id, new_price)
+    end)
+  end
+
+  defp calculate_boomed_price(card, boom_percentage) do
+    # Each card is affected slightly differently (±3% variation)
+    card_boom = boom_percentage + (:rand.uniform(600) - 300) / 100
+    trunc(card.current_price * (1 + card_boom / 100))
+  end
+
   # Ensure Markus Turm always has the highest price among all cards.
   defp ensure_markus_turm_highest_price do
     case Cards.list_cards() do
       {:ok, cards} ->
-        # Find Markus Turm card
-        markus_card = Enum.find(cards, fn card -> card.name == "Markus Turm" end)
-
-        if markus_card do
-          # Find the highest price among all cards (excluding Markus Turm)
-          other_cards = Enum.reject(cards, fn card -> card.name == "Markus Turm" end)
-          
-          if Enum.any?(other_cards) do
-            highest_other_price = 
-              other_cards
-              |> Enum.map(& &1.current_price)
-              |> Enum.max()
-
-            # If Markus Turm's price is not the highest, update it
-            if markus_card.current_price <= highest_other_price do
-              # Set Markus Turm's price to be 5-15% higher than the current highest
-              price_boost_percentage = 5 + :rand.uniform(11) # 5% to 15%
-              new_markus_price = trunc(highest_other_price * (1 + price_boost_percentage / 100))
-              
-              case Cards.update_card_price(markus_card.id, new_markus_price) do
-                {:ok, updated_card} ->
-                  Logger.info("Markus Turm price adjusted to maintain highest position: #{Card.format_price(markus_card.current_price)} → #{Card.format_price(new_markus_price)}")
-                  {:ok, updated_card}
-                
-                {:error, reason} ->
-                  Logger.error("Failed to adjust Markus Turm price: #{inspect(reason)}")
-                  {:error, reason}
-              end
-            else
-              # Markus Turm already has the highest price
-              {:ok, markus_card}
-            end
-          else
-            # No other cards to compare against
-            {:ok, markus_card}
-          end
-        else
-          Logger.warning("Markus Turm card not found for price adjustment")
-          {:error, :markus_turm_not_found}
-        end
+        adjust_markus_turm_price(cards)
 
       {:error, reason} ->
         Logger.error("Failed to fetch cards for Markus Turm price adjustment: #{inspect(reason)}")
+        {:error, reason}
+    end
+  end
+
+  defp adjust_markus_turm_price(cards) do
+    markus_card = Enum.find(cards, fn card -> card.name == "Markus Turm" end)
+
+    if markus_card do
+      check_and_update_markus_price(markus_card, cards)
+    else
+      Logger.warning("Markus Turm card not found for price adjustment")
+      {:error, :markus_turm_not_found}
+    end
+  end
+
+  defp check_and_update_markus_price(markus_card, cards) do
+    other_cards = Enum.reject(cards, fn card -> card.name == "Markus Turm" end)
+
+    if Enum.any?(other_cards) do
+      highest_other_price = Enum.max(Enum.map(other_cards, & &1.current_price))
+      maybe_boost_markus_price(markus_card, highest_other_price)
+    else
+      # No other cards to compare against
+      {:ok, markus_card}
+    end
+  end
+
+  defp maybe_boost_markus_price(markus_card, highest_other_price) do
+    if markus_card.current_price <= highest_other_price do
+      boost_markus_price(markus_card, highest_other_price)
+    else
+      # Markus Turm already has the highest price
+      {:ok, markus_card}
+    end
+  end
+
+  defp boost_markus_price(markus_card, highest_other_price) do
+    # Set Markus Turm's price to be 5-15% higher than the current highest
+    price_boost_percentage = 5 + :rand.uniform(11)
+    new_markus_price = trunc(highest_other_price * (1 + price_boost_percentage / 100))
+
+    case Cards.update_card_price(markus_card.id, new_markus_price) do
+      {:ok, updated_card} ->
+        Logger.info(
+          "Markus Turm price adjusted to maintain highest position: #{Card.format_price(markus_card.current_price)} → #{Card.format_price(new_markus_price)}"
+        )
+
+        {:ok, updated_card}
+
+      {:error, reason} ->
+        Logger.error("Failed to adjust Markus Turm price: #{inspect(reason)}")
         {:error, reason}
     end
   end

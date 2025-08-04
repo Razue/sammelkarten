@@ -309,8 +309,11 @@ defmodule SammelkartenWeb.CardDetailLive do
     sign = if change_in_sats >= 0, do: "+", else: ""
 
     formatted_amount =
-      Sammelkarten.Formatter.format_german_price(abs(change_in_sats))
-      |> String.replace(" sats", "")
+      String.replace(
+        Sammelkarten.Formatter.format_german_price(abs(change_in_sats)),
+        " sats",
+        ""
+      )
 
     "#{sign}#{formatted_amount} sats"
   end
@@ -320,7 +323,7 @@ defmodule SammelkartenWeb.CardDetailLive do
     change_sats = trunc(abs(change))
 
     formatted_amount =
-      Sammelkarten.Formatter.format_german_price(change_sats) |> String.replace(" sats", "")
+      String.replace(Sammelkarten.Formatter.format_german_price(change_sats), " sats", "")
 
     "#{sign}#{formatted_amount} sats"
   end
@@ -350,8 +353,7 @@ defmodule SammelkartenWeb.CardDetailLive do
 
   defp prepare_chart_data(price_history) do
     chart_data =
-      price_history
-      |> Enum.map(fn entry ->
+      Enum.map(price_history, fn entry ->
         %{
           price: entry.price,
           timestamp: DateTime.to_iso8601(entry.timestamp)

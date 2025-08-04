@@ -7,17 +7,14 @@ defmodule SammelkartenWeb.AdminLive do
   @impl true
   def mount(_params, session, socket) do
     # Check authentication
-    unless session["admin_authenticated"] do
-      {:ok, push_navigate(socket, to: ~p"/admin/login")}
-    else
+    if session["admin_authenticated"] do
       cards = case Cards.list_cards() do
         {:ok, cards_list} -> cards_list
         {:error, _} -> []
       end
       
       socket =
-        socket
-        |> assign(
+        assign(socket,
           cards: cards,
           selected_card: nil,
           form_data: %{},
@@ -28,6 +25,8 @@ defmodule SammelkartenWeb.AdminLive do
         )
 
       {:ok, socket}
+    else
+      {:ok, push_navigate(socket, to: ~p"/admin/login")}
     end
   end
 
@@ -134,39 +133,39 @@ defmodule SammelkartenWeb.AdminLive do
 
   defp create_or_update_card(params, nil) do
     # Create new card
-    with {:ok, price} <- parse_price(params["current_price"] || "0") do
-      card_attrs = %{
-        id: params["id"] || generate_id(params["name"]),
-        name: params["name"],
-        image_path: params["image_path"],
-        current_price: price,
-        rarity: params["rarity"] || "common",
-        description: params["description"] || "",
-        last_updated: DateTime.utc_now()
-      }
-      
-      Cards.create_card(card_attrs)
-    else
+    case parse_price(params["current_price"] || "0") do
+      {:ok, price} ->
+        card_attrs = %{
+          id: params["id"] || generate_id(params["name"]),
+          name: params["name"],
+          image_path: params["image_path"],
+          current_price: price,
+          rarity: params["rarity"] || "common",
+          description: params["description"] || "",
+          last_updated: DateTime.utc_now()
+        }
+        
+        Cards.create_card(card_attrs)
       :error -> {:error, "Invalid price format"}
     end
   end
 
   defp create_or_update_card(params, card) do
     # Update existing card
-    with {:ok, price} <- parse_price(params["current_price"] || "0") do
-      update_attrs = %{
-        name: params["name"],
-        image_path: params["image_path"],
-        current_price: price,
-        rarity: params["rarity"],
-        description: params["description"],
-        last_updated: DateTime.utc_now()
-      }
-      
-      # Since no update_card/2 exists, we recreate the card
-      Cards.delete_card(card.id)
-      Cards.create_card(Map.put(update_attrs, :id, card.id))
-    else
+    case parse_price(params["current_price"] || "0") do
+      {:ok, price} ->
+        update_attrs = %{
+          name: params["name"],
+          image_path: params["image_path"],
+          current_price: price,
+          rarity: params["rarity"],
+          description: params["description"],
+          last_updated: DateTime.utc_now()
+        }
+        
+        # Since no update_card/2 exists, we recreate the card
+        Cards.delete_card(card.id)
+        Cards.create_card(Map.put(update_attrs, :id, card.id))
       :error -> {:error, "Invalid price format"}
     end
   end

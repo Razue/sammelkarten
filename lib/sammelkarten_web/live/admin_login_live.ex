@@ -10,8 +10,7 @@ defmodule SammelkartenWeb.AdminLoginLive do
       {:ok, push_navigate(socket, to: ~p"/admin")}
     else
       socket =
-        socket
-        |> assign(
+        assign(socket,
           password: "",
           error_message: nil,
           show_password: false

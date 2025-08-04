@@ -113,48 +113,57 @@ defmodule SammelkartenWeb.MarketLive do
   defp get_market_chart_data(time_range) do
     # Get aggregated market data for the chart
     # This simulates market overview data points
-    hours_back =
-      case time_range do
-        "24h" -> 24
-        "7d" -> 24 * 7
-        "30d" -> 24 * 30
-        _ -> 24
-      end
-
-    interval =
-      case time_range do
-        # hourly
-        "24h" -> 1
-        # every 4 hours
-        "7d" -> 4
-        # daily
-        "30d" -> 24
-        _ -> 1
-      end
-
+    hours_back = get_hours_back_for_range(time_range)
+    interval = get_interval_for_range(time_range)
     now = DateTime.utc_now()
 
     0..hours_back
     |> Enum.take_every(interval)
-    |> Enum.map(fn hours_ago ->
-      timestamp = DateTime.add(now, -hours_ago * 3600, :second)
-
-      # Simulate market value over time with some volatility
-      # 200,000 sats
-      base_value = 200_000
-      # ±5%
-      volatility = :rand.uniform() * 0.1 - 0.05
-      # slight upward trend
-      trend = -hours_ago * 10
-
-      value = base_value + base_value * volatility + trend
-
-      %{
-        timestamp: timestamp,
-        value: trunc(value)
-      }
-    end)
+    |> Enum.map(&generate_market_data_point(&1, now))
     |> Enum.reverse()
+  end
+
+  defp get_hours_back_for_range(time_range) do
+    case time_range do
+      "24h" -> 24
+      "7d" -> 24 * 7
+      "30d" -> 24 * 30
+      _ -> 24
+    end
+  end
+
+  defp get_interval_for_range(time_range) do
+    case time_range do
+      # hourly
+      "24h" -> 1
+      # every 4 hours
+      "7d" -> 4
+      # daily
+      "30d" -> 24
+      _ -> 1
+    end
+  end
+
+  defp generate_market_data_point(hours_ago, now) do
+    timestamp = DateTime.add(now, -hours_ago * 3600, :second)
+    value = calculate_simulated_market_value(hours_ago)
+
+    %{
+      timestamp: timestamp,
+      value: trunc(value)
+    }
+  end
+
+  defp calculate_simulated_market_value(hours_ago) do
+    # Simulate market value over time with some volatility
+    # 200,000 sats
+    base_value = 200_000
+    # ±5%
+    volatility = :rand.uniform() * 0.1 - 0.05
+    # slight upward trend
+    trend = -hours_ago * 10
+
+    base_value + base_value * volatility + trend
   end
 
   defp format_currency(amount) when is_integer(amount) do
@@ -187,8 +196,7 @@ defmodule SammelkartenWeb.MarketLive do
   defp card_initials(name) do
     name
     |> String.split()
-    |> Enum.map(&String.first/1)
-    |> Enum.join()
+    |> Enum.map_join("", &String.first/1)
     |> String.upcase()
   end
 end

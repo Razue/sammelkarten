@@ -120,22 +120,30 @@ defmodule SammelkartenWeb.PreferencesLive do
   # Helper function to clean and convert form data to appropriate types
   defp clean_preference_changes(changes) do
     changes
-    |> Enum.reduce(%{}, fn {key, value}, acc ->
-      case key do
-        "refresh_rate" -> Map.put(acc, :refresh_rate, String.to_integer(value))
-        "cards_per_page" -> Map.put(acc, :cards_per_page, String.to_integer(value))
-        "ticker_speed" -> Map.put(acc, :ticker_speed, String.to_integer(value))
-        "theme" -> Map.put(acc, :theme, value)
-        "default_sort" -> Map.put(acc, :default_sort, value)
-        "default_sort_direction" -> Map.put(acc, :default_sort_direction, value)
-        "chart_style" -> Map.put(acc, :chart_style, value)
-        "auto_refresh" -> Map.put(acc, :auto_refresh, value == "true")
-        "notifications_enabled" -> Map.put(acc, :notifications_enabled, value == "true")
-        "sound_enabled" -> Map.put(acc, :sound_enabled, value == "true")
-        "show_ticker" -> Map.put(acc, :show_ticker, value == "true")
-        _ -> acc
-      end
-    end)
+    |> Enum.reduce(%{}, &convert_preference_field/2)
     |> Map.merge(%{updated_at: DateTime.utc_now()})
+  end
+
+  defp convert_preference_field({key, value}, acc) do
+    case convert_field_value(key, value) do
+      {atom_key, converted_value} -> Map.put(acc, atom_key, converted_value)
+      nil -> acc
+    end
+  end
+
+  defp convert_field_value(key, value) do
+    case key do
+      key when key in ["refresh_rate", "cards_per_page", "ticker_speed"] ->
+        {String.to_atom(key), String.to_integer(value)}
+
+      key when key in ["theme", "default_sort", "default_sort_direction", "chart_style"] ->
+        {String.to_atom(key), value}
+
+      key when key in ["auto_refresh", "notifications_enabled", "sound_enabled", "show_ticker"] ->
+        {String.to_atom(key), value == "true"}
+
+      _ ->
+        nil
+    end
   end
 end

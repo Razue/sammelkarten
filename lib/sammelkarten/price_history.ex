@@ -43,8 +43,8 @@ defmodule Sammelkarten.PriceHistory do
   Generate a unique ID for a price history record.
   """
   def generate_id do
-    timestamp = DateTime.utc_now() |> DateTime.to_unix(:microsecond)
-    "#{timestamp}_#{:crypto.strong_rand_bytes(8) |> Base.encode16(case: :lower)}"
+    timestamp = DateTime.to_unix(DateTime.utc_now(), :microsecond)
+    "#{timestamp}_#{Base.encode16(:crypto.strong_rand_bytes(8), case: :lower)}"
   end
 
   @doc """

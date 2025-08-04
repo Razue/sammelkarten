@@ -56,7 +56,8 @@ defmodule Sammelkarten.MixProject do
       {:dns_cluster, "~> 0.1.1"},
       {:bandit, "~> 1.5"},
       {:decimal, "~> 2.0"},
-      {:tidewave, "~> 0.2", only: [:dev]}
+      {:tidewave, "~> 0.2", only: [:dev]},
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
     ]
   end
 

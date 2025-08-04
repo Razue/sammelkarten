@@ -54,6 +54,9 @@ COPY assets assets
 # compile assets
 RUN mix assets.deploy
 
+# Clean up any previous build artifacts
+RUN mix clean
+
 # Compile the release
 RUN mix compile
 
@@ -61,6 +64,7 @@ RUN mix compile
 COPY config/runtime.exs config/
 
 COPY rel rel
+RUN mix clean
 RUN mix release
 
 # start a new build stage so that the final image will only contain

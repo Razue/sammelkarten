@@ -1,10 +1,10 @@
 defmodule SammelkartenWeb.AdminSessionController do
   use SammelkartenWeb, :controller
 
-  @admin_password Application.compile_env(:sammelkarten, :admin_password)
+  defp admin_password, do: Application.get_env(:sammelkarten, :admin_password)
 
   def create(conn, %{"password" => password}) do
-    if password == @admin_password do
+    if password == admin_password() do
       conn
       |> put_session(:admin_authenticated, true)
       |> put_flash(:info, "Admin access granted")

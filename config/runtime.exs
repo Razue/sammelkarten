@@ -21,7 +21,9 @@ if System.get_env("PHX_SERVER") do
 end
 
 if config_env() != :test do
-  config :sammelkarten, admin_password: System.fetch_env!("ADMIN_PASSWORD")
+  config :sammelkarten,
+    admin_password: System.fetch_env!("ADMIN_PASSWORD"),
+    validate_compile_env: false
 end
 
 if config_env() == :prod do

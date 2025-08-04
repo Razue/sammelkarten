@@ -5,14 +5,14 @@ defmodule SammelkartenWeb.Plugs.AdminAuth do
   import Plug.Conn
   import Phoenix.Controller
 
-  @admin_password Application.compile_env(:sammelkarten, :admin_password)
+  defp admin_password, do: Application.get_env(:sammelkarten, :admin_password)
 
   def init(opts), do: opts
 
   def call(conn, _opts) do
     password = get_session(conn, :admin_password)
 
-    if password == @admin_password do
+    if password == admin_password() do
       # User is authenticated
       conn
     else
@@ -29,7 +29,7 @@ defmodule SammelkartenWeb.Plugs.AdminAuth do
   Returns {:ok, conn} if successful, {:error, conn} if failed.
   """
   def authenticate(conn, password) when is_binary(password) do
-    if password == @admin_password do
+    if password == admin_password() do
       conn = put_session(conn, :admin_password, password)
       {:ok, conn}
     else
@@ -48,6 +48,6 @@ defmodule SammelkartenWeb.Plugs.AdminAuth do
   Checks if the current user is authenticated as admin.
   """
   def authenticated?(conn) do
-    get_session(conn, :admin_password) == @admin_password
+    get_session(conn, :admin_password) == admin_password()
   end
 end

@@ -1,12 +1,12 @@
 defmodule SammelkartenWeb.AdminLoginLive do
   use SammelkartenWeb, :live_view
 
-  @admin_password Application.compile_env(:sammelkarten, :admin_password)
+  defp admin_password, do: Application.get_env(:sammelkarten, :admin_password)
 
   @impl true
   def mount(_params, session, socket) do
     # Check if already authenticated
-    if session["admin_password"] == @admin_password do
+    if session["admin_password"] == admin_password() do
       {:ok, push_navigate(socket, to: ~p"/admin")}
     else
       socket =

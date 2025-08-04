@@ -4,10 +4,10 @@ defmodule SammelkartenWeb.AdminAuth do
   """
   import Phoenix.LiveView
 
-  @admin_password Application.compile_env(:sammelkarten, :admin_password)
+  defp admin_password, do: Application.get_env(:sammelkarten, :admin_password)
 
   def on_mount(:ensure_admin, _params, session, socket) do
-    if session["admin_password"] == @admin_password do
+    if session["admin_password"] == admin_password() do
       {:cont, socket}
     else
       socket =
@@ -23,7 +23,7 @@ defmodule SammelkartenWeb.AdminAuth do
   Authenticates user with the given password.
   """
   def authenticate_admin(socket, password) when is_binary(password) do
-    if password == @admin_password do
+    if password == admin_password() do
       {:ok, socket}
     else
       {:error, socket}

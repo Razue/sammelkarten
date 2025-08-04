@@ -2,6 +2,7 @@ defmodule SammelkartenWeb.PreferencesLive do
   use SammelkartenWeb, :live_view
 
   alias Sammelkarten.Preferences
+  alias Sammelkarten.Theme
 
   @impl true
   def mount(_params, _session, socket) do
@@ -108,6 +109,32 @@ defmodule SammelkartenWeb.PreferencesLive do
           |> assign(:saved, false)
           |> assign(:error_message, "Failed to reset preferences: #{inspect(reason)}")
 
+        {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("toggle_theme", _params, socket) do
+    user_id = socket.assigns.user_id
+    {:ok, current_preferences} = Preferences.get_user_preferences(user_id)
+    
+    # Toggle theme
+    new_theme = Theme.toggle_theme(current_preferences.theme)
+    
+    # Update preferences
+    case Preferences.update_theme(user_id, new_theme) do
+      {:ok, updated_preferences} ->
+        socket =
+          socket
+          |> assign(:user_preferences, updated_preferences)
+          |> assign(:form_data, Map.from_struct(updated_preferences))
+          |> push_event("theme_changed", %{theme: new_theme})
+        
+        {:noreply, socket}
+      
+      {:error, _reason} ->
+        # If saving fails, still toggle for this session
+        socket = push_event(socket, "theme_changed", %{theme: new_theme})
         {:noreply, socket}
     end
   end

@@ -1,13 +1,13 @@
-<div class="space-y-6">
+<div class="space-y-6" id="market-container" phx-hook="ThemeManager">
   <!-- Header -->
   <div class="flex items-center justify-between">
     <div>
-      <h1 class="text-3xl font-bold text-gray-900">Market</h1>
-      <p class="mt-2 text-gray-600">Real-time market data and trends for collectible cards</p>
+      <h1 class="text-3xl font-bold theme-text-primary">Market</h1>
+      <p class="mt-2 theme-text-secondary">Real-time market data and trends for collectible cards</p>
     </div>
     <div class="flex items-center space-x-4">
       <form phx-change="change_time_range">
-        <select name="time_range" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+        <select name="time_range" class="theme-border-primary border rounded-lg px-3 py-2 text-sm theme-bg-primary theme-text-primary">
           <option value="24h" selected={@time_range=="24h" }>Last 24h</option>
           <option value="7d" selected={@time_range=="7d" }>Last 7d</option>
           <option value="30d" selected={@time_range=="30d" }>Last 30d</option>
@@ -17,7 +17,7 @@
   </div>
 
   <!-- Market Summary -->
-  <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+  <div class="theme-bg-card p-6 rounded-lg shadow-sm theme-border-primary border">
     <%= if @loading do %>
       <div class="animate-pulse">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">

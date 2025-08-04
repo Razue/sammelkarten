@@ -1,16 +1,16 @@
-<div class="min-h-screen bg-gray-50" id="dashboard-container" phx-hook="KeyboardShortcuts">
+<div class="min-h-screen theme-bg-secondary" id="dashboard-container" phx-hook="KeyboardShortcuts ThemeManager">
   <!-- Price Ticker -->
   <%= if Map.get(@user_preferences, :show_ticker, true) do %>
     <.live_component module={SammelkartenWeb.Components.PriceTicker} id="price-ticker" cards={@cards} />
     <% end %>
 
       <!-- Header Section -->
-      <div class="bg-white shadow-sm border-b animate-slide-in-top">
+      <div class="theme-bg-primary shadow-sm theme-border-primary border-b animate-slide-in-top">
         <div class="max-w-7xl mx-auto px-4 py-6">
           <div class="sm:flex sm:items-center sm:justify-between">
             <div>
-              <h1 class="text-3xl font-bold text-gray-900 animate-fade-in-up">Card Collection</h1>
-              <p class="mt-2 text-sm text-gray-600 animate-fade-in">
+              <h1 class="text-3xl font-bold theme-text-primary animate-fade-in-up">Card Collection</h1>
+              <p class="mt-2 text-sm theme-text-secondary animate-fade-in">
                 Track prices and trends for your collectible cards
               </p>
             </div>

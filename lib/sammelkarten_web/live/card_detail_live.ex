@@ -12,6 +12,8 @@ defmodule SammelkartenWeb.CardDetailLive do
   use SammelkartenWeb, :live_view
 
   alias Sammelkarten.Cards
+  alias Sammelkarten.Preferences
+  alias Sammelkarten.Theme
 
   @impl true
   def mount(%{"id" => card_id}, _session, socket) do
@@ -80,12 +82,33 @@ defmodule SammelkartenWeb.CardDetailLive do
   end
 
   @impl true
+  def handle_event("toggle_theme", _params, socket) do
+    user_id = "default_user"  # Get from session in real app
+    {:ok, current_preferences} = Preferences.get_user_preferences(user_id)
+    
+    # Toggle theme
+    new_theme = Theme.toggle_theme(current_preferences.theme)
+    
+    # Update preferences
+    case Preferences.update_theme(user_id, new_theme) do
+      {:ok, _updated_preferences} ->
+        socket = push_event(socket, "theme_changed", %{theme: new_theme})
+        {:noreply, socket}
+      
+      {:error, _reason} ->
+        # If saving fails, still toggle for this session
+        socket = push_event(socket, "theme_changed", %{theme: new_theme})
+        {:noreply, socket}
+    end
+  end
+
+  @impl true
   def render(assigns) do
     ~H"""
     <div
-      class="min-h-screen bg-gray-50 page-transition"
+      class="min-h-screen theme-bg-secondary page-transition"
       id="card-detail-container"
-      phx-hook="CardDetailKeyboardShortcuts"
+      phx-hook="CardDetailKeyboardShortcuts ThemeManager"
     >
       <%= if @error do %>
         <div class="max-w-4xl mx-auto px-4 py-8">
@@ -103,12 +126,12 @@ defmodule SammelkartenWeb.CardDetailLive do
       <% else %>
         <%= if @card do %>
           <!-- Breadcrumb Navigation -->
-          <div class="bg-white border-b border-gray-200 animate-slide-in-top">
+          <div class="theme-bg-primary theme-border-primary border-b animate-slide-in-top">
             <div class="max-w-6xl mx-auto px-4 py-3">
               <nav class="flex" aria-label="Breadcrumb">
-                <ol class="flex items-center space-x-2 text-sm text-gray-500">
+                <ol class="flex items-center space-x-2 text-sm theme-text-muted">
                   <li>
-                    <.link navigate="/cards" class="hover:text-gray-700">
+                    <.link navigate="/cards" class="hover:theme-text-secondary">
                       Cards
                     </.link>
                   </li>
@@ -120,7 +143,7 @@ defmodule SammelkartenWeb.CardDetailLive do
                         clip-rule="evenodd"
                       />
                     </svg>
-                    <span class="font-medium text-gray-900">{@card.name}</span>
+                    <span class="font-medium theme-text-primary">{@card.name}</span>
                   </li>
                 </ol>
               </nav>

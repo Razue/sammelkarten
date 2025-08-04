@@ -22,8 +22,32 @@ import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
 import topbar from "../vendor/topbar"
 
-// Chart.js hook for price history and keyboard shortcuts
+// LiveView hooks including theme management
 let Hooks = {}
+
+// Theme management hook
+Hooks.ThemeManager = {
+  mounted() {
+    // Load theme from localStorage on mount
+    const savedTheme = localStorage.getItem('sammelkarten-theme') || 'light'
+    this.setTheme(savedTheme)
+    
+    // Listen for theme toggle events
+    this.handleEvent("theme_changed", ({theme}) => {
+      this.setTheme(theme)
+      localStorage.setItem('sammelkarten-theme', theme)
+    })
+  },
+  
+  setTheme(theme) {
+    const htmlElement = document.getElementById('html-root')
+    if (theme === 'dark') {
+      htmlElement.classList.add('dark')
+    } else {
+      htmlElement.classList.remove('dark')
+    }
+  }
+}
 
 // Price flash animation hook for real-time price updates
 Hooks.PriceFlash = {

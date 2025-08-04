@@ -2,6 +2,8 @@ defmodule SammelkartenWeb.MarketLive do
   use SammelkartenWeb, :live_view
 
   alias Sammelkarten.Cards
+  alias Sammelkarten.Preferences
+  alias Sammelkarten.Theme
 
   @impl true
   def mount(_params, _session, socket) do
@@ -190,5 +192,26 @@ defmodule SammelkartenWeb.MarketLive do
     |> Enum.map(&String.first/1)
     |> Enum.join()
     |> String.upcase()
+  end
+
+  @impl true
+  def handle_event("toggle_theme", _params, socket) do
+    user_id = "default_user"  # Get from session in real app
+    {:ok, current_preferences} = Preferences.get_user_preferences(user_id)
+    
+    # Toggle theme
+    new_theme = Theme.toggle_theme(current_preferences.theme)
+    
+    # Update preferences
+    case Preferences.update_theme(user_id, new_theme) do
+      {:ok, _updated_preferences} ->
+        socket = push_event(socket, "theme_changed", %{theme: new_theme})
+        {:noreply, socket}
+      
+      {:error, _reason} ->
+        # If saving fails, still toggle for this session
+        socket = push_event(socket, "theme_changed", %{theme: new_theme})
+        {:noreply, socket}
+    end
   end
 end

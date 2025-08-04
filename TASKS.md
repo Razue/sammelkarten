@@ -63,7 +63,7 @@
 - [x] Admin access only with Password
 - [ ] Refine color scheme and typography
 - [x] Add smooth animations and transitions
-- [ ] Implement dark/light theme toggle
+- [x] Implement dark/light theme toggle
 - [ ] Add accessibility improvements (ARIA, keyboard nav)
 - [ ] Create custom icons and graphics
 - [ ] Add performance monitoring and optimization

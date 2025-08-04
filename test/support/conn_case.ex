@@ -32,6 +32,8 @@ defmodule SammelkartenWeb.ConnCase do
   end
 
   setup _tags do
+    # Ensure all required Mnesia tables exist for tests
+    Sammelkarten.Database.create_tables()
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end
 end

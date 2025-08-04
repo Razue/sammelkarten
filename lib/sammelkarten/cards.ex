@@ -45,24 +45,8 @@ defmodule Sammelkarten.Cards do
       {:atomic, []} ->
         {:error, :not_found}
 
-      {:atomic,
-       [
-         {:cards, id, name, image_path, current_price, price_change_24h, price_change_percentage,
-          rarity, description, last_updated}
-       ]} ->
-        card = %Card{
-          id: id,
-          name: name,
-          image_path: image_path,
-          current_price: current_price,
-          price_change_24h: price_change_24h,
-          price_change_percentage: price_change_percentage,
-          rarity: rarity,
-          description: description,
-          last_updated: last_updated
-        }
-
-        {:ok, card}
+      {:atomic, [record]} ->
+        {:ok, card_from_record(record)}
 
       {:aborted, reason} ->
         Logger.error("Failed to get card: #{inspect(reason)}")
@@ -76,22 +60,7 @@ defmodule Sammelkarten.Cards do
   def list_cards do
     case :mnesia.transaction(fn -> :mnesia.select(:cards, [{:_, [], [:"$_"]}]) end) do
       {:atomic, records} ->
-        cards =
-          Enum.map(records, fn {_table, id, name, image_path, current_price, price_change_24h,
-                                price_change_percentage, rarity, description, last_updated} ->
-            %Card{
-              id: id,
-              name: name,
-              image_path: image_path,
-              current_price: current_price,
-              price_change_24h: price_change_24h,
-              price_change_percentage: price_change_percentage,
-              rarity: rarity,
-              description: description,
-              last_updated: last_updated
-            }
-          end)
-
+        cards = Enum.map(records, &card_from_record/1)
         {:ok, cards}
 
       {:aborted, reason} ->
@@ -165,39 +134,20 @@ defmodule Sammelkarten.Cards do
   Get price history for a card.
   """
   def get_price_history(card_id, limit \\ 100) do
-    # Create match specification to find records for specific card
     match_spec = [{{:price_history, :_, card_id, :_, :_, :_}, [], [:"$_"]}]
 
     case :mnesia.transaction(fn -> :mnesia.select(:price_history, match_spec, limit, :read) end) do
       {:atomic, {records, _continuation}} when is_list(records) ->
-        price_history =
-          Enum.map(records, fn {_table, id, card_id, price, timestamp, volume} ->
-            %PriceHistory{
-              id: id,
-              card_id: card_id,
-              price: price,
-              timestamp: timestamp,
-              volume: volume
-            }
-          end)
-          |> Enum.sort_by(& &1.timestamp, {:desc, DateTime})
-
-        {:ok, price_history}
+        {:ok,
+         records
+         |> Enum.map(&price_history_from_record/1)
+         |> Enum.sort_by(& &1.timestamp, {:desc, DateTime})}
 
       {:atomic, records} when is_list(records) ->
-        price_history =
-          Enum.map(records, fn {_table, id, card_id, price, timestamp, volume} ->
-            %PriceHistory{
-              id: id,
-              card_id: card_id,
-              price: price,
-              timestamp: timestamp,
-              volume: volume
-            }
-          end)
-          |> Enum.sort_by(& &1.timestamp, {:desc, DateTime})
-
-        {:ok, price_history}
+        {:ok,
+         records
+         |> Enum.map(&price_history_from_record/1)
+         |> Enum.sort_by(& &1.timestamp, {:desc, DateTime})}
 
       {:atomic, :"$end_of_table"} ->
         {:ok, []}
@@ -206,6 +156,34 @@ defmodule Sammelkarten.Cards do
         Logger.error("Failed to get price history: #{inspect(reason)}")
         {:error, reason}
     end
+  end
+
+  # Private helpers
+  defp card_from_record(
+         {:cards, id, name, image_path, current_price, price_change_24h, price_change_percentage,
+          rarity, description, last_updated}
+       ) do
+    %Card{
+      id: id,
+      name: name,
+      image_path: image_path,
+      current_price: current_price,
+      price_change_24h: price_change_24h,
+      price_change_percentage: price_change_percentage,
+      rarity: rarity,
+      description: description,
+      last_updated: last_updated
+    }
+  end
+
+  defp price_history_from_record({:price_history, id, card_id, price, timestamp, volume}) do
+    %PriceHistory{
+      id: id,
+      card_id: card_id,
+      price: price,
+      timestamp: timestamp,
+      volume: volume
+    }
   end
 
   @doc """

@@ -9,7 +9,7 @@
     {
         "name": "Seed or Chris",
         "image_path": "/images/cards/SEED_OR_CHRIS.jpg",
-        "current_price": 21000,
+        "current_price": 71000,
         "rarity": "rare",
         "description": "Bitcoin security advocate emphasizing proper seed phrase management. A rare card promoting Bitcoin best practices."
     },
@@ -66,35 +66,35 @@
         "name": "Niko Jilch",
         "image_path": "/images/cards/NIKO_JILCH.jpg",
         "current_price": 64000,
-        "rarity": "rare",
+        "rarity": "epic",
         "description": "Austrian journalist and Bitcoin advocate. A rare card highlighting Bitcoin journalism and financial education."
     },
     {
         "name": "Einundzwanzig Magazin",
         "image_path": "/images/cards/EINUNDZWANZIG_MAGAZIN.jpg",
-        "current_price": 62000,
-        "rarity": "rare",
+        "current_price": 65000,
+        "rarity": "epic",
         "description": "German Bitcoin magazine promoting education. A rare card celebrating Bitcoin journalism and community media."
     },
     {
         "name": "Maurice Effekt",
         "image_path": "/images/cards/MAURICE_EFFEKT.jpg",
         "current_price": 54000,
-        "rarity": "rare",
+        "rarity": "common",
         "description": "Bitcoin content creator and educator. A rare card representing creative Bitcoin education and community engagement."
     },
     {
         "name": "Node Signal",
         "image_path": "/images/cards/NODESIGNAL.jpg",
         "current_price": 52000,
-        "rarity": "rare",
+        "rarity": "mythic",
         "description": "Representing the Bitcoin node network infrastructure. A rare card symbolizing decentralized network participation."
     },
     {
         "name": "Einundzwanzig Stammtisch",
         "image_path": "/images/cards/EINUNDZWANZIG_STAMMTISCH.jpg",
         "current_price": 51000,
-        "rarity": "rare",
+        "rarity": "common",
         "description": "Local Bitcoin meetup community. A rare card celebrating grassroots Bitcoin adoption and local communities."
     },
     {
@@ -147,10 +147,24 @@
         "description": "Bitcoin technical enthusiast. A common card representing the technical exploration of Bitcoin."
     },
     {
+        "name": "BitcoinHotel Holo",
+        "image_path": "/images/cards/BitcoinHotel_Holo.jpg",
+        "current_price": 75000,
+        "rarity": "rare",
+        "description": "Bitcoin technical enthusiast. A common card representing the technical exploration of Bitcoin."
+    },
+    {
         "name": "Toxic Booster",
         "image_path": "/images/cards/TOXIC_BOOSTER.jpg",
         "current_price": 30000,
         "rarity": "common",
         "description": "The passionate Bitcoin maximalist energy. A common card representing the fierce dedication to Bitcoin principles."
+    },
+    {
+        "name": "7x Toxic Booster",
+        "image_path": "/images/cards/SevenPacks_Auction.jpg",
+        "current_price": 275000,
+        "rarity": "common",
+        "description": "Auction to get SEVEN boosters to start your collection. There are 21 unique designs, spread over 4410 cards in 630 Boosters. Each card is individually numbered from 001 to 210. Number 21/210 is extra special, it features a holographic effect, creating ONE single set of Holo cards"
     }
 ]

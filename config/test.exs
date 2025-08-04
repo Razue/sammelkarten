@@ -7,9 +7,6 @@ config :sammelkarten, SammelkartenWeb.Endpoint,
   secret_key_base: "x4VV8d21MZZ4EHsVkotuDS0sWbgzclIUgSD6VRSRE4imdnb8WKHBwtMXtysX1SVO",
   server: false
 
-# In test we don't send emails
-config :sammelkarten, Sammelkarten.Mailer, adapter: Swoosh.Adapters.Test
-
 # Disable swoosh api client as it is only required for production adapters
 config :swoosh, :api_client, false
 

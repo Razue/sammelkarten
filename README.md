@@ -6,7 +6,7 @@
 
 ## Intentions - Sneak Preview
 
-Sammelkarten is designed to showcase a powerful, real-time platform for collectors and enthusiasts to track informations and maybe the value of their collectible cards. Inspired by cryptocurrency exchanges, it provides a professional, minimalistic interface with live updates, interactive charts, and advanced analytics. After community feedback, the project can evolve to meet the needs of its users.
+Sammelkarten is based on the idea of showcasing a powerful, real-time platform for collectors and enthusiasts to track informations and maybe the value of their collectible cards. Inspired by cryptocurrency exchanges, it provides a professional, minimalistic interface with live updates, interactive charts, and advanced analytics. After community feedback, the project can evolve to meet the needs of its users.
 
 ## ✨ Features - Sneak Preview (to play around with some)
 

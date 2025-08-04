@@ -62,7 +62,7 @@
 - [x] Admin Interface for the Database
 - [x] Admin access only with Password
 - [ ] Refine color scheme and typography
-- [ ] Add smooth animations and transitions
+- [x] Add smooth animations and transitions
 - [ ] Implement dark/light theme toggle
 - [ ] Add accessibility improvements (ARIA, keyboard nav)
 - [ ] Create custom icons and graphics

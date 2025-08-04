@@ -14,15 +14,15 @@
       <!-- Navigation Links -->
       <div class="hidden md:flex items-center space-x-8">
         <.link navigate={~p"/cards"}
-          class="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors">
+          class="nav-link text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium">
           Cards
         </.link>
         <.link navigate={~p"/market"}
-          class="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors">
+          class="nav-link text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium">
           Market
         </.link>
         <.link navigate={~p"/preferences"}
-          class="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors">
+          class="nav-link text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium">
           Preferences
         </.link>
       </div>
@@ -39,7 +39,7 @@
   </div>
 </nav>
 
-<main class="min-h-screen bg-gray-50">
+<main class="min-h-screen bg-gray-50 page-transition">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <.flash_group flash={@flash} />
     {@inner_content}

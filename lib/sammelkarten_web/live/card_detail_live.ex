@@ -83,7 +83,7 @@ defmodule SammelkartenWeb.CardDetailLive do
   def render(assigns) do
     ~H"""
     <div
-      class="min-h-screen bg-gray-50"
+      class="min-h-screen bg-gray-50 page-transition"
       id="card-detail-container"
       phx-hook="CardDetailKeyboardShortcuts"
     >
@@ -103,7 +103,7 @@ defmodule SammelkartenWeb.CardDetailLive do
       <% else %>
         <%= if @card do %>
           <!-- Breadcrumb Navigation -->
-          <div class="bg-white border-b border-gray-200">
+          <div class="bg-white border-b border-gray-200 animate-slide-in-top">
             <div class="max-w-6xl mx-auto px-4 py-3">
               <nav class="flex" aria-label="Breadcrumb">
                 <ol class="flex items-center space-x-2 text-sm text-gray-500">
@@ -132,9 +132,9 @@ defmodule SammelkartenWeb.CardDetailLive do
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
               
     <!-- Left Column: Card Image and Basic Info -->
-              <div class="space-y-6">
+              <div class="space-y-6 animate-fade-in-up">
                 <!-- Card Image -->
-                <div class="bg-white rounded-lg shadow-sm p-6">
+                <div class="bg-white rounded-lg shadow-sm p-6 card-hover">
                   <div
                     class="bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center"
                     style="min-height: 630px;"
@@ -142,7 +142,7 @@ defmodule SammelkartenWeb.CardDetailLive do
                     <img
                       src={@card.image_path}
                       alt={@card.name}
-                      class="w-full h-full object-contain"
+                      class="card-image-hover w-full h-full object-contain"
                       style="max-height: 600px;"
                     />
                   </div>
@@ -181,9 +181,9 @@ defmodule SammelkartenWeb.CardDetailLive do
               </div>
               
     <!-- Right Column: Price Info and Chart -->
-              <div class="space-y-6">
+              <div class="space-y-6 animate-fade-in-up" style="animation-delay: 0.2s;">
                 <!-- Price Information -->
-                <div class="bg-white rounded-lg shadow-sm p-6">
+                <div class="bg-white rounded-lg shadow-sm p-6 card-hover">
                   <h1 class="text-2xl font-bold text-gray-900 mb-6">{@card.name}</h1>
                   
     <!-- Current Price -->
@@ -229,7 +229,7 @@ defmodule SammelkartenWeb.CardDetailLive do
                 </div>
                 
     <!-- Price History Chart -->
-                <div class="bg-white rounded-lg shadow-sm p-6">
+                <div class="bg-white rounded-lg shadow-sm p-6 chart-container">
                   <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg font-semibold text-gray-900">Price History</h3>
                     <div class="text-xs text-gray-500">

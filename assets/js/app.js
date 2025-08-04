@@ -25,6 +25,127 @@ import topbar from "../vendor/topbar"
 // Chart.js hook for price history and keyboard shortcuts
 let Hooks = {}
 
+// Price flash animation hook for real-time price updates
+Hooks.PriceFlash = {
+  mounted() {
+    this.oldPrice = this.el.dataset.price
+  },
+  
+  updated() {
+    const newPrice = this.el.dataset.price
+    const oldPrice = this.oldPrice
+    
+    if (oldPrice && newPrice && oldPrice !== newPrice) {
+      // Determine if price went up or down
+      const priceChange = parseFloat(newPrice) - parseFloat(oldPrice)
+      
+      // Add flash animation class
+      this.el.classList.remove('price-flash-green', 'price-flash-red')
+      
+      if (priceChange > 0) {
+        this.el.classList.add('price-flash-green')
+      } else if (priceChange < 0) {
+        this.el.classList.add('price-flash-red')
+      }
+      
+      // Remove the class after animation completes
+      setTimeout(() => {
+        this.el.classList.remove('price-flash-green', 'price-flash-red')
+      }, 600)
+    }
+    
+    this.oldPrice = newPrice
+  }
+}
+
+// Smooth page transitions
+Hooks.PageTransition = {
+  mounted() {
+    this.el.classList.add('page-transition')
+  },
+  
+  updated() {
+    // Re-trigger page transition animation on updates
+    this.el.classList.remove('page-transition')
+    setTimeout(() => {
+      this.el.classList.add('page-transition')
+    }, 10)
+  }
+}
+
+// Enhanced search functionality with animations
+Hooks.SearchAnimation = {
+  mounted() {
+    this.searchTimeout = null
+    
+    // Add focus/blur animations
+    this.el.addEventListener('focus', () => {
+      this.el.parentElement.classList.add('search-focused')
+    })
+    
+    this.el.addEventListener('blur', () => {
+      this.el.parentElement.classList.remove('search-focused')
+    })
+    
+    // Add typing animation feedback
+    this.el.addEventListener('input', (e) => {
+      // Clear existing timeout
+      if (this.searchTimeout) {
+        clearTimeout(this.searchTimeout)
+      }
+      
+      // Add typing indicator
+      this.el.classList.add('search-typing')
+      
+      // Debounce the search to reduce server load
+      this.searchTimeout = setTimeout(() => {
+        this.el.classList.remove('search-typing')
+      }, 300)
+    })
+  },
+  
+  destroyed() {
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout)
+    }
+  }
+}
+
+// Smooth scrolling behavior
+Hooks.SmoothScroll = {
+  mounted() {
+    // Add smooth scrolling to all anchor links
+    const links = this.el.querySelectorAll('a[href^="#"]')
+    
+    links.forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault()
+        const targetId = link.getAttribute('href').substring(1)
+        const targetElement = document.getElementById(targetId)
+        
+        if (targetElement) {
+          targetElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          })
+        }
+      })
+    })
+    
+    // Add smooth scroll to top functionality
+    this.scrollToTop = () => {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      })
+    }
+  },
+  
+  destroyed() {
+    // Cleanup if needed
+  }
+}
+
 // Keyboard shortcuts hook
 Hooks.KeyboardShortcuts = {
   mounted() {

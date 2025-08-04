@@ -65,21 +65,22 @@
                 <select
                   name="preferences[refresh_rate]"
                   id="refresh_rate"
-                  value={@form_data[:refresh_rate] || @user_preferences.refresh_rate}
                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 >
                   <%= for {label, value} <- Sammelkarten.UserPreferences.refresh_rate_options() do %>
-                    <option value={value}>{label}</option>
+                    <option value={value} selected={value == (@form_data[:refresh_rate] || @user_preferences.refresh_rate)}>{label}</option>
                   <% end %>
                 </select>
                 <p class="mt-1 text-sm text-gray-500">How often prices are updated</p>
               </div>
               <div class="flex items-start pt-6">
                 <div class="flex items-center h-5">
+                  <input type="hidden" name="preferences[auto_refresh]" value="false" />
                   <input
                     type="checkbox"
                     name="preferences[auto_refresh]"
                     id="auto_refresh"
+                    value="true"
                     checked={@form_data[:auto_refresh] || @user_preferences.auto_refresh}
                     class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
@@ -117,11 +118,10 @@
                 <select
                   name="preferences[theme]"
                   id="theme"
-                  value={@form_data[:theme] || @user_preferences.theme}
                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 >
                   <%= for {label, value} <- Sammelkarten.UserPreferences.theme_options() do %>
-                    <option value={value}>{label}</option>
+                    <option value={value} selected={value == (@form_data[:theme] || @user_preferences.theme)}>{label}</option>
                   <% end %>
                 </select>
                 <p class="mt-1 text-sm text-gray-500">Choose your preferred color scheme</p>
@@ -133,13 +133,12 @@
                 <select
                   name="preferences[cards_per_page]"
                   id="cards_per_page"
-                  value={@form_data[:cards_per_page] || @user_preferences.cards_per_page}
                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 >
-                  <option value="10">10 cards</option>
-                  <option value="20">20 cards</option>
-                  <option value="50">50 cards</option>
-                  <option value="100">100 cards</option>
+                  <option value="10" selected={10 == (@form_data[:cards_per_page] || @user_preferences.cards_per_page)}>10 cards</option>
+                  <option value="20" selected={20 == (@form_data[:cards_per_page] || @user_preferences.cards_per_page)}>20 cards</option>
+                  <option value="50" selected={50 == (@form_data[:cards_per_page] || @user_preferences.cards_per_page)}>50 cards</option>
+                  <option value="100" selected={100 == (@form_data[:cards_per_page] || @user_preferences.cards_per_page)}>100 cards</option>
                 </select>
                 <p class="mt-1 text-sm text-gray-500">Number of cards displayed per page</p>
               </div>
@@ -164,10 +163,12 @@
             <div class="space-y-6">
               <div class="flex items-start">
                 <div class="flex items-center h-5">
+                  <input type="hidden" name="preferences[show_ticker]" value="false" />
                   <input
                     type="checkbox"
                     name="preferences[show_ticker]"
                     id="show_ticker"
+                    value="true"
                     checked={@form_data[:show_ticker] || @user_preferences.show_ticker}
                     class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
@@ -181,10 +182,12 @@
               </div>
               <div class="flex items-start">
                 <div class="flex items-center h-5">
+                  <input type="hidden" name="preferences[notifications_enabled]" value="false" />
                   <input
                     type="checkbox"
                     name="preferences[notifications_enabled]"
                     id="notifications_enabled"
+                    value="true"
                     checked={@form_data[:notifications_enabled] || @user_preferences.notifications_enabled}
                     class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
@@ -198,10 +201,12 @@
               </div>
               <div class="flex items-start">
                 <div class="flex items-center h-5">
+                  <input type="hidden" name="preferences[sound_enabled]" value="false" />
                   <input
                     type="checkbox"
                     name="preferences[sound_enabled]"
                     id="sound_enabled"
+                    value="true"
                     checked={@form_data[:sound_enabled] || @user_preferences.sound_enabled}
                     class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
@@ -239,12 +244,11 @@
                 <select
                   name="preferences[default_sort]"
                   id="default_sort"
-                  value={@form_data[:default_sort] || @user_preferences.default_sort}
                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 >
-                  <option value="name">Name</option>
-                  <option value="price">Price</option>
-                  <option value="change">Change %</option>
+                  <option value="name" selected={"name" == (@form_data[:default_sort] || @user_preferences.default_sort)}>Name</option>
+                  <option value="price" selected={"price" == (@form_data[:default_sort] || @user_preferences.default_sort)}>Price</option>
+                  <option value="change" selected={"change" == (@form_data[:default_sort] || @user_preferences.default_sort)}>Change %</option>
                 </select>
                 <p class="mt-1 text-sm text-gray-500">Default field to sort cards by</p>
               </div>
@@ -255,11 +259,10 @@
                 <select
                   name="preferences[default_sort_direction]"
                   id="default_sort_direction"
-                  value={@form_data[:default_sort_direction] || @user_preferences.default_sort_direction}
                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 >
-                  <option value="asc">Ascending</option>
-                  <option value="desc">Descending</option>
+                  <option value="asc" selected={"asc" == (@form_data[:default_sort_direction] || @user_preferences.default_sort_direction)}>Ascending</option>
+                  <option value="desc" selected={"desc" == (@form_data[:default_sort_direction] || @user_preferences.default_sort_direction)}>Descending</option>
                 </select>
                 <p class="mt-1 text-sm text-gray-500">Default sort order direction</p>
               </div>
@@ -289,11 +292,10 @@
                 <select
                   name="preferences[chart_style]"
                   id="chart_style"
-                  value={@form_data[:chart_style] || @user_preferences.chart_style}
                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 >
                   <%= for {label, value} <- Sammelkarten.UserPreferences.chart_style_options() do %>
-                    <option value={value}>{label}</option>
+                    <option value={value} selected={value == (@form_data[:chart_style] || @user_preferences.chart_style)}>{label}</option>
                   <% end %>
                 </select>
                 <p class="mt-1 text-sm text-gray-500">Default chart visualization style</p>
@@ -305,14 +307,13 @@
                 <select
                   name="preferences[ticker_speed]"
                   id="ticker_speed"
-                  value={@form_data[:ticker_speed] || @user_preferences.ticker_speed}
                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 >
-                  <option value="20">Very Fast</option>
-                  <option value="35">Fast</option>
-                  <option value="50">Normal</option>
-                  <option value="75">Slow</option>
-                  <option value="100">Very Slow</option>
+                  <option value="20" selected={20 == (@form_data[:ticker_speed] || @user_preferences.ticker_speed)}>Very Fast</option>
+                  <option value="35" selected={35 == (@form_data[:ticker_speed] || @user_preferences.ticker_speed)}>Fast</option>
+                  <option value="50" selected={50 == (@form_data[:ticker_speed] || @user_preferences.ticker_speed)}>Normal</option>
+                  <option value="75" selected={75 == (@form_data[:ticker_speed] || @user_preferences.ticker_speed)}>Slow</option>
+                  <option value="100" selected={100 == (@form_data[:ticker_speed] || @user_preferences.ticker_speed)}>Very Slow</option>
                 </select>
                 <p class="mt-1 text-sm text-gray-500">Speed of the scrolling price ticker</p>
               </div>

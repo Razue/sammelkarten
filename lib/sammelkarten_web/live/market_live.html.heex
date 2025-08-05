@@ -91,7 +91,7 @@
         <% else %>
           <div class="space-y-3">
             <%= for card <- @top_gainers do %>
-              <.link navigate={~p"/cards/#{card.id}"}
+              <.link navigate={~p"/cards/#{card.slug}"}
                 class="block hover:bg-gray-50 rounded-lg p-2 -m-2 transition-colors">
                 <div class="flex items-center justify-between">
                   <div class="flex items-center space-x-3">
@@ -139,7 +139,7 @@
         <% else %>
           <div class="space-y-3">
             <%= for card <- @top_losers do %>
-              <.link navigate={~p"/cards/#{card.id}"}
+              <.link navigate={~p"/cards/#{card.slug}"}
                 class="block hover:bg-gray-50 rounded-lg p-2 -m-2 transition-colors">
                 <div class="flex items-center justify-between">
                   <div class="flex items-center space-x-3">

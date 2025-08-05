@@ -14,46 +14,47 @@ defmodule SammelkartenWeb.CardDetailLive do
   alias Sammelkarten.Cards
 
   @impl true
-  def mount(%{"id" => card_id}, _session, socket) do
-    if connected?(socket) do
-      # Subscribe to price updates for this specific card
-      Phoenix.PubSub.subscribe(Sammelkarten.PubSub, "card_prices:#{card_id}")
-    end
-
-    case Cards.get_card(card_id) do
+  def mount(%{"slug" => card_slug}, _session, socket) do
+    case Cards.get_card_by_slug(card_slug) do
       {:ok, card} ->
-        # Get price history for the card
-        {:ok, price_history} = Cards.get_price_history(card_id, 30)
-
-        socket =
-          socket
-          |> assign(:card, card)
-          |> assign(:price_history, price_history)
-          |> assign(:loading, false)
-          |> assign(:error, nil)
-
-        {:ok, socket}
-
+        if connected?(socket) do
+          # Subscribe to price updates for this specific card using the card ID
+          Phoenix.PubSub.subscribe(Sammelkarten.PubSub, "card_prices:#{card.id}")
+        end
+        
+        mount_with_card(card, socket)
+        
       {:error, :not_found} ->
-        socket =
-          socket
-          |> assign(:card, nil)
-          |> assign(:price_history, [])
-          |> assign(:loading, false)
-          |> assign(:error, "Card not found")
-
-        {:ok, socket}
-
+        mount_with_error("Card not found", socket)
+        
       {:error, reason} ->
-        socket =
-          socket
-          |> assign(:card, nil)
-          |> assign(:price_history, [])
-          |> assign(:loading, false)
-          |> assign(:error, "Failed to load card: #{inspect(reason)}")
-
-        {:ok, socket}
+        mount_with_error("Failed to load card: #{inspect(reason)}", socket)
     end
+  end
+  
+  defp mount_with_card(card, socket) do
+    # Get price history for the card
+    {:ok, price_history} = Cards.get_price_history(card.id, 30)
+
+    socket =
+      socket
+      |> assign(:card, card)
+      |> assign(:price_history, price_history)
+      |> assign(:loading, false)
+      |> assign(:error, nil)
+
+    {:ok, socket}
+  end
+  
+  defp mount_with_error(error_message, socket) do
+    socket =
+      socket
+      |> assign(:card, nil)
+      |> assign(:price_history, [])
+      |> assign(:loading, false)
+      |> assign(:error, error_message)
+
+    {:ok, socket}
   end
 
   @impl true
@@ -232,9 +233,6 @@ defmodule SammelkartenWeb.CardDetailLive do
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 chart-container">
                   <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Price History</h3>
-                    <div class="text-xs text-gray-500 dark:text-gray-400">
-                      <div>📈 Scroll to zoom • Drag to pan • Double-click to reset</div>
-                    </div>
                   </div>
 
                   <%= if length(@price_history) > 0 do %>

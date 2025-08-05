@@ -17,6 +17,7 @@ defmodule Sammelkarten.Card do
   @type t :: %__MODULE__{
           id: String.t(),
           name: String.t(),
+          slug: String.t(),
           image_path: String.t(),
           current_price: integer(),
           price_change_24h: integer(),
@@ -29,6 +30,7 @@ defmodule Sammelkarten.Card do
   defstruct [
     :id,
     :name,
+    :slug,
     :image_path,
     :current_price,
     :price_change_24h,
@@ -52,7 +54,16 @@ defmodule Sammelkarten.Card do
       last_updated: DateTime.utc_now()
     }
 
-    struct(__MODULE__, Map.merge(defaults, attrs))
+    merged_attrs = Map.merge(defaults, attrs)
+    
+    # Auto-generate slug from image_path if not provided
+    final_attrs = if Map.has_key?(merged_attrs, :slug) do
+      merged_attrs
+    else
+      Map.put(merged_attrs, :slug, generate_slug_from_image_path(merged_attrs[:image_path]))
+    end
+
+    struct(__MODULE__, final_attrs)
   end
 
   @doc """
@@ -61,6 +72,19 @@ defmodule Sammelkarten.Card do
   def generate_id do
     Base.encode16(:crypto.strong_rand_bytes(16), case: :lower)
   end
+
+  @doc """
+  Generate a URL-friendly slug from image path.
+  Example: "/images/cards/JONAS_NICK.jpg" -> "jonas_nick"
+  """
+  def generate_slug_from_image_path(image_path) when is_binary(image_path) do
+    image_path
+    |> Path.basename()  # Get filename: "JONAS_NICK.jpg"
+    |> Path.rootname()  # Remove extension: "JONAS_NICK"
+    |> String.downcase() # Convert to lowercase: "jonas_nick"
+  end
+  
+  def generate_slug_from_image_path(_), do: "unknown"
 
   @doc """
   Convert price from cents to decimal for display.

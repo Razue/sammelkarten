@@ -269,28 +269,13 @@ Hooks.CardDetailKeyboardShortcuts = {
 Hooks.PriceChart = {
   mounted() {
     this.initChart()
-    this.setupInteractivity()
   },
   
   updated() {
     this.updateChart()
   },
   
-  destroyed() {
-    this.cleanup()
-  },
-  
   initChart() {
-    // Initialize chart state
-    this.zoom = 1.0
-    this.panX = 0
-    this.panY = 0
-    this.isDragging = false
-    this.lastMouseX = 0
-    this.lastMouseY = 0
-    this.minZoom = 0.5
-    this.maxZoom = 5.0
-    
     const ctx = this.el.getContext('2d')
     const data = JSON.parse(this.el.dataset.chartData)
     
@@ -307,141 +292,11 @@ Hooks.PriceChart = {
     this.drawChart(ctx, data)
   },
   
-  setupInteractivity() {
-    // Mouse wheel for zooming
-    this.handleWheel = (e) => {
-      e.preventDefault()
-      
-      const rect = this.el.getBoundingClientRect()
-      const mouseX = e.clientX - rect.left
-      const mouseY = e.clientY - rect.top
-      
-      // Zoom factor
-      const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1
-      const newZoom = Math.max(this.minZoom, Math.min(this.maxZoom, this.zoom * zoomFactor))
-      
-      if (newZoom !== this.zoom) {
-        // Zoom towards mouse position
-        const zoomRatio = newZoom / this.zoom
-        this.panX = mouseX - (mouseX - this.panX) * zoomRatio
-        this.panY = mouseY - (mouseY - this.panY) * zoomRatio
-        this.zoom = newZoom
-        
-        this.updateChart()
-      }
-    }
-    
-    // Mouse drag for panning
-    this.handleMouseDown = (e) => {
-      this.isDragging = true
-      this.lastMouseX = e.clientX
-      this.lastMouseY = e.clientY
-      this.el.style.cursor = 'grabbing'
-    }
-    
-    this.handleMouseMove = (e) => {
-      if (this.isDragging) {
-        const deltaX = e.clientX - this.lastMouseX
-        const deltaY = e.clientY - this.lastMouseY
-        
-        this.panX += deltaX
-        this.panY += deltaY
-        
-        this.lastMouseX = e.clientX
-        this.lastMouseY = e.clientY
-        
-        this.updateChart()
-      }
-    }
-    
-    this.handleMouseUp = () => {
-      this.isDragging = false
-      this.el.style.cursor = 'grab'
-    }
-    
-    this.handleMouseLeave = () => {
-      this.isDragging = false
-      this.el.style.cursor = 'default'
-    }
-    
-    // Double-click to reset zoom/pan
-    this.handleDoubleClick = () => {
-      this.zoom = 1.0
-      this.panX = 0
-      this.panY = 0
-      this.updateChart()
-    }
-    
-    // Touch events for mobile
-    this.handleTouchStart = (e) => {
-      e.preventDefault()
-      if (e.touches.length === 1) {
-        // Single touch - panning
-        this.isDragging = true
-        this.lastMouseX = e.touches[0].clientX
-        this.lastMouseY = e.touches[0].clientY
-      }
-    }
-    
-    this.handleTouchMove = (e) => {
-      e.preventDefault()
-      if (e.touches.length === 1 && this.isDragging) {
-        // Single touch - panning
-        const deltaX = e.touches[0].clientX - this.lastMouseX
-        const deltaY = e.touches[0].clientY - this.lastMouseY
-        
-        this.panX += deltaX
-        this.panY += deltaY
-        
-        this.lastMouseX = e.touches[0].clientX
-        this.lastMouseY = e.touches[0].clientY
-        
-        this.updateChart()
-      } else if (e.touches.length === 2) {
-        // Two finger pinch zoom (simplified)
-        this.isDragging = false
-      }
-    }
-    
-    this.handleTouchEnd = (e) => {
-      e.preventDefault()
-      this.isDragging = false
-    }
-    
-    // Add event listeners
-    this.el.addEventListener('wheel', this.handleWheel)
-    this.el.addEventListener('mousedown', this.handleMouseDown)
-    this.el.addEventListener('mousemove', this.handleMouseMove)
-    this.el.addEventListener('mouseup', this.handleMouseUp)
-    this.el.addEventListener('mouseleave', this.handleMouseLeave)
-    this.el.addEventListener('dblclick', this.handleDoubleClick)
-    this.el.addEventListener('touchstart', this.handleTouchStart)
-    this.el.addEventListener('touchmove', this.handleTouchMove)
-    this.el.addEventListener('touchend', this.handleTouchEnd)
-    
-    // Set initial cursor
-    this.el.style.cursor = 'grab'
-  },
-  
-  cleanup() {
-    if (this.handleWheel) {
-      this.el.removeEventListener('wheel', this.handleWheel)
-      this.el.removeEventListener('mousedown', this.handleMouseDown)
-      this.el.removeEventListener('mousemove', this.handleMouseMove)
-      this.el.removeEventListener('mouseup', this.handleMouseUp)
-      this.el.removeEventListener('mouseleave', this.handleMouseLeave)
-      this.el.removeEventListener('dblclick', this.handleDoubleClick)
-      this.el.removeEventListener('touchstart', this.handleTouchStart)
-      this.el.removeEventListener('touchmove', this.handleTouchMove)
-      this.el.removeEventListener('touchend', this.handleTouchEnd)
-    }
-  },
-  
   drawChart(ctx, data) {
     if (!data || data.length === 0) return
     
     const canvas = this.el
-    const padding = 40
+    const padding = 80
     
     // Set canvas size for high DPI displays
     const rect = canvas.getBoundingClientRect()
@@ -455,14 +310,9 @@ Hooks.PriceChart = {
     const chartWidth = rect.width - (padding * 2)
     const chartHeight = rect.height - (padding * 2)
     
-    // Draw background first (before transformations)
+    // Draw background
     ctx.fillStyle = '#f9fafb'
     ctx.fillRect(0, 0, rect.width, rect.height)
-    
-    // Apply zoom and pan transformations
-    ctx.save()
-    ctx.translate(this.panX, this.panY)
-    ctx.scale(this.zoom, this.zoom)
     
     // Find min and max values
     const prices = data.map(d => d.price)
@@ -472,20 +322,14 @@ Hooks.PriceChart = {
     
     // Draw grid lines
     ctx.strokeStyle = '#e5e7eb'
-    ctx.lineWidth = 1 / this.zoom
-    
-    // Calculate visible area after transformations
-    const visibleLeft = Math.max(0, -this.panX / this.zoom)
-    const visibleRight = Math.min(rect.width, (rect.width - this.panX) / this.zoom)
-    const visibleTop = Math.max(0, -this.panY / this.zoom)
-    const visibleBottom = Math.min(rect.height, (rect.height - this.panY) / this.zoom)
+    ctx.lineWidth = 1
     
     // Horizontal grid lines
     for (let i = 0; i <= 5; i++) {
       const y = padding + (chartHeight / 5) * i
       ctx.beginPath()
-      ctx.moveTo(visibleLeft, y)
-      ctx.lineTo(visibleRight, y)
+      ctx.moveTo(padding, y)
+      ctx.lineTo(rect.width - padding, y)
       ctx.stroke()
     }
     
@@ -493,15 +337,15 @@ Hooks.PriceChart = {
     for (let i = 0; i <= 4; i++) {
       const x = padding + (chartWidth / 4) * i
       ctx.beginPath()
-      ctx.moveTo(x, visibleTop)
-      ctx.lineTo(x, visibleBottom)
+      ctx.moveTo(x, padding)
+      ctx.lineTo(x, rect.height - padding)
       ctx.stroke()
     }
     
     // Draw price line
     if (data.length > 1) {
       ctx.strokeStyle = '#3b82f6'
-      ctx.lineWidth = 2 / this.zoom
+      ctx.lineWidth = 2
       ctx.beginPath()
       
       data.forEach((point, index) => {
@@ -524,14 +368,12 @@ Hooks.PriceChart = {
         const y = padding + chartHeight - ((point.price - minPrice) / priceRange) * chartHeight
         
         ctx.beginPath()
-        ctx.arc(x, y, 3 / this.zoom, 0, 2 * Math.PI)
+        ctx.arc(x, y, 3, 0, 2 * Math.PI)
         ctx.fill()
       })
     }
     
-    ctx.restore()
-    
-    // Draw Y-axis labels (prices) - always visible
+    // Draw Y-axis labels (prices)
     ctx.fillStyle = '#6b7280'
     ctx.font = '12px system-ui'
     ctx.textAlign = 'right'
@@ -542,7 +384,7 @@ Hooks.PriceChart = {
       ctx.fillText(`${Math.floor(price)} sats`, padding - 10, y)
     }
     
-    // Draw X-axis labels (simplified - just show first and last) - always visible
+    // Draw X-axis labels (simplified - just show first and last)
     ctx.textAlign = 'center'
     if (data.length > 0) {
       const firstDate = new Date(data[data.length - 1].timestamp).toLocaleDateString()
@@ -551,17 +393,6 @@ Hooks.PriceChart = {
       ctx.fillText(firstDate, padding, rect.height - 10)
       ctx.fillText(lastDate, rect.width - padding, rect.height - 10)
     }
-    
-    // Draw zoom indicator
-    if (this.zoom !== 1.0 || this.panX !== 0 || this.panY !== 0) {
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'
-      ctx.fillRect(rect.width - 120, 10, 110, 30)
-      ctx.fillStyle = '#ffffff'
-      ctx.font = '10px system-ui'
-      ctx.textAlign = 'left'
-      ctx.fillText(`Zoom: ${this.zoom.toFixed(1)}x`, rect.width - 115, 25)
-      ctx.fillText('Double-click to reset', rect.width - 115, 35)
-    }
   }
 }
 
@@ -569,28 +400,13 @@ Hooks.PriceChart = {
 Hooks.MarketChart = {
   mounted() {
     this.initChart()
-    this.setupInteractivity()
   },
   
   updated() {
     this.updateChart()
   },
   
-  destroyed() {
-    this.cleanup()
-  },
-  
   initChart() {
-    // Initialize chart state
-    this.zoom = 1.0
-    this.panX = 0
-    this.panY = 0
-    this.isDragging = false
-    this.lastMouseX = 0
-    this.lastMouseY = 0
-    this.minZoom = 0.5
-    this.maxZoom = 3.0
-    
     const ctx = this.el.getContext('2d')
     const data = JSON.parse(this.el.dataset.chartData)
     
@@ -604,94 +420,6 @@ Hooks.MarketChart = {
     // Clear and redraw
     ctx.clearRect(0, 0, this.el.width, this.el.height)
     this.drawChart(ctx, data)
-  },
-  
-  setupInteractivity() {
-    // Mouse wheel for zooming
-    this.handleWheel = (e) => {
-      e.preventDefault()
-      
-      const rect = this.el.getBoundingClientRect()
-      const mouseX = e.clientX - rect.left
-      const mouseY = e.clientY - rect.top
-      
-      // Zoom factor
-      const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1
-      const newZoom = Math.max(this.minZoom, Math.min(this.maxZoom, this.zoom * zoomFactor))
-      
-      if (newZoom !== this.zoom) {
-        // Zoom towards mouse position
-        const zoomRatio = newZoom / this.zoom
-        this.panX = mouseX - (mouseX - this.panX) * zoomRatio
-        this.panY = mouseY - (mouseY - this.panY) * zoomRatio
-        this.zoom = newZoom
-        
-        this.updateChart()
-      }
-    }
-    
-    // Mouse drag for panning
-    this.handleMouseDown = (e) => {
-      this.isDragging = true
-      this.lastMouseX = e.clientX
-      this.lastMouseY = e.clientY
-      this.el.style.cursor = 'grabbing'
-    }
-    
-    this.handleMouseMove = (e) => {
-      if (this.isDragging) {
-        const deltaX = e.clientX - this.lastMouseX
-        const deltaY = e.clientY - this.lastMouseY
-        
-        this.panX += deltaX
-        this.panY += deltaY
-        
-        this.lastMouseX = e.clientX
-        this.lastMouseY = e.clientY
-        
-        this.updateChart()
-      }
-    }
-    
-    this.handleMouseUp = () => {
-      this.isDragging = false
-      this.el.style.cursor = 'grab'
-    }
-    
-    this.handleMouseLeave = () => {
-      this.isDragging = false
-      this.el.style.cursor = 'default'
-    }
-    
-    // Double-click to reset zoom/pan
-    this.handleDoubleClick = () => {
-      this.zoom = 1.0
-      this.panX = 0
-      this.panY = 0
-      this.updateChart()
-    }
-    
-    // Add event listeners
-    this.el.addEventListener('wheel', this.handleWheel)
-    this.el.addEventListener('mousedown', this.handleMouseDown)
-    this.el.addEventListener('mousemove', this.handleMouseMove)
-    this.el.addEventListener('mouseup', this.handleMouseUp)
-    this.el.addEventListener('mouseleave', this.handleMouseLeave)
-    this.el.addEventListener('dblclick', this.handleDoubleClick)
-    
-    // Set initial cursor
-    this.el.style.cursor = 'grab'
-  },
-  
-  cleanup() {
-    if (this.handleWheel) {
-      this.el.removeEventListener('wheel', this.handleWheel)
-      this.el.removeEventListener('mousedown', this.handleMouseDown)
-      this.el.removeEventListener('mousemove', this.handleMouseMove)
-      this.el.removeEventListener('mouseup', this.handleMouseUp)
-      this.el.removeEventListener('mouseleave', this.handleMouseLeave)
-      this.el.removeEventListener('dblclick', this.handleDoubleClick)
-    }
   },
   
   drawChart(ctx, data) {
@@ -710,7 +438,7 @@ Hooks.MarketChart = {
     }
     
     const canvas = this.el
-    const padding = 50
+    const padding = 60
     
     // Set canvas size for high DPI displays
     const rect = canvas.getBoundingClientRect()
@@ -724,11 +452,6 @@ Hooks.MarketChart = {
     const chartWidth = rect.width - (padding * 2)
     const chartHeight = rect.height - (padding * 2)
     
-    // Apply zoom and pan transformations
-    ctx.save()
-    ctx.translate(this.panX, this.panY)
-    ctx.scale(this.zoom, this.zoom)
-    
     // Find min and max values
     const values = data.map(d => d.value)
     const minValue = Math.min(...values)
@@ -737,11 +460,11 @@ Hooks.MarketChart = {
     
     // Draw background
     ctx.fillStyle = '#ffffff'
-    ctx.fillRect(-this.panX / this.zoom, -this.panY / this.zoom, rect.width / this.zoom, rect.height / this.zoom)
+    ctx.fillRect(0, 0, rect.width, rect.height)
     
     // Draw grid lines
     ctx.strokeStyle = '#e5e7eb'
-    ctx.lineWidth = 1 / this.zoom
+    ctx.lineWidth = 1
     
     // Horizontal grid lines
     for (let i = 0; i <= 4; i++) {
@@ -798,7 +521,7 @@ Hooks.MarketChart = {
     // Draw main line
     if (data.length > 1) {
       ctx.strokeStyle = '#3b82f6'
-      ctx.lineWidth = 2 / this.zoom
+      ctx.lineWidth = 2
       ctx.beginPath()
       
       data.forEach((point, index) => {
@@ -821,14 +544,12 @@ Hooks.MarketChart = {
         const y = padding + chartHeight - ((point.value - minValue) / valueRange) * chartHeight
         
         ctx.beginPath()
-        ctx.arc(x, y, 3 / this.zoom, 0, 2 * Math.PI)
+        ctx.arc(x, y, 3, 0, 2 * Math.PI)
         ctx.fill()
       })
     }
     
-    ctx.restore()
-    
-    // Draw Y-axis labels (values) - always visible
+    // Draw Y-axis labels (values)
     ctx.fillStyle = '#6b7280'
     ctx.font = '11px system-ui'
     ctx.textAlign = 'right'
@@ -845,25 +566,6 @@ Hooks.MarketChart = {
     ctx.font = '10px system-ui'
     const timeRange = this.el.dataset.timeRange || '24h'
     ctx.fillText(`Market Cap Over ${timeRange}`, rect.width / 2, rect.height - 5)
-    
-    // Draw interaction hints
-    if (this.zoom !== 1.0 || this.panX !== 0 || this.panY !== 0) {
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'
-      ctx.fillRect(10, 10, 140, 40)
-      ctx.fillStyle = '#ffffff'
-      ctx.font = '10px system-ui'
-      ctx.textAlign = 'left'
-      ctx.fillText(`Zoom: ${this.zoom.toFixed(1)}x`, 15, 25)
-      ctx.fillText('Scroll: zoom, Drag: pan', 15, 35)
-      ctx.fillText('Double-click: reset', 15, 45)
-    } else {
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.6)'
-      ctx.fillRect(10, rect.height - 35, 160, 25)
-      ctx.fillStyle = '#ffffff'
-      ctx.font = '10px system-ui'
-      ctx.textAlign = 'left'
-      ctx.fillText('Scroll to zoom, drag to pan', 15, rect.height - 20)
-    }
   }
 }
 

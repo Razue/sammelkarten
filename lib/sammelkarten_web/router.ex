@@ -23,7 +23,7 @@ defmodule SammelkartenWeb.Router do
 
     live "/", DashboardLive, :index
     live "/cards", DashboardLive, :index
-    live "/cards/:id", CardDetailLive, :show
+    live "/cards/:slug", CardDetailLive, :show
     live "/preferences", PreferencesLive, :index
     live "/market", MarketLive, :index
     live "/donation", DonationLive, :index

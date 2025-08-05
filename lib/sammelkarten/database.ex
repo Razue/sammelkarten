@@ -66,6 +66,7 @@ defmodule Sammelkarten.Database do
       attributes: [
         :id,
         :name,
+        :slug,
         :image_path,
         :current_price,
         :price_change_24h,

@@ -29,14 +29,14 @@ defmodule SammelkartenWeb.PreferencesLive do
     # Convert form data to appropriate types for comparison
     cleaned_changes = clean_preference_changes(preference_changes)
     current_prefs = Map.from_struct(socket.assigns.user_preferences)
-    
+
     # Remove timestamps and user_id for comparison
     current_prefs_clean = Map.drop(current_prefs, [:created_at, :updated_at, :user_id])
     cleaned_changes_clean = Map.drop(cleaned_changes, [:created_at, :updated_at, :user_id])
-    
+
     # Check if there are actual changes by comparing relevant fields
     has_changes = Map.merge(current_prefs_clean, cleaned_changes_clean) != current_prefs_clean
-    
+
     socket =
       socket
       |> assign(:form_data, cleaned_changes)
@@ -72,8 +72,15 @@ defmodule SammelkartenWeb.PreferencesLive do
           |> assign(:saved, true)
           |> assign(:error_message, nil)
 
-        # Clear the saved message after 3 seconds
-        Process.send_after(self(), :clear_saved_message, 3000)
+        # If theme changed, refresh the page to apply new theme
+        socket =
+          if Map.has_key?(cleaned_changes, :theme) do
+            push_navigate(socket, to: ~p"/preferences")
+          else
+            # Clear the saved message after 3 seconds
+            Process.send_after(self(), :clear_saved_message, 3000)
+            socket
+          end
 
         {:noreply, socket}
 

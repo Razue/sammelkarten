@@ -2,6 +2,9 @@
 
 ## Development Notes
 
+### Code Style Guidelines
+- Elixir Code style: Use always a function call when a pipeline is only one function long
+
 ### Server Status Notes
 - The server is already running
 

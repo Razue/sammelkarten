@@ -10,5 +10,14 @@ defmodule SammelkartenWeb.Layouts do
   """
   use SammelkartenWeb, :html
 
+  alias SammelkartenWeb.Theme
+
   embed_templates "layouts/*"
+
+  @doc """
+  Gets the theme CSS class for the HTML element.
+  """
+  def get_theme_class(_assigns) do
+    Theme.get_theme_class()
+  end
 end

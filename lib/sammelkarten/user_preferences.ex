@@ -104,8 +104,8 @@ defmodule Sammelkarten.UserPreferences do
 
   defp validate_refresh_rate(_), do: {:error, "Refresh rate must be between 1 and 300 seconds"}
 
-  defp validate_theme(theme) when theme in ["light", "dark", "auto"], do: :ok
-  defp validate_theme(_), do: {:error, "Theme must be 'light', 'dark', or 'auto'"}
+  defp validate_theme(theme) when theme in ["light", "dark"], do: :ok
+  defp validate_theme(_), do: {:error, "Theme must be 'light' or 'dark'"}
 
   defp validate_sort_field(field) when field in ["name", "price", "change"], do: :ok
   defp validate_sort_field(_), do: {:error, "Sort field must be 'name', 'price', or 'change'"}
@@ -173,8 +173,7 @@ defmodule Sammelkarten.UserPreferences do
   def theme_options do
     [
       {"Light", "light"},
-      {"Dark", "dark"},
-      {"Auto", "auto"}
+      {"Dark", "dark"}
     ]
   end
 

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="[scrollbar-gutter:stable]">
+<html lang="en" class={["[scrollbar-gutter:stable]", get_theme_class(assigns)]}>
 
 <head>
   <meta charset="utf-8" />
@@ -16,7 +16,7 @@
   </script>
 </head>
 
-<body class="bg-white">
+<body class="bg-white dark:bg-gray-900 transition-colors duration-200">
   {@inner_content}
 </body>
 

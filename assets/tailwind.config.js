@@ -11,6 +11,7 @@ module.exports = {
     "../lib/sammelkarten_web.ex",
     "../lib/sammelkarten_web/**/*.*ex"
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {

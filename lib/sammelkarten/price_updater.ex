@@ -51,6 +51,13 @@ defmodule Sammelkarten.PriceUpdater do
   end
 
   @doc """
+  Enable or disable automatic price refreshes.
+  """
+  def set_auto_refresh(enabled) when is_boolean(enabled) do
+    GenServer.cast(__MODULE__, {:set_auto_refresh, enabled})
+  end
+
+  @doc """
   Pause automatic updates.
   """
   def pause do
@@ -75,25 +82,26 @@ defmodule Sammelkarten.PriceUpdater do
 
   @impl true
   def init(_opts) do
-    # Load user preferences to get initial refresh rate
-    default_interval =
-      case Sammelkarten.Preferences.get_refresh_rate("default_user") do
-        {:ok, refresh_rate} -> refresh_rate
-        {:error, _} -> @update_interval
+    # Load user preferences to get initial refresh rate and auto_refresh setting
+    {default_interval, auto_refresh_enabled} =
+      case Sammelkarten.Preferences.get_user_preferences("default_user") do
+        {:ok, preferences} -> {preferences.refresh_rate, preferences.auto_refresh}
+        {:error, _} -> {@update_interval, true}
       end
 
     state = %{
       interval: default_interval,
       timer_ref: nil,
       paused: false,
+      auto_refresh_enabled: auto_refresh_enabled,
       last_update: nil,
       update_count: 0
     }
 
-    # Schedule the first update
+    # Schedule the first update only if auto_refresh is enabled
     state = schedule_next_update(state)
 
-    Logger.info("Price updater started with #{state.interval}ms interval")
+    Logger.info("Price updater started with #{state.interval}ms interval, auto_refresh: #{auto_refresh_enabled}")
     {:ok, state}
   end
 
@@ -107,6 +115,7 @@ defmodule Sammelkarten.PriceUpdater do
     status = %{
       interval: state.interval,
       paused: state.paused,
+      auto_refresh_enabled: state.auto_refresh_enabled,
       last_update: state.last_update,
       update_count: state.update_count,
       next_update: if(state.timer_ref, do: "scheduled", else: "none")
@@ -129,6 +138,19 @@ defmodule Sammelkarten.PriceUpdater do
     state = cancel_timer(state)
     new_state = %{state | interval: new_interval}
     new_state = schedule_next_update(new_state)
+
+    {:noreply, new_state}
+  end
+
+  @impl true
+  def handle_cast({:set_auto_refresh, enabled}, state) do
+    Logger.info("#{if enabled, do: "Enabling", else: "Disabling"} automatic price refreshes")
+
+    state = cancel_timer(state)
+    new_state = %{state | auto_refresh_enabled: enabled}
+    
+    # If enabling auto_refresh, schedule next update; if disabling, don't schedule
+    new_state = if enabled, do: schedule_next_update(new_state), else: new_state
 
     {:noreply, new_state}
   end
@@ -204,6 +226,7 @@ defmodule Sammelkarten.PriceUpdater do
   end
 
   defp schedule_next_update(%{paused: true} = state), do: state
+  defp schedule_next_update(%{auto_refresh_enabled: false} = state), do: state
 
   defp schedule_next_update(%{interval: interval} = state) do
     timer_ref = Process.send_after(self(), :update_prices, interval)

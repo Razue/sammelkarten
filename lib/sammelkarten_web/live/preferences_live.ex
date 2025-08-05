@@ -59,6 +59,11 @@ defmodule SammelkartenWeb.PreferencesLive do
           Sammelkarten.PriceUpdater.set_interval(updated_preferences.refresh_rate)
         end
 
+        # Update auto_refresh setting in PriceUpdater if it changed
+        if Map.has_key?(cleaned_changes, :auto_refresh) do
+          Sammelkarten.PriceUpdater.set_auto_refresh(updated_preferences.auto_refresh)
+        end
+
         socket =
           socket
           |> assign(:user_preferences, updated_preferences)
@@ -86,8 +91,9 @@ defmodule SammelkartenWeb.PreferencesLive do
   def handle_event("reset_preferences", _params, socket) do
     case Preferences.reset_to_defaults(socket.assigns.user_id) do
       {:ok, default_preferences} ->
-        # Update refresh rate in PriceUpdater
+        # Update refresh rate and auto_refresh in PriceUpdater
         Sammelkarten.PriceUpdater.set_interval(default_preferences.refresh_rate)
+        Sammelkarten.PriceUpdater.set_auto_refresh(default_preferences.auto_refresh)
 
         socket =
           socket

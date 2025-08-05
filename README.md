@@ -7,6 +7,9 @@
 [![Last Commit](https://img.shields.io/github/last-commit/razue/sammelkarten.svg)](https://github.com/razue/sammelkarten/commits/master)
 [![Issues](https://img.shields.io/github/issues/razue/sammelkarten.svg)](https://github.com/razue/sammelkarten/issues)
 [![Pull Requests](https://img.shields.io/github/issues-pr/razue/sammelkarten.svg)](https://github.com/razue/sammelkarten/pulls)
+[![Donate Bitcoin](https://img.shields.io/badge/Donate-Bitcoin-orange?logo=bitcoin&logoColor=white)](https://sammelkarten.fly.dev/donation)
+
+
 
 > **Sammelkarten** - A beautiful, real-time web application for tracking collectible card values with Bitcoin-style analytics.
 
@@ -177,8 +180,11 @@ Thank you for the beautiful photos of the cards: OrangePin21!
 ---
 
 **Live Demo**: [samelkarten.fly.dev](https://sammelkarten.fly.dev)
+
 **Source Code**: [GitHub Repository](https://github.com/razue/sammelkarten)
-**Donation**: [Donation](https://sammelkarten.fly.dev/donation)
+
+**Donation**: [Donation](https://razue.github.io/sammelkarten/donation)
+
 
 *Made with ❤️ in Bitcoin and Elixir*
 

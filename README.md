@@ -178,5 +178,7 @@ Thank you for the beautiful photos of the cards: OrangePin21!
 
 **Live Demo**: [samelkarten.fly.dev](https://sammelkarten.fly.dev)
 **Source Code**: [GitHub Repository](https://github.com/razue/sammelkarten)
+**Donation**: [Donation](https://sammelkarten.fly.dev/donation)
 
 *Made with ❤️ in Bitcoin and Elixir*
+

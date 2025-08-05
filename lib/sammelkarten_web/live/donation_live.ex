@@ -5,8 +5,8 @@ defmodule SammelkartenWeb.DonationLive do
     {:ok,
      assign(socket,
        page_title: "Support this Project",
-       lightning_address: "xxx@ln.tips",
-       bitcoin_address: "bc1qxyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+       lightning_address: "",
+       bitcoin_address: "xxx",
        qr_code_shown: false,
        donation_type: "lightning"
      )}

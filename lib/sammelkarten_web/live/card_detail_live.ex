@@ -83,18 +83,18 @@ defmodule SammelkartenWeb.CardDetailLive do
   def render(assigns) do
     ~H"""
     <div
-      class="min-h-screen bg-gray-50 page-transition"
+      class="min-h-screen bg-gray-50 dark:bg-gray-900 page-transition"
       id="card-detail-container"
       phx-hook="CardDetailKeyboardShortcuts"
     >
       <%= if @error do %>
         <div class="max-w-4xl mx-auto px-4 py-8">
-          <div class="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-            <h2 class="text-xl font-semibold text-red-800 mb-2">Error</h2>
-            <p class="text-red-600">{@error}</p>
+          <div class="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-lg p-6 text-center">
+            <h2 class="text-xl font-semibold text-red-800 dark:text-red-100 mb-2">Error</h2>
+            <p class="text-red-600 dark:text-red-300">{@error}</p>
             <.link
               navigate="/cards"
-              class="inline-block mt-4 text-blue-600 hover:text-blue-800 underline"
+              class="inline-block mt-4 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline"
             >
               ← Back to Cards
             </.link>
@@ -103,12 +103,12 @@ defmodule SammelkartenWeb.CardDetailLive do
       <% else %>
         <%= if @card do %>
           <!-- Breadcrumb Navigation -->
-          <div class="bg-white border-b border-gray-200 animate-slide-in-top">
+          <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 animate-slide-in-top">
             <div class="max-w-6xl mx-auto px-4 py-3">
               <nav class="flex" aria-label="Breadcrumb">
-                <ol class="flex items-center space-x-2 text-sm text-gray-500">
+                <ol class="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
                   <li>
-                    <.link navigate="/cards" class="hover:text-gray-700">
+                    <.link navigate="/cards" class="hover:text-gray-700 dark:hover:text-gray-300">
                       Cards
                     </.link>
                   </li>
@@ -120,7 +120,7 @@ defmodule SammelkartenWeb.CardDetailLive do
                         clip-rule="evenodd"
                       />
                     </svg>
-                    <span class="font-medium text-gray-900">{@card.name}</span>
+                    <span class="font-medium text-gray-900 dark:text-white">{@card.name}</span>
                   </li>
                 </ol>
               </nav>
@@ -134,9 +134,9 @@ defmodule SammelkartenWeb.CardDetailLive do
     <!-- Left Column: Card Image and Basic Info -->
               <div class="space-y-6 animate-fade-in-up">
                 <!-- Card Image -->
-                <div class="bg-white rounded-lg shadow-sm p-6 card-hover">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 card-hover">
                   <div
-                    class="bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center"
+                    class="bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden flex items-center justify-center"
                     style="min-height: 630px;"
                   >
                     <img
@@ -149,11 +149,11 @@ defmodule SammelkartenWeb.CardDetailLive do
                 </div>
                 
     <!-- Card Metadata -->
-                <div class="bg-white rounded-lg shadow-sm p-6">
-                  <h3 class="text-lg font-semibold text-gray-900 mb-4">Card Details</h3>
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+                  <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Card Details</h3>
                   <div class="space-y-3">
                     <div class="flex justify-between">
-                      <span class="text-gray-600">Rarity</span>
+                      <span class="text-gray-600 dark:text-gray-400">Rarity</span>
                       <span class={[
                         "px-2 py-1 rounded-full text-xs font-medium",
                         rarity_color_class(@card.rarity)
@@ -162,17 +162,17 @@ defmodule SammelkartenWeb.CardDetailLive do
                       </span>
                     </div>
                     <div class="flex justify-between">
-                      <span class="text-gray-600">Last Updated</span>
-                      <span class="text-gray-900">
+                      <span class="text-gray-600 dark:text-gray-400">Last Updated</span>
+                      <span class="text-gray-900 dark:text-white">
                         {format_datetime(@card.last_updated)}
                       </span>
                     </div>
                   </div>
 
                   <%= if @card.description && @card.description != "" do %>
-                    <div class="mt-6 pt-6 border-t border-gray-200">
-                      <h4 class="font-medium text-gray-900 mb-2">Description</h4>
-                      <p class="text-gray-600 text-sm leading-relaxed">
+                    <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                      <h4 class="font-medium text-gray-900 dark:text-white mb-2">Description</h4>
+                      <p class="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
                         {@card.description}
                       </p>
                     </div>
@@ -183,12 +183,12 @@ defmodule SammelkartenWeb.CardDetailLive do
     <!-- Right Column: Price Info and Chart -->
               <div class="space-y-6 animate-fade-in-up" style="animation-delay: 0.2s;">
                 <!-- Price Information -->
-                <div class="bg-white rounded-lg shadow-sm p-6 card-hover">
-                  <h1 class="text-2xl font-bold text-gray-900 mb-6">{@card.name}</h1>
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 card-hover">
+                  <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">{@card.name}</h1>
                   
     <!-- Current Price -->
                   <div class="mb-6">
-                    <div class="text-3xl font-bold text-gray-900 mb-2">
+                    <div class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
                       {format_price(@card.current_price)}
                     </div>
                     
@@ -229,10 +229,10 @@ defmodule SammelkartenWeb.CardDetailLive do
                 </div>
                 
     <!-- Price History Chart -->
-                <div class="bg-white rounded-lg shadow-sm p-6 chart-container">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 chart-container">
                   <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-semibold text-gray-900">Price History</h3>
-                    <div class="text-xs text-gray-500">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Price History</h3>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">
                       <div>📈 Scroll to zoom • Drag to pan • Double-click to reset</div>
                     </div>
                   </div>
@@ -243,22 +243,22 @@ defmodule SammelkartenWeb.CardDetailLive do
                         id="price-chart"
                         phx-hook="PriceChart"
                         data-chart-data={prepare_chart_data(@price_history)}
-                        class="w-full border border-gray-200 rounded"
+                        class="w-full border border-gray-200 dark:border-gray-600 rounded"
                         style="height: 300px;"
                       >
                       </canvas>
                     </div>
                     
     <!-- Recent price data table -->
-                    <div class="mt-6 pt-6 border-t border-gray-200">
-                      <h4 class="text-sm font-medium text-gray-900 mb-3">Recent Price Changes</h4>
+                    <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                      <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-3">Recent Price Changes</h4>
                       <div class="space-y-2 max-h-32 overflow-y-auto">
                         <%= for entry <- Enum.take(@price_history, 5) do %>
                           <div class="flex justify-between items-center py-1 text-sm">
-                            <span class="text-gray-600">
+                            <span class="text-gray-600 dark:text-gray-400">
                               {format_datetime(entry.timestamp)}
                             </span>
-                            <span class="font-medium text-gray-900">
+                            <span class="font-medium text-gray-900 dark:text-white">
                               {format_price(entry.price)}
                             </span>
                           </div>
@@ -266,9 +266,9 @@ defmodule SammelkartenWeb.CardDetailLive do
                       </div>
                     </div>
                   <% else %>
-                    <div class="text-center py-8 text-gray-500">
+                    <div class="text-center py-8 text-gray-500 dark:text-gray-400">
                       <svg
-                        class="mx-auto h-12 w-12 text-gray-400 mb-4"
+                        class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500 mb-4"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -332,16 +332,16 @@ defmodule SammelkartenWeb.CardDetailLive do
     Sammelkarten.Formatter.format_german_percentage(percentage)
   end
 
-  defp price_change_color(change) when change > 0, do: "text-green-600"
-  defp price_change_color(change) when change < 0, do: "text-red-600"
-  defp price_change_color(_), do: "text-gray-600"
+  defp price_change_color(change) when change > 0, do: "text-green-600 dark:text-green-400"
+  defp price_change_color(change) when change < 0, do: "text-red-600 dark:text-red-400"
+  defp price_change_color(_), do: "text-gray-600 dark:text-gray-400"
 
-  defp rarity_color_class("common"), do: "bg-gray-100 text-gray-800"
-  defp rarity_color_class("uncommon"), do: "bg-green-100 text-green-800"
-  defp rarity_color_class("rare"), do: "bg-blue-100 text-blue-800"
-  defp rarity_color_class("epic"), do: "bg-purple-100 text-purple-800"
-  defp rarity_color_class("legendary"), do: "bg-yellow-100 text-yellow-800"
-  defp rarity_color_class(_), do: "bg-gray-100 text-gray-800"
+  defp rarity_color_class("common"), do: "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+  defp rarity_color_class("uncommon"), do: "bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200"
+  defp rarity_color_class("rare"), do: "bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200"
+  defp rarity_color_class("epic"), do: "bg-purple-100 dark:bg-purple-800 text-purple-800 dark:text-purple-200"
+  defp rarity_color_class("legendary"), do: "bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200"
+  defp rarity_color_class(_), do: "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
 
   defp format_datetime(%DateTime{} = dt) do
     dt

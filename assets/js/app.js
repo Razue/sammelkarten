@@ -25,6 +25,29 @@ import topbar from "../vendor/topbar"
 // Chart.js hook for price history and keyboard shortcuts
 let Hooks = {}
 
+// Theme toggle hook for real-time theme switching
+Hooks.ThemeToggle = {
+  mounted() {
+    // Listen for theme change events from LiveView
+    this.handleEvent("theme-changed", ({theme}) => {
+      this.toggleTheme(theme)
+    })
+  },
+  
+  toggleTheme(theme) {
+    const htmlElement = document.documentElement
+    
+    if (theme === "dark") {
+      htmlElement.classList.add("dark")
+    } else {
+      htmlElement.classList.remove("dark")
+    }
+    
+    // Optional: Store theme preference in localStorage for persistence
+    localStorage.setItem("theme", theme)
+  }
+}
+
 // Price flash animation hook for real-time price updates
 Hooks.PriceFlash = {
   mounted() {
@@ -864,6 +887,21 @@ liveSocket.connect()
 // >> liveSocket.enableLatencySim(1000)  // enabled for duration of browser session
 // >> liveSocket.disableLatencySim()
 window.liveSocket = liveSocket
+
+// Global theme change handler
+window.addEventListener("phx:theme-changed", (event) => {
+  const theme = event.detail.theme
+  const htmlElement = document.documentElement
+  
+  if (theme === "dark") {
+    htmlElement.classList.add("dark")
+  } else {
+    htmlElement.classList.remove("dark")
+  }
+  
+  // Store theme preference in localStorage for persistence
+  localStorage.setItem("theme", theme)
+})
 
 // Mobile menu functionality
 document.addEventListener('DOMContentLoaded', function() {

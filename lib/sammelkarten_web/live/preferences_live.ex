@@ -72,15 +72,17 @@ defmodule SammelkartenWeb.PreferencesLive do
           |> assign(:saved, true)
           |> assign(:error_message, nil)
 
-        # If theme changed, refresh the page to apply new theme
+        # If theme changed, broadcast theme update to all clients
         socket =
           if Map.has_key?(cleaned_changes, :theme) do
-            push_navigate(socket, to: ~p"/preferences")
+            # Push theme change event to client-side JavaScript
+            push_event(socket, "theme-changed", %{theme: updated_preferences.theme})
           else
-            # Clear the saved message after 3 seconds
-            Process.send_after(self(), :clear_saved_message, 3000)
             socket
           end
+
+        # Clear the saved message after 3 seconds
+        Process.send_after(self(), :clear_saved_message, 3000)
 
         {:noreply, socket}
 

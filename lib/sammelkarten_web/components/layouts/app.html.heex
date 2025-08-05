@@ -7,24 +7,24 @@
           <div class="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
             <span class="text-white font-bold text-sm">S</span>
           </div>
-          <span class="text-xl font-semibold text-gray-900 dark:text-white">Sammelkarten</span>
+          <span class="text-heading-lg text-gray-900 dark:text-white">Sammelkarten</span>
         </.link>
       </div>
 
       <!-- Navigation Links -->
       <div class="hidden md:flex items-center space-x-8">
-        <.link navigate={~p"/cards"} class="nav-link text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white px-3 py-2 text-sm font-medium transition-colors">
+        <.link navigate={~p"/cards"} class="nav-link text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white px-3 py-2 text-label-lg transition-colors">
           Cards
         </.link>
-        <.link navigate={~p"/market"} class="nav-link text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white px-3 py-2 text-sm font-medium transition-colors">
+        <.link navigate={~p"/market"} class="nav-link text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white px-3 py-2 text-label-lg transition-colors">
           Market
         </.link>
         <.link navigate={~p"/preferences"}
-          class="nav-link text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white px-3 py-2 text-sm font-medium transition-colors">
+          class="nav-link text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white px-3 py-2 text-label-lg transition-colors">
           Preferences
         </.link>
         <.link navigate={~p"/donation"}
-          class="nav-link text-orange-600 hover:text-orange-700 px-3 py-2 text-sm font-medium border border-orange-200 rounded-lg hover:bg-orange-50 transition-colors">
+          class="nav-link text-orange-600 hover:text-orange-700 px-3 py-2 text-label-lg border border-orange-200 rounded-lg hover:bg-orange-50 transition-colors">
           💝 Donation
         </.link>
       </div>
@@ -63,7 +63,7 @@
   </div>
 </nav>
 
-<main class="min-h-screen bg-gray-50 dark:bg-gray-900 page-transition transition-colors duration-200">
+<main class="min-h-screen bg-enhanced page-transition transition-colors duration-200">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <.flash_group flash={@flash} />
     {@inner_content}

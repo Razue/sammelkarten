@@ -183,31 +183,32 @@
                 </div>
                 <div class="ml-3 text-sm">
                   <label for="show_ticker" class="font-medium text-gray-700 dark:text-gray-300">
-                    Show price ticker
+                    Show price or exchange ticker
                   </label>
-                  <p class="text-gray-500 dark:text-gray-400">Display the scrolling price ticker at the top of pages</p>
+                  <p class="text-gray-500 dark:text-gray-400">Display the scrolling price or exchange ticker at the top of pages</p>
                 </div>
               </div>
-              <div class="flex items-start">
+              <div class="flex items-start opacity-60 cursor-not-allowed">
                 <div class="flex items-center h-5">
                   <input type="hidden" name="preferences[notifications_enabled]" value="false" />
                   <input
                     type="checkbox"
                     name="preferences[notifications_enabled]"
                     id="notifications_enabled"
-                    value="true"
+                    value="false"
                     checked={if Map.has_key?(@form_data, :notifications_enabled), do: @form_data[:notifications_enabled], else: @user_preferences.notifications_enabled}
-                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-not-allowed"
+                    disabled
                   />
                 </div>
                 <div class="ml-3 text-sm">
-                  <label for="notifications_enabled" class="font-medium text-gray-700 dark:text-gray-300">
+                  <label for="notifications_enabled" class="font-medium text-gray-700 dark:text-gray-300 cursor-not-allowed">
                     Enable notifications
                   </label>
                   <p class="text-gray-500 dark:text-gray-400">Receive notifications for price changes and alerts</p>
                 </div>
               </div>
-              <div class="flex items-start">
+              <div class="flex items-start opacity-60 cursor-not-allowed">
                 <div class="flex items-center h-5">
                   <input type="hidden" name="preferences[sound_enabled]" value="false" />
                   <input
@@ -216,11 +217,12 @@
                     id="sound_enabled"
                     value="true"
                     checked={if Map.has_key?(@form_data, :sound_enabled), do: @form_data[:sound_enabled], else: @user_preferences.sound_enabled}
-                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-not-allowed"
+                    disabled
                   />
                 </div>
                 <div class="ml-3 text-sm">
-                  <label for="sound_enabled" class="font-medium text-gray-700 dark:text-gray-300">
+                  <label for="sound_enabled" class="font-medium text-gray-700 dark:text-gray-300 cursor-not-allowed">
                     Enable sound notifications
                   </label>
                   <p class="text-gray-500 dark:text-gray-400">Play sounds for important price alerts and changes</p>
@@ -375,4 +377,5 @@
     </div>
   </div>
 </div>
+
 

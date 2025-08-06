@@ -107,6 +107,10 @@
 - Implemented realistic offer and search value calculations based on current prices
 - Added appropriate icons (arrow for offers, search for searches) to distinguish exchange values
 - Integrated with existing real-time update system and search/filter functionality
+- **Session 13**: Adapted price ticker for exchange mode:
+  - Created ExchangeTicker component showing offer/search quantities instead of prices
+  - Updated exchange page to use the new ticker component
+  - Added visual indicators for trading activity with green (offering) and blue (searching) color coding
 
 
 ## Task Management Rules

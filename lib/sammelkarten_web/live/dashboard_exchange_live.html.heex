@@ -1,7 +1,7 @@
 <div class="min-h-screen bg-enhanced" id="dashboard-container" phx-hook="KeyboardShortcuts">
-  <!-- Price Ticker (Exchange Mode) -->
+  <!-- Exchange Ticker -->
   <%= if Map.get(@user_preferences, :show_ticker, true) do %>
-    <.live_component module={SammelkartenWeb.Components.PriceTicker} id="price-ticker" cards={@cards} />
+    <.live_component module={SammelkartenWeb.Components.ExchangeTicker} id="exchange-ticker" cards={@cards} />
   <% end %>
 
   <!-- Header Section -->

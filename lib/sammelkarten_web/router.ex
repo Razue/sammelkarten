@@ -21,13 +21,13 @@ defmodule SammelkartenWeb.Router do
   scope "/", SammelkartenWeb do
     pipe_through :browser
 
-    live "/", DashboardLive, :index
+    live "/", DashboardExchangeLive, :index
     live "/cards", DashboardLive, :index
     live "/cards/:slug", CardDetailLive, :show
     live "/preferences", PreferencesLive, :index
     live "/market", MarketLive, :index
     live "/donation", DonationLive, :index
-    
+
     # Admin authentication routes
     live "/admin/login", AdminLoginLive, :index
     post "/admin/session", AdminSessionController, :create
@@ -36,7 +36,7 @@ defmodule SammelkartenWeb.Router do
 
   scope "/admin", SammelkartenWeb do
     pipe_through [:browser, :admin_auth]
-    
+
     live "/", AdminLive, :index
   end
 

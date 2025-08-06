@@ -22,7 +22,6 @@ defmodule SammelkartenWeb.Router do
     pipe_through :browser
 
     live "/", DashboardExchangeLive, :index
-    live "/:slug", CardDetailExchangeLive, :show
     live "/cards", DashboardLive, :index
     live "/cards/:slug", CardDetailLive, :show
     live "/preferences", PreferencesLive, :index
@@ -33,6 +32,9 @@ defmodule SammelkartenWeb.Router do
     live "/admin/login", AdminLoginLive, :index
     post "/admin/session", AdminSessionController, :create
     delete "/admin/session", AdminSessionController, :delete
+
+    # Catch-all route for exchange cards - must be last
+    live "/:slug", CardDetailExchangeLive, :show
   end
 
   scope "/admin", SammelkartenWeb do

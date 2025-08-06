@@ -450,4 +450,45 @@ mix phx.server
 
 ---
 
-*Last updated: Session 12 - Exchange mode peer-to-peer trading implementation completed*
+### Session 14 - Exchange Card Detail Pages Implementation
+**Completed**: Comprehensive exchange-focused card detail pages with pseudonym traders
+- **CardDetailExchangeLive Module**: Built complete exchange-focused card detail LiveView:
+  - Individual card pages accessible from exchange dashboard (/:slug routing)
+  - Real-time price update integration with automatic trader data regeneration
+  - Comprehensive card metadata display with current market price reference
+  - Professional styling matching existing application aesthetic
+- **Pseudonym Trader System**: Implemented realistic trader simulation:
+  - 25 unique pseudonym names including requested ones (Seedorchris, Fab, Altan, Sticker21M, Markus_Turm, Maulwurf)
+  - Additional Bitcoin-themed names (BitcoinBär, SatsStacker, NoKYC, NodeRunner42, etc.)
+  - Deterministic generation based on card ID for consistency
+  - Realistic offer and search quantities based on card rarity and price
+- **Exchange Activity Display**: Created detailed offer and search sections:
+  - Green-themed offers section showing traders selling cards (2-8% below market price)
+  - Blue-themed searches section showing traders wanting cards (1-5% above market price)
+  - Trader profiles with initials, names, timestamps, prices, and quantities
+  - Time-based activity indicators (minutes/hours ago)
+  - Empty states with helpful messaging when no activity exists
+- **Navigation & Integration**: Seamless integration with exchange dashboard:
+  - Breadcrumb navigation back to Card Collection Exchange
+  - Direct navigation from exchange dashboard cards to detail pages
+  - Keyboard shortcuts integration (B/Escape to go back)
+  - German number formatting throughout (€1.234,50 format)
+
+**Files Created/Modified**:
+- `lib/sammelkarten_web/live/card_detail_exchange_live.ex` - New exchange card detail LiveView
+- `lib/sammelkarten_web/router.ex` - Added /:slug route for exchange card details
+- `lib/sammelkarten_web/live/dashboard_exchange_live.html.heex` - Updated links to use exchange details
+- `TASKS.md` - Added session documentation and completion tracking
+
+**Exchange Detail Features Achieved**:
+- Individual card exchange pages with comprehensive trader activity
+- Realistic offer/search simulations with pseudonym trader personalities
+- Real-time updates regenerating trader data when prices change
+- Professional two-column layout: card image/metadata + exchange activity
+- Visual distinction between offers (green) and searches (blue)
+- Time-based activity tracking with relative timestamps
+- Consistent styling and German locale formatting integration
+
+---
+
+*Last updated: Session 14 - Exchange card detail pages with pseudonym traders completed*

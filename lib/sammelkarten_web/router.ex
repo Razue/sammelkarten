@@ -22,6 +22,7 @@ defmodule SammelkartenWeb.Router do
     pipe_through :browser
 
     live "/", DashboardExchangeLive, :index
+    live "/:slug", CardDetailExchangeLive, :show
     live "/cards", DashboardLive, :index
     live "/cards/:slug", CardDetailLive, :show
     live "/preferences", PreferencesLive, :index

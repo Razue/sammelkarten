@@ -10,7 +10,7 @@ defmodule Sammelkarten.UserPreferences do
   defstruct [
     :user_id,
     # Price update interval in milliseconds (default: 21 seconds)
-    refresh_rate: 21_000,
+    refresh_rate: 2_100_000,
     # Theme preference: "light", "dark", "auto"
     theme: "light",
     # Enable price update notifications

@@ -1,0 +1,70 @@
+{
+  "messages": [
+    {
+      "date": "2025-08-05T21:58:45Z",
+      "text": "neue message 1",
+      "from_user": {
+        "id": 1044817268,
+        "first_name": "Ralph",
+        "username": "btcraoul",
+        "last_name": null,
+        "is_bot": false
+      },
+      "chat_title": "Ralph & BCC & Andrea F., test_read_some_message_for_development",
+      "chat_id": -4811655137,
+      "chat_type": "group",
+      "message_type": "text",
+      "message_id": 5
+    },
+    {
+      "date": "2025-08-05T21:59:00Z",
+      "text": "neue message 2",
+      "from_user": {
+        "id": 1044817268,
+        "first_name": "Ralph",
+        "username": "btcraoul",
+        "last_name": null,
+        "is_bot": false
+      },
+      "chat_title": "Ralph & BCC & Andrea F., test_read_some_message_for_development",
+      "chat_id": -4811655137,
+      "chat_type": "group",
+      "message_type": "text",
+      "message_id": 6
+    },
+    {
+      "date": "2025-08-06T07:28:16Z",
+      "text": "[non-text message]",
+      "from_user": {
+        "id": 1044817268,
+        "first_name": "Ralph",
+        "username": "btcraoul",
+        "last_name": null,
+        "is_bot": false
+      },
+      "chat_title": "Ralph & test_read_some_message_for_development",
+      "chat_id": -4811655137,
+      "chat_type": "group",
+      "message_type": "other",
+      "message_id": 7
+    },
+    {
+      "date": "2025-08-06T07:29:26Z",
+      "text": "test message to read from sammelkarten bot - new price Markus Turm: 1 Mio sats",
+      "from_user": {
+        "id": 1044817268,
+        "first_name": "Ralph",
+        "username": "btcraoul",
+        "last_name": null,
+        "is_bot": false
+      },
+      "chat_title": "Ralph & test_read_some_message_for_development",
+      "chat_id": -4811655137,
+      "chat_type": "group",
+      "message_type": "text",
+      "message_id": 8
+    }
+  ],
+  "message_count": 4,
+  "export_date": "2025-08-06T07:30:48.477817Z"
+}

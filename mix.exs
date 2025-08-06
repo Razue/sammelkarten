@@ -57,7 +57,8 @@ defmodule Sammelkarten.MixProject do
       {:bandit, "~> 1.5"},
       {:decimal, "~> 2.0"},
       {:tidewave, "~> 0.2", only: [:dev]},
-      {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+      {:telegex, "~> 1.8"}
     ]
   end
 

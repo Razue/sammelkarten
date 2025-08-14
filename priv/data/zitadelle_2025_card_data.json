@@ -154,6 +154,13 @@
         "description": "Bitcoin technical enthusiast. A common card representing the technical exploration of Bitcoin."
     },
     {
+        "name": "Pioniere Münzweg Holo",
+        "image_path": "/images/cards/Pioniere_Muenzweg_Holo.jpg",
+        "current_price": 82000,
+        "rarity": "uncommon",
+        "description": "Bitcoin pioneers paving the way. An uncommon card honoring early adopters and Bitcoin pathway creators."
+    },
+    {
         "name": "Toxic Booster",
         "image_path": "/images/cards/TOXIC_BOOSTER.jpg",
         "current_price": 30000,

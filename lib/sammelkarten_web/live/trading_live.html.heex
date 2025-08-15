@@ -1,0 +1,414 @@
+<div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+  <div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <h1 class="text-display font-bold text-gray-900 mb-2">
+        P2P Card Trading
+      </h1>
+      <p class="text-body text-gray-600">
+        Trade cards directly with other collectors via Nostr
+      </p>
+    </div>
+
+    <%= if @loading do %>
+      <!-- Loading State -->
+      <div class="text-center py-16">
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600">
+        </div>
+        <p class="text-body text-gray-600 mt-4">Loading trading data...</p>
+      </div>
+    <% else %>
+      <!-- Trading Tabs -->
+      <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
+        <div class="border-b border-gray-200">
+          <nav class="-mb-px flex space-x-8 px-6">
+            <button
+              class="py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 border-blue-500 text-blue-600"
+              id="active-offers-tab"
+            >
+              Active Offers ({length(@active_offers)})
+            </button>
+            <button
+              class="py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 transition-colors duration-200"
+              id="my-offers-tab"
+            >
+              My Offers ({length(@my_offers)})
+            </button>
+            <button
+              class="py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 transition-colors duration-200"
+              id="trade-history-tab"
+            >
+              Trade History ({length(@trade_history)})
+            </button>
+            <button
+              class="py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 transition-colors duration-200"
+              id="create-offer-tab"
+            >
+              Create Offer
+            </button>
+          </nav>
+        </div>
+        
+<!-- Active Offers Tab Content -->
+        <div id="active-offers-content" class="p-6">
+          <div class="flex flex-col sm:flex-row gap-4 mb-6">
+            <!-- Filter Controls -->
+            <div class="flex gap-2">
+              <button
+                phx-click="filter_offers"
+                phx-value-type="all"
+                class={"px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 #{if @filter_type == "all", do: "bg-blue-600 text-white", else: "bg-gray-100 text-gray-700 hover:bg-gray-200"}"}
+              >
+                All
+              </button>
+              <button
+                phx-click="filter_offers"
+                phx-value-type="buy"
+                class={"px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 #{if @filter_type == "buy", do: "bg-green-600 text-white", else: "bg-gray-100 text-gray-700 hover:bg-gray-200"}"}
+              >
+                Buy Orders
+              </button>
+              <button
+                phx-click="filter_offers"
+                phx-value-type="sell"
+                class={"px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 #{if @filter_type == "sell", do: "bg-red-600 text-white", else: "bg-gray-100 text-gray-700 hover:bg-gray-200"}"}
+              >
+                Sell Orders
+              </button>
+            </div>
+            
+<!-- Sort Controls -->
+            <div class="flex gap-2">
+              <select phx-change="sort_offers" name="by" class="input-professional text-sm">
+                <option value="newest" selected={@sort_by == "newest"}>Newest First</option>
+                <option value="price_low" selected={@sort_by == "price_low"}>
+                  Price: Low to High
+                </option>
+                <option value="price_high" selected={@sort_by == "price_high"}>
+                  Price: High to Low
+                </option>
+              </select>
+            </div>
+          </div>
+          
+<!-- Active Offers List -->
+          <%= if Enum.empty?(@active_offers) do %>
+            <div class="text-center py-12">
+              <div class="text-6xl mb-4">🔄</div>
+              <h3 class="text-lg font-semibold text-gray-900 mb-2">No Active Offers</h3>
+              <p class="text-gray-600">Be the first to create a trade offer!</p>
+            </div>
+          <% else %>
+            <div class="grid gap-4">
+              <%= for offer <- @active_offers do %>
+                <div class="card-professional p-4 hover:shadow-lg transition-shadow duration-200">
+                  <div class="flex flex-col sm:flex-row gap-4">
+                    <!-- Card Image -->
+                    <div class="flex-shrink-0">
+                      <img
+                        src={"/images/cards/#{offer.card.image}"}
+                        alt={offer.card.name}
+                        class="w-16 h-16 object-cover rounded-lg"
+                      />
+                    </div>
+                    
+<!-- Offer Details -->
+                    <div class="flex-grow">
+                      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <h3 class="font-semibold text-gray-900">
+                            {offer.card.name}
+                          </h3>
+                          <p class="text-sm text-gray-600">
+                            {offer.user_short} •
+                            <span class={[
+                              "font-medium",
+                              if(offer.offer_type == "buy",
+                                do: "text-green-600",
+                                else: "text-red-600"
+                              )
+                            ]}>
+                              {String.upcase(offer.offer_type)}
+                            </span>
+                          </p>
+                          <div class="mt-1">
+                            <span class="text-lg font-bold text-gray-900">
+                              {Formatter.format_german_price(offer.price)}
+                            </span>
+                            <span class="text-sm text-gray-600 ml-2">
+                              Qty: {offer.quantity}
+                            </span>
+                            <span class="text-sm text-gray-600 ml-2">
+                              Total: {Formatter.format_german_price(offer.total_value)}
+                            </span>
+                          </div>
+                        </div>
+                        
+<!-- Action Button -->
+                        <div class="mt-4 sm:mt-0">
+                          <button
+                            phx-click="accept_offer"
+                            phx-value-offer_id={offer.id}
+                            class="btn-primary"
+                            data-confirm="Are you sure you want to accept this trade offer?"
+                          >
+                            {if offer.offer_type == "buy",
+                              do: "Sell to Them",
+                              else: "Buy from Them"}
+                          </button>
+                        </div>
+                      </div>
+                      
+<!-- Expiration -->
+                      <div class="mt-2 text-xs text-gray-500">
+                        Expires: {Calendar.strftime(offer.expires_at, "%m/%d/%Y %H:%M")}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+        
+<!-- My Offers Tab Content (Hidden by default) -->
+        <div id="my-offers-content" class="p-6 hidden">
+          <%= if Enum.empty?(@my_offers) do %>
+            <div class="text-center py-12">
+              <div class="text-6xl mb-4">📝</div>
+              <h3 class="text-lg font-semibold text-gray-900 mb-2">No Active Offers</h3>
+              <p class="text-gray-600">Create your first trade offer to get started.</p>
+            </div>
+          <% else %>
+            <div class="grid gap-4">
+              <%= for offer <- @my_offers do %>
+                <div class="card-professional p-4">
+                  <div class="flex flex-col sm:flex-row gap-4">
+                    <!-- Card Image -->
+                    <div class="flex-shrink-0">
+                      <img
+                        src={"/images/cards/#{offer.card.image}"}
+                        alt={offer.card.name}
+                        class="w-16 h-16 object-cover rounded-lg"
+                      />
+                    </div>
+                    
+<!-- Offer Details -->
+                    <div class="flex-grow">
+                      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <h3 class="font-semibold text-gray-900">
+                            {offer.card.name}
+                          </h3>
+                          <p class="text-sm text-gray-600">
+                            <span class={[
+                              "font-medium",
+                              if(offer.offer_type == "buy",
+                                do: "text-green-600",
+                                else: "text-red-600"
+                              )
+                            ]}>
+                              {String.upcase(offer.offer_type)} ORDER
+                            </span>
+                          </p>
+                          <div class="mt-1">
+                            <span class="text-lg font-bold text-gray-900">
+                              {Formatter.format_german_price(offer.price)}
+                            </span>
+                            <span class="text-sm text-gray-600 ml-2">
+                              Qty: {offer.quantity}
+                            </span>
+                            <span class="text-sm text-gray-600 ml-2">
+                              Total: {Formatter.format_german_price(offer.total_value)}
+                            </span>
+                          </div>
+                        </div>
+                        
+<!-- Cancel Button -->
+                        <div class="mt-4 sm:mt-0">
+                          <button
+                            phx-click="cancel_offer"
+                            phx-value-offer_id={offer.id}
+                            class="btn-secondary"
+                            data-confirm="Are you sure you want to cancel this offer?"
+                          >
+                            Cancel Offer
+                          </button>
+                        </div>
+                      </div>
+                      
+<!-- Expiration -->
+                      <div class="mt-2 text-xs text-gray-500">
+                        Expires: {Calendar.strftime(offer.expires_at, "%m/%d/%Y %H:%M")}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+        
+<!-- Trade History Tab Content (Hidden by default) -->
+        <div id="trade-history-content" class="p-6 hidden">
+          <%= if Enum.empty?(@trade_history) do %>
+            <div class="text-center py-12">
+              <div class="text-6xl mb-4">📈</div>
+              <h3 class="text-lg font-semibold text-gray-900 mb-2">No Trade History</h3>
+              <p class="text-gray-600">Your completed trades will appear here.</p>
+            </div>
+          <% else %>
+            <div class="grid gap-4">
+              <%= for trade <- @trade_history do %>
+                <div class="card-professional p-4">
+                  <div class="flex flex-col sm:flex-row gap-4">
+                    <!-- Card Image -->
+                    <div class="flex-shrink-0">
+                      <img
+                        src={"/images/cards/#{trade.card.image}"}
+                        alt={trade.card.name}
+                        class="w-16 h-16 object-cover rounded-lg"
+                      />
+                    </div>
+                    
+<!-- Trade Details -->
+                    <div class="flex-grow">
+                      <h3 class="font-semibold text-gray-900">
+                        {trade.card.name}
+                      </h3>
+                      <p class="text-sm text-gray-600">
+                        <%= if trade.buyer_pubkey == @current_user.pubkey do %>
+                          Bought from {trade.seller_short}
+                        <% else %>
+                          Sold to {trade.buyer_short}
+                        <% end %>
+                      </p>
+                      <div class="mt-1">
+                        <span class="text-lg font-bold text-gray-900">
+                          {Formatter.format_german_price(trade.price)}
+                        </span>
+                        <span class="text-sm text-gray-600 ml-2">
+                          Qty: {trade.quantity}
+                        </span>
+                        <span class="text-sm text-gray-600 ml-2">
+                          Total: {Formatter.format_german_price(trade.total_value)}
+                        </span>
+                      </div>
+                      <div class="mt-2 text-xs text-gray-500">
+                        Executed: {Calendar.strftime(trade.executed_at, "%m/%d/%Y %H:%M")}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+        
+<!-- Create Offer Tab Content (Hidden by default) -->
+        <div id="create-offer-content" class="p-6 hidden">
+          <div class="max-w-md mx-auto">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Create New Trade Offer</h3>
+
+            <form phx-submit="create_offer" class="space-y-4">
+              <!-- Card Selection -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Select Card
+                </label>
+                <select name="card_id" required class="input-professional">
+                  <option value="">Choose a card...</option>
+                  <%= for card <- @available_cards do %>
+                    <option value={card.id}>
+                      <%= card.name %> - <%= Formatter.format_german_price(card.current_price) %>
+                    </option>
+                  <% end %>
+                </select>
+              </div>
+              
+<!-- Offer Type -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Offer Type
+                </label>
+                <select name="offer_type" required class="input-professional">
+                  <option value="">Choose type...</option>
+                  <option value="buy">Buy Order (I want to buy)</option>
+                  <option value="sell">Sell Order (I want to sell)</option>
+                </select>
+              </div>
+              
+<!-- Price -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Price per Card (€)
+                </label>
+                <input
+                  type="number"
+                  name="price"
+                  step="0.01"
+                  min="0.01"
+                  required
+                  class="input-professional"
+                  placeholder="0.00"
+                />
+              </div>
+              
+<!-- Quantity -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Quantity
+                </label>
+                <input
+                  type="number"
+                  name="quantity"
+                  min="1"
+                  required
+                  class="input-professional"
+                  placeholder="1"
+                />
+              </div>
+              
+<!-- Submit Button -->
+              <button type="submit" class="btn-primary w-full">
+                Create Trade Offer
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<!-- JavaScript for Tab Switching -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const tabs = ['active-offers', 'my-offers', 'trade-history', 'create-offer'];
+    
+    tabs.forEach(tab => {
+      const tabButton = document.getElementById(tab + '-tab');
+      const tabContent = document.getElementById(tab + '-content');
+      
+      if (tabButton) {
+        tabButton.addEventListener('click', function() {
+          // Hide all content
+          tabs.forEach(t => {
+            const content = document.getElementById(t + '-content');
+            const button = document.getElementById(t + '-tab');
+            if (content) content.classList.add('hidden');
+            if (button) {
+              button.classList.remove('border-blue-500', 'text-blue-600');
+              button.classList.add('border-transparent', 'text-gray-500');
+            }
+          });
+          
+          // Show selected content
+          if (tabContent) tabContent.classList.remove('hidden');
+          tabButton.classList.add('border-blue-500', 'text-blue-600');
+          tabButton.classList.remove('border-transparent', 'text-gray-500');
+        });
+      }
+    });
+  });
+</script>

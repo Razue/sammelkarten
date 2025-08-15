@@ -27,6 +27,13 @@ defmodule SammelkartenWeb.Router do
     live "/preferences", PreferencesLive, :index
     live "/market", MarketLive, :index
     live "/donation", DonationLive, :index
+    live "/auth", NostrAuthLive, :index
+    live "/portfolio", PortfolioLive, :index
+    live "/trading", TradingLive, :index
+
+    # Nostr authentication routes
+    post "/nostr/session", NostrSessionController, :create
+    delete "/nostr/session", NostrSessionController, :delete
 
     # Admin authentication routes
     live "/admin/login", AdminLoginLive, :index

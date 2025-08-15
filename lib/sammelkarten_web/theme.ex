@@ -1,7 +1,7 @@
 defmodule SammelkartenWeb.Theme do
   @moduledoc """
   Theme management functionality for the application.
-  
+
   Provides utilities for managing light/dark themes across the application.
   """
 
@@ -41,7 +41,7 @@ defmodule SammelkartenWeb.Theme do
     if dark_theme?(user_id) do
       %{
         bg_primary: "bg-gray-900",
-        bg_secondary: "bg-gray-800", 
+        bg_secondary: "bg-gray-800",
         bg_tertiary: "bg-gray-700",
         text_primary: "text-white",
         text_secondary: "text-gray-300",
@@ -53,7 +53,7 @@ defmodule SammelkartenWeb.Theme do
       %{
         bg_primary: "bg-white",
         bg_secondary: "bg-gray-50",
-        bg_tertiary: "bg-gray-100", 
+        bg_tertiary: "bg-gray-100",
         text_primary: "text-gray-900",
         text_secondary: "text-gray-700",
         text_muted: "text-gray-500",

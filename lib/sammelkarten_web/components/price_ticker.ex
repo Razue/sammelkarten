@@ -139,17 +139,27 @@ defmodule SammelkartenWeb.Components.PriceTicker do
     decimal_change = change / 100
 
     case decimal_change do
-      change when change > 0 -> "+#{String.replace(:erlang.float_to_binary(change, decimals: 2), ".", ",")}%"
-      change when change < 0 -> "#{String.replace(:erlang.float_to_binary(change, decimals: 2), ".", ",")}%"
-      _ -> "0,00%"
+      change when change > 0 ->
+        "+#{String.replace(:erlang.float_to_binary(change, decimals: 2), ".", ",")}%"
+
+      change when change < 0 ->
+        "#{String.replace(:erlang.float_to_binary(change, decimals: 2), ".", ",")}%"
+
+      _ ->
+        "0,00%"
     end
   end
 
   defp format_percentage_change(change) when is_float(change) do
     case change do
-      change when change > 0 -> "+#{String.replace(:erlang.float_to_binary(change, decimals: 2), ".", ",")}%"
-      change when change < 0 -> "#{String.replace(:erlang.float_to_binary(change, decimals: 2), ".", ",")}%"
-      _ -> "0,00%"
+      change when change > 0 ->
+        "+#{String.replace(:erlang.float_to_binary(change, decimals: 2), ".", ",")}%"
+
+      change when change < 0 ->
+        "#{String.replace(:erlang.float_to_binary(change, decimals: 2), ".", ",")}%"
+
+      _ ->
+        "0,00%"
     end
   end
 

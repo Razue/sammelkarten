@@ -51,6 +51,29 @@ config :logger, :console,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
+# Nostr configuration
+config :sammelkarten, :nostr,
+  # Default Nostr relays for the application
+  relays: [
+    "wss://relay.damus.io",
+    "wss://nos.lol",
+    "wss://relay.nostr.band",
+    "wss://nostr.wine",
+    "wss://relay.snort.social"
+  ],
+  # Custom Sammelkarten event kinds
+  custom_kinds: %{
+    card_collection: 30000,
+    trade_offer: 30001,
+    trade_execution: 30002,
+    price_alert: 30003,
+    portfolio_snapshot: 30004
+  },
+  # Connection settings
+  connection_timeout: 10_000,
+  reconnect_interval: 5_000,
+  max_reconnect_attempts: 10
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"

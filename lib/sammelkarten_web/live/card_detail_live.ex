@@ -21,17 +21,17 @@ defmodule SammelkartenWeb.CardDetailLive do
           # Subscribe to price updates for this specific card using the card ID
           Phoenix.PubSub.subscribe(Sammelkarten.PubSub, "card_prices:#{card.id}")
         end
-        
+
         mount_with_card(card, socket)
-        
+
       {:error, :not_found} ->
         mount_with_error("Card not found", socket)
-        
+
       {:error, reason} ->
         mount_with_error("Failed to load card: #{inspect(reason)}", socket)
     end
   end
-  
+
   defp mount_with_card(card, socket) do
     # Get price history for the card
     {:ok, price_history} = Cards.get_price_history(card.id, 30)
@@ -45,7 +45,7 @@ defmodule SammelkartenWeb.CardDetailLive do
 
     {:ok, socket}
   end
-  
+
   defp mount_with_error(error_message, socket) do
     socket =
       socket
@@ -151,7 +151,9 @@ defmodule SammelkartenWeb.CardDetailLive do
                 
     <!-- Card Metadata -->
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-                  <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Card Details</h3>
+                  <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    Card Details
+                  </h3>
                   <div class="space-y-3">
                     <div class="flex justify-between">
                       <span class="text-gray-600 dark:text-gray-400">Rarity</span>
@@ -249,7 +251,9 @@ defmodule SammelkartenWeb.CardDetailLive do
                     
     <!-- Recent price data table -->
                     <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                      <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-3">Recent Price Changes</h4>
+                      <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-3">
+                        Recent Price Changes
+                      </h4>
                       <div class="space-y-2 max-h-32 overflow-y-auto">
                         <%= for entry <- Enum.take(@price_history, 5) do %>
                           <div class="flex justify-between items-center py-1 text-sm">
@@ -334,11 +338,21 @@ defmodule SammelkartenWeb.CardDetailLive do
   defp price_change_color(change) when change < 0, do: "text-red-600 dark:text-red-400"
   defp price_change_color(_), do: "text-gray-600 dark:text-gray-400"
 
-  defp rarity_color_class("common"), do: "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-  defp rarity_color_class("uncommon"), do: "bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200"
-  defp rarity_color_class("rare"), do: "bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200"
-  defp rarity_color_class("epic"), do: "bg-purple-100 dark:bg-purple-800 text-purple-800 dark:text-purple-200"
-  defp rarity_color_class("legendary"), do: "bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200"
+  defp rarity_color_class("common"),
+    do: "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+
+  defp rarity_color_class("uncommon"),
+    do: "bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200"
+
+  defp rarity_color_class("rare"),
+    do: "bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200"
+
+  defp rarity_color_class("epic"),
+    do: "bg-purple-100 dark:bg-purple-800 text-purple-800 dark:text-purple-200"
+
+  defp rarity_color_class("legendary"),
+    do: "bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200"
+
   defp rarity_color_class(_), do: "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
 
   defp format_datetime(%DateTime{} = dt) do

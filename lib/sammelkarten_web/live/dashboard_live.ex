@@ -210,7 +210,6 @@ defmodule SammelkartenWeb.DashboardLive do
     {:noreply, socket}
   end
 
-
   defp filter_cards(cards, ""), do: cards
 
   defp filter_cards(cards, term) do
@@ -280,5 +279,4 @@ defmodule SammelkartenWeb.DashboardLive do
       _ -> "bg-gray-100 text-gray-800"
     end
   end
-
 end

@@ -21,6 +21,8 @@ defmodule Sammelkarten.Application do
       {Finch, name: Sammelkarten.Finch},
       # Start the price updater for background price simulation
       Sammelkarten.PriceUpdater,
+      # Start the Nostr client for relay connections
+      Sammelkarten.Nostr.Client,
       # Start to serve requests, typically the last entry
       SammelkartenWeb.Endpoint
     ]

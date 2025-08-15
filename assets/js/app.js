@@ -21,9 +21,15 @@ import "phoenix_html"
 import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
 import topbar from "../vendor/topbar"
+import { NostrAuth, NostrProfile, NostrTrading } from "./nostr"
 
 // Chart.js hook for price history and keyboard shortcuts
 let Hooks = {}
+
+// Add Nostr hooks
+Hooks.NostrAuth = NostrAuth
+Hooks.NostrProfile = NostrProfile
+Hooks.NostrTrading = NostrTrading
 
 // Theme toggle hook for real-time theme switching
 Hooks.ThemeToggle = {

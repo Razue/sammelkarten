@@ -23,7 +23,7 @@ defmodule SammelkartenWeb.DonationLive do
           hosting, and new features for the entire community.
         </p>
       </div>
-
+      
     <!-- Donation Options -->
       <div class="flex justify-center">
         <!-- Lightning Network -->
@@ -40,10 +40,12 @@ defmodule SammelkartenWeb.DonationLive do
           </script>
         </div>
       </div>
-
+      
     <!-- Why Donate -->
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 mb-12">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Why Support This Project?</h2>
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+          Why Support This Project?
+        </h2>
         <div class="grid md:grid-cols-3 gap-8">
           <a
             href="https://github.com/razue/sammelkarten"
@@ -118,7 +120,7 @@ defmodule SammelkartenWeb.DonationLive do
           </a>
         </div>
       </div>
-
+      
     <!-- Developer Info -->
       <div class="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg p-8 text-center">
         <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">About the Developer</h2>

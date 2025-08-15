@@ -55,13 +55,14 @@ defmodule Sammelkarten.Card do
     }
 
     merged_attrs = Map.merge(defaults, attrs)
-    
+
     # Auto-generate slug from image_path if not provided
-    final_attrs = if Map.has_key?(merged_attrs, :slug) do
-      merged_attrs
-    else
-      Map.put(merged_attrs, :slug, generate_slug_from_image_path(merged_attrs[:image_path]))
-    end
+    final_attrs =
+      if Map.has_key?(merged_attrs, :slug) do
+        merged_attrs
+      else
+        Map.put(merged_attrs, :slug, generate_slug_from_image_path(merged_attrs[:image_path]))
+      end
 
     struct(__MODULE__, final_attrs)
   end
@@ -79,11 +80,14 @@ defmodule Sammelkarten.Card do
   """
   def generate_slug_from_image_path(image_path) when is_binary(image_path) do
     image_path
-    |> Path.basename()  # Get filename: "JONAS_NICK.jpg"
-    |> Path.rootname()  # Remove extension: "JONAS_NICK"
-    |> String.downcase() # Convert to lowercase: "jonas_nick"
+    # Get filename: "JONAS_NICK.jpg"
+    |> Path.basename()
+    # Remove extension: "JONAS_NICK"
+    |> Path.rootname()
+    # Convert to lowercase: "jonas_nick"
+    |> String.downcase()
   end
-  
+
   def generate_slug_from_image_path(_), do: "unknown"
 
   @doc """

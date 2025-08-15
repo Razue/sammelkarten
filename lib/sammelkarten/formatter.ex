@@ -6,9 +6,9 @@ defmodule Sammelkarten.Formatter do
 
   @doc """
   Format a number in German locale with thousands separator, no decimals.
-  
+
   ## Examples
-  
+
       iex> Sammelkarten.Formatter.format_german_number("1234.50")
       "1.234"
       
@@ -24,7 +24,7 @@ defmodule Sammelkarten.Formatter do
       [integer_part] ->
         # No decimal part
         add_thousands_separator(integer_part)
-      
+
       [integer_part, _decimal_part] ->
         # Ignore decimal part completely (truncate)
         add_thousands_separator(integer_part)
@@ -45,9 +45,9 @@ defmodule Sammelkarten.Formatter do
 
   @doc """
   Format price in sats to German sats format without decimals.
-  
+
   ## Examples
-  
+
       iex> Sammelkarten.Formatter.format_german_price(1234)
       "1.234 sats"
   """
@@ -58,22 +58,29 @@ defmodule Sammelkarten.Formatter do
 
   @doc """
   Format percentage change with German decimal format.
-  
+
   ## Examples
-  
+
       iex> Sammelkarten.Formatter.format_german_percentage(12.34)
       "+12,34%"
       
       iex> Sammelkarten.Formatter.format_german_percentage(-5.67)
       "-5,67%"
   """
+  def format_german_percentage(percentage) when is_integer(percentage) do
+    sign = if percentage >= 0, do: "+", else: ""
+    formatted_number = "#{percentage},00"
+    "#{sign}#{formatted_number}%"
+  end
+
   def format_german_percentage(percentage) when is_float(percentage) do
     sign = if percentage >= 0, do: "+", else: ""
-    formatted_number = 
+
+    formatted_number =
       percentage
       |> :erlang.float_to_binary(decimals: 2)
       |> String.replace(".", ",")
-    
+
     "#{sign}#{formatted_number}%"
   end
 

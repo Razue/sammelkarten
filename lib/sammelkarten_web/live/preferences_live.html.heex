@@ -1,4 +1,8 @@
-<div id="theme-preferences" class="min-h-screen bg-gray-50 dark:bg-gray-900" phx-hook="ThemeToggle">
+<div
+  id="theme-preferences"
+  class="min-h-screen bg-gray-50 dark:bg-gray-900"
+  phx-hook="ThemeToggle"
+>
   <!-- Header Section -->
   <div class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
     <div class="max-w-4xl mx-auto px-4 py-6">
@@ -14,7 +18,12 @@
           <%= if @saved do %>
             <div class="flex items-center text-green-600">
               <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
               <span class="text-sm font-medium">Settings saved successfully!</span>
             </div>
@@ -36,8 +45,8 @@
       </div>
     </div>
   </div>
-
-  <!-- Preferences Form -->
+  
+<!-- Preferences Form -->
   <div class="max-w-4xl mx-auto px-4 py-8">
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
       <form phx-change="form_change" phx-submit="save_preferences" class="p-6">
@@ -46,7 +55,12 @@
           <div class="border-b border-gray-200 dark:border-gray-600 pb-8">
             <div class="flex items-center mb-6">
               <div class="flex items-center justify-center h-10 w-10 rounded-full bg-blue-100">
-                <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  class="h-6 w-6 text-blue-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -55,11 +69,16 @@
                   />
                 </svg>
               </div>
-              <h3 class="text-lg font-semibold text-gray-900 dark:text-white ml-4">Real-time Updates</h3>
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white ml-4">
+                Real-time Updates
+              </h3>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label for="refresh_rate" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label
+                  for="refresh_rate"
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                >
                   Refresh Rate
                 </label>
                 <select
@@ -68,10 +87,19 @@
                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
                   <%= for {label, value} <- Sammelkarten.UserPreferences.refresh_rate_options() do %>
-                    <option value={value} selected={value == (@form_data[:refresh_rate] || @user_preferences.refresh_rate)}>{label}</option>
+                    <option
+                      value={value}
+                      selected={
+                        value == (@form_data[:refresh_rate] || @user_preferences.refresh_rate)
+                      }
+                    >
+                      {label}
+                    </option>
                   <% end %>
                 </select>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">How often prices are updated</p>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  How often prices are updated
+                </p>
               </div>
               <div class="flex items-start pt-6 opacity-60 cursor-not-allowed">
                 <div class="flex items-center h-5">
@@ -81,7 +109,11 @@
                     name="preferences[auto_refresh]"
                     id="auto_refresh"
                     value="true"
-                    checked={if Map.has_key?(@form_data, :auto_refresh), do: @form_data[:auto_refresh], else: @user_preferences.auto_refresh}
+                    checked={
+                      if Map.has_key?(@form_data, :auto_refresh),
+                        do: @form_data[:auto_refresh],
+                        else: @user_preferences.auto_refresh
+                    }
                     class="h-4 w-4 text-gray-400 focus:ring-gray-300 border-gray-200 rounded cursor-not-allowed"
                     disabled
                   />
@@ -93,7 +125,11 @@
                   <p class="text-gray-400">
                     <span class="inline-flex items-center">
                       <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                        <path
+                          fill-rule="evenodd"
+                          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                          clip-rule="evenodd"
+                        />
                       </svg>
                       Currently managed by system settings - always enabled for real-time updates
                     </span>
@@ -102,12 +138,17 @@
               </div>
             </div>
           </div>
-
-          <!-- Appearance Section -->
+          
+<!-- Appearance Section -->
           <div class="border-b border-gray-200 dark:border-gray-600 pb-8">
             <div class="flex items-center mb-6">
               <div class="flex items-center justify-center h-10 w-10 rounded-full bg-purple-100">
-                <svg class="h-6 w-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  class="h-6 w-6 text-purple-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -120,7 +161,10 @@
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label for="theme" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label
+                  for="theme"
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                >
                   Theme
                 </label>
                 <select
@@ -129,13 +173,23 @@
                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
                   <%= for {label, value} <- Sammelkarten.UserPreferences.theme_options() do %>
-                    <option value={value} selected={value == (@form_data[:theme] || @user_preferences.theme)}>{label}</option>
+                    <option
+                      value={value}
+                      selected={value == (@form_data[:theme] || @user_preferences.theme)}
+                    >
+                      {label}
+                    </option>
                   <% end %>
                 </select>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Choose your preferred color scheme</p>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  Choose your preferred color scheme
+                </p>
               </div>
               <div>
-                <label for="cards_per_page" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label
+                  for="cards_per_page"
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                >
                   Cards per page
                 </label>
                 <select
@@ -143,21 +197,56 @@
                   id="cards_per_page"
                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
-                  <option value="10" selected={10 == (@form_data[:cards_per_page] || @user_preferences.cards_per_page)}>10 cards</option>
-                  <option value="20" selected={20 == (@form_data[:cards_per_page] || @user_preferences.cards_per_page)}>20 cards</option>
-                  <option value="50" selected={50 == (@form_data[:cards_per_page] || @user_preferences.cards_per_page)}>50 cards</option>
-                  <option value="100" selected={100 == (@form_data[:cards_per_page] || @user_preferences.cards_per_page)}>100 cards</option>
+                  <option
+                    value="10"
+                    selected={
+                      10 == (@form_data[:cards_per_page] || @user_preferences.cards_per_page)
+                    }
+                  >
+                    10 cards
+                  </option>
+                  <option
+                    value="20"
+                    selected={
+                      20 == (@form_data[:cards_per_page] || @user_preferences.cards_per_page)
+                    }
+                  >
+                    20 cards
+                  </option>
+                  <option
+                    value="50"
+                    selected={
+                      50 == (@form_data[:cards_per_page] || @user_preferences.cards_per_page)
+                    }
+                  >
+                    50 cards
+                  </option>
+                  <option
+                    value="100"
+                    selected={
+                      100 == (@form_data[:cards_per_page] || @user_preferences.cards_per_page)
+                    }
+                  >
+                    100 cards
+                  </option>
                 </select>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Number of cards displayed per page</p>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  Number of cards displayed per page
+                </p>
               </div>
             </div>
           </div>
-
-          <!-- Display Options Section -->
+          
+<!-- Display Options Section -->
           <div class="border-b border-gray-200 dark:border-gray-600 pb-8">
             <div class="flex items-center mb-6">
               <div class="flex items-center justify-center h-10 w-10 rounded-full bg-green-100">
-                <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  class="h-6 w-6 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -166,7 +255,9 @@
                   />
                 </svg>
               </div>
-              <h3 class="text-lg font-semibold text-gray-900 dark:text-white ml-4">Display Options</h3>
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white ml-4">
+                Display Options
+              </h3>
             </div>
             <div class="space-y-6">
               <div class="flex items-start">
@@ -177,7 +268,11 @@
                     name="preferences[show_ticker]"
                     id="show_ticker"
                     value="true"
-                    checked={if Map.has_key?(@form_data, :show_ticker), do: @form_data[:show_ticker], else: @user_preferences.show_ticker}
+                    checked={
+                      if Map.has_key?(@form_data, :show_ticker),
+                        do: @form_data[:show_ticker],
+                        else: @user_preferences.show_ticker
+                    }
                     class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
                 </div>
@@ -185,7 +280,9 @@
                   <label for="show_ticker" class="font-medium text-gray-700 dark:text-gray-300">
                     Show price or exchange ticker
                   </label>
-                  <p class="text-gray-500 dark:text-gray-400">Display the scrolling price or exchange ticker at the top of pages</p>
+                  <p class="text-gray-500 dark:text-gray-400">
+                    Display the scrolling price or exchange ticker at the top of pages
+                  </p>
                 </div>
               </div>
               <div class="flex items-start opacity-60 cursor-not-allowed">
@@ -196,16 +293,25 @@
                     name="preferences[notifications_enabled]"
                     id="notifications_enabled"
                     value="false"
-                    checked={if Map.has_key?(@form_data, :notifications_enabled), do: @form_data[:notifications_enabled], else: @user_preferences.notifications_enabled}
+                    checked={
+                      if Map.has_key?(@form_data, :notifications_enabled),
+                        do: @form_data[:notifications_enabled],
+                        else: @user_preferences.notifications_enabled
+                    }
                     class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-not-allowed"
                     disabled
                   />
                 </div>
                 <div class="ml-3 text-sm">
-                  <label for="notifications_enabled" class="font-medium text-gray-700 dark:text-gray-300 cursor-not-allowed">
+                  <label
+                    for="notifications_enabled"
+                    class="font-medium text-gray-700 dark:text-gray-300 cursor-not-allowed"
+                  >
                     Enable notifications
                   </label>
-                  <p class="text-gray-500 dark:text-gray-400">Receive notifications for price changes and alerts</p>
+                  <p class="text-gray-500 dark:text-gray-400">
+                    Receive notifications for price changes and alerts
+                  </p>
                 </div>
               </div>
               <div class="flex items-start opacity-60 cursor-not-allowed">
@@ -216,26 +322,40 @@
                     name="preferences[sound_enabled]"
                     id="sound_enabled"
                     value="true"
-                    checked={if Map.has_key?(@form_data, :sound_enabled), do: @form_data[:sound_enabled], else: @user_preferences.sound_enabled}
+                    checked={
+                      if Map.has_key?(@form_data, :sound_enabled),
+                        do: @form_data[:sound_enabled],
+                        else: @user_preferences.sound_enabled
+                    }
                     class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-not-allowed"
                     disabled
                   />
                 </div>
                 <div class="ml-3 text-sm">
-                  <label for="sound_enabled" class="font-medium text-gray-700 dark:text-gray-300 cursor-not-allowed">
+                  <label
+                    for="sound_enabled"
+                    class="font-medium text-gray-700 dark:text-gray-300 cursor-not-allowed"
+                  >
                     Enable sound notifications
                   </label>
-                  <p class="text-gray-500 dark:text-gray-400">Play sounds for important price alerts and changes</p>
+                  <p class="text-gray-500 dark:text-gray-400">
+                    Play sounds for important price alerts and changes
+                  </p>
                 </div>
               </div>
             </div>
           </div>
-
-          <!-- Default Sorting Section -->
+          
+<!-- Default Sorting Section -->
           <div class="border-b border-gray-200 dark:border-gray-600 pb-8">
             <div class="flex items-center mb-6">
               <div class="flex items-center justify-center h-10 w-10 rounded-full bg-orange-100">
-                <svg class="h-6 w-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  class="h-6 w-6 text-orange-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -244,11 +364,16 @@
                   />
                 </svg>
               </div>
-              <h3 class="text-lg font-semibold text-gray-900 dark:text-white ml-4">Default Sorting</h3>
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white ml-4">
+                Default Sorting
+              </h3>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label for="default_sort" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label
+                  for="default_sort"
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                >
                   Sort by
                 </label>
                 <select
@@ -256,14 +381,40 @@
                   id="default_sort"
                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
-                  <option value="name" selected={"name" == (@form_data[:default_sort] || @user_preferences.default_sort)}>Name</option>
-                  <option value="price" selected={"price" == (@form_data[:default_sort] || @user_preferences.default_sort)}>Price</option>
-                  <option value="change" selected={"change" == (@form_data[:default_sort] || @user_preferences.default_sort)}>Change %</option>
+                  <option
+                    value="name"
+                    selected={
+                      "name" == (@form_data[:default_sort] || @user_preferences.default_sort)
+                    }
+                  >
+                    Name
+                  </option>
+                  <option
+                    value="price"
+                    selected={
+                      "price" == (@form_data[:default_sort] || @user_preferences.default_sort)
+                    }
+                  >
+                    Price
+                  </option>
+                  <option
+                    value="change"
+                    selected={
+                      "change" == (@form_data[:default_sort] || @user_preferences.default_sort)
+                    }
+                  >
+                    Change %
+                  </option>
                 </select>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Default field to sort cards by</p>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  Default field to sort cards by
+                </p>
               </div>
               <div>
-                <label for="default_sort_direction" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label
+                  for="default_sort_direction"
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                >
                   Direction
                 </label>
                 <select
@@ -271,19 +422,44 @@
                   id="default_sort_direction"
                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
-                  <option value="asc" selected={"asc" == (@form_data[:default_sort_direction] || @user_preferences.default_sort_direction)}>Ascending</option>
-                  <option value="desc" selected={"desc" == (@form_data[:default_sort_direction] || @user_preferences.default_sort_direction)}>Descending</option>
+                  <option
+                    value="asc"
+                    selected={
+                      "asc" ==
+                        (@form_data[:default_sort_direction] ||
+                           @user_preferences.default_sort_direction)
+                    }
+                  >
+                    Ascending
+                  </option>
+                  <option
+                    value="desc"
+                    selected={
+                      "desc" ==
+                        (@form_data[:default_sort_direction] ||
+                           @user_preferences.default_sort_direction)
+                    }
+                  >
+                    Descending
+                  </option>
                 </select>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Default sort order direction</p>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  Default sort order direction
+                </p>
               </div>
             </div>
           </div>
-
-          <!-- Chart Settings Section -->
+          
+<!-- Chart Settings Section -->
           <div>
             <div class="flex items-center mb-6">
               <div class="flex items-center justify-center h-10 w-10 rounded-full bg-indigo-100">
-                <svg class="h-6 w-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  class="h-6 w-6 text-indigo-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -292,11 +468,16 @@
                   />
                 </svg>
               </div>
-              <h3 class="text-lg font-semibold text-gray-900 dark:text-white ml-4">Chart Settings</h3>
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white ml-4">
+                Chart Settings
+              </h3>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label for="chart_style" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label
+                  for="chart_style"
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                >
                   Chart Style
                 </label>
                 <select
@@ -305,13 +486,25 @@
                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
                   <%= for {label, value} <- Sammelkarten.UserPreferences.chart_style_options() do %>
-                    <option value={value} selected={value == (@form_data[:chart_style] || @user_preferences.chart_style)}>{label}</option>
+                    <option
+                      value={value}
+                      selected={
+                        value == (@form_data[:chart_style] || @user_preferences.chart_style)
+                      }
+                    >
+                      {label}
+                    </option>
                   <% end %>
                 </select>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Default chart visualization style</p>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  Default chart visualization style
+                </p>
               </div>
               <div>
-                <label for="ticker_speed" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label
+                  for="ticker_speed"
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                >
                   Ticker Speed
                 </label>
                 <select
@@ -319,19 +512,48 @@
                   id="ticker_speed"
                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
-                  <option value="20" selected={20 == (@form_data[:ticker_speed] || @user_preferences.ticker_speed)}>Very Fast</option>
-                  <option value="35" selected={35 == (@form_data[:ticker_speed] || @user_preferences.ticker_speed)}>Fast</option>
-                  <option value="50" selected={50 == (@form_data[:ticker_speed] || @user_preferences.ticker_speed)}>Normal</option>
-                  <option value="75" selected={75 == (@form_data[:ticker_speed] || @user_preferences.ticker_speed)}>Slow</option>
-                  <option value="100" selected={100 == (@form_data[:ticker_speed] || @user_preferences.ticker_speed)}>Very Slow</option>
+                  <option
+                    value="20"
+                    selected={20 == (@form_data[:ticker_speed] || @user_preferences.ticker_speed)}
+                  >
+                    Very Fast
+                  </option>
+                  <option
+                    value="35"
+                    selected={35 == (@form_data[:ticker_speed] || @user_preferences.ticker_speed)}
+                  >
+                    Fast
+                  </option>
+                  <option
+                    value="50"
+                    selected={50 == (@form_data[:ticker_speed] || @user_preferences.ticker_speed)}
+                  >
+                    Normal
+                  </option>
+                  <option
+                    value="75"
+                    selected={75 == (@form_data[:ticker_speed] || @user_preferences.ticker_speed)}
+                  >
+                    Slow
+                  </option>
+                  <option
+                    value="100"
+                    selected={
+                      100 == (@form_data[:ticker_speed] || @user_preferences.ticker_speed)
+                    }
+                  >
+                    Very Slow
+                  </option>
                 </select>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Speed of the scrolling price ticker</p>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  Speed of the scrolling price ticker
+                </p>
               </div>
             </div>
           </div>
         </div>
-
-        <!-- Action Buttons -->
+        
+<!-- Action Buttons -->
         <div class="flex items-center justify-between pt-8 mt-8 border-t border-gray-200 dark:border-gray-600">
           <button
             type="button"
@@ -348,7 +570,7 @@
             </svg>
             Reset to Defaults
           </button>
-          
+
           <div class="flex space-x-3">
             <.link
               navigate={~p"/cards"}
@@ -361,13 +583,25 @@
               disabled={not @has_changes}
               class={[
                 "px-4 py-2 text-sm font-medium border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors",
-                if(@has_changes, 
-                   do: "text-white bg-blue-600 hover:bg-blue-700 focus:ring-blue-500", 
-                   else: "text-gray-400 dark:text-gray-500 bg-gray-200 dark:bg-gray-700 cursor-not-allowed")
+                if(@has_changes,
+                  do: "text-white bg-blue-600 hover:bg-blue-700 focus:ring-blue-500",
+                  else:
+                    "text-gray-400 dark:text-gray-500 bg-gray-200 dark:bg-gray-700 cursor-not-allowed"
+                )
               ]}
             >
-              <svg class="h-4 w-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              <svg
+                class="h-4 w-4 mr-2 inline"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
               Save Preferences
             </button>
@@ -377,5 +611,3 @@
     </div>
   </div>
 </div>
-
-

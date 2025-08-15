@@ -8,11 +8,12 @@ defmodule SammelkartenWeb.AdminLive do
   def mount(_params, session, socket) do
     # Check authentication
     if session["admin_authenticated"] do
-      cards = case Cards.list_cards() do
-        {:ok, cards_list} -> cards_list
-        {:error, _} -> []
-      end
-      
+      cards =
+        case Cards.list_cards() do
+          {:ok, cards_list} -> cards_list
+          {:error, _} -> []
+        end
+
       socket =
         assign(socket,
           cards: cards,
@@ -52,32 +53,37 @@ defmodule SammelkartenWeb.AdminLive do
           "rarity" => card.rarity,
           "description" => card.description
         }
-        
-        {:noreply, assign(socket, 
-          show_edit_form: true, 
-          show_add_form: false,
-          selected_card: card,
-          form_data: form_data
-        )}
+
+        {:noreply,
+         assign(socket,
+           show_edit_form: true,
+           show_add_form: false,
+           selected_card: card,
+           form_data: form_data
+         )}
+
       {:error, _} ->
         {:noreply, assign(socket, error_message: "Card not found")}
     end
   end
 
-
   @impl true
   def handle_event("delete_card", %{"id" => id}, socket) do
     case Cards.delete_card(id) do
       :ok ->
-        cards = case Cards.list_cards() do
-          {:ok, cards_list} -> cards_list
-          {:error, _} -> []
-        end
-        {:noreply, assign(socket, 
-          cards: cards, 
-          success_message: "Card deleted successfully",
-          error_message: nil
-        )}
+        cards =
+          case Cards.list_cards() do
+            {:ok, cards_list} -> cards_list
+            {:error, _} -> []
+          end
+
+        {:noreply,
+         assign(socket,
+           cards: cards,
+           success_message: "Card deleted successfully",
+           error_message: nil
+         )}
+
       {:error, reason} ->
         {:noreply, assign(socket, error_message: "Failed to delete card: #{reason}")}
     end
@@ -87,23 +93,26 @@ defmodule SammelkartenWeb.AdminLive do
   def handle_event("save_card", %{"card" => params}, socket) do
     case create_or_update_card(params, socket.assigns.selected_card) do
       {:ok, _card} ->
-        cards = case Cards.list_cards() do
-          {:ok, cards_list} -> cards_list
-          {:error, _} -> []
-        end
-        {:noreply, assign(socket, 
-          cards: cards,
-          show_add_form: false,
-          show_edit_form: false,
-          selected_card: nil,
-          success_message: "Card saved successfully",
-          error_message: nil
-        )}
+        cards =
+          case Cards.list_cards() do
+            {:ok, cards_list} -> cards_list
+            {:error, _} -> []
+          end
+
+        {:noreply,
+         assign(socket,
+           cards: cards,
+           show_add_form: false,
+           show_edit_form: false,
+           selected_card: nil,
+           success_message: "Card saved successfully",
+           error_message: nil
+         )}
+
       {:error, reason} ->
         {:noreply, assign(socket, error_message: "Failed to save card: #{reason}")}
     end
   end
-
 
   @impl true
   def handle_event("clear_messages", _params, socket) do
@@ -115,19 +124,23 @@ defmodule SammelkartenWeb.AdminLive do
     try do
       Database.reset_tables()
       Sammelkarten.Seeds.run()
-      cards = case Cards.list_cards() do
-        {:ok, cards_list} -> cards_list
-        {:error, _} -> []
-      end
-      
-      {:noreply, assign(socket, 
-        cards: cards,
-        success_message: "Database reset and reseeded successfully",
-        error_message: nil
-      )}
+
+      cards =
+        case Cards.list_cards() do
+          {:ok, cards_list} -> cards_list
+          {:error, _} -> []
+        end
+
+      {:noreply,
+       assign(socket,
+         cards: cards,
+         success_message: "Database reset and reseeded successfully",
+         error_message: nil
+       )}
     rescue
       e ->
-        {:noreply, assign(socket, error_message: "Failed to reset database: #{Exception.message(e)}")}
+        {:noreply,
+         assign(socket, error_message: "Failed to reset database: #{Exception.message(e)}")}
     end
   end
 
@@ -144,9 +157,11 @@ defmodule SammelkartenWeb.AdminLive do
           description: params["description"] || "",
           last_updated: DateTime.utc_now()
         }
-        
+
         Cards.create_card(card_attrs)
-      :error -> {:error, "Invalid price format"}
+
+      :error ->
+        {:error, "Invalid price format"}
     end
   end
 
@@ -162,11 +177,13 @@ defmodule SammelkartenWeb.AdminLive do
           description: params["description"],
           last_updated: DateTime.utc_now()
         }
-        
+
         # Since no update_card/2 exists, we recreate the card
         Cards.delete_card(card.id)
         Cards.create_card(Map.put(update_attrs, :id, card.id))
-      :error -> {:error, "Invalid price format"}
+
+      :error ->
+        {:error, "Invalid price format"}
     end
   end
 

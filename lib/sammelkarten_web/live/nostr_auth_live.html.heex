@@ -1,0 +1,324 @@
+<div
+  class="min-h-[80vh] bg-gradient-to-br from-gray-50 to-white py-12 px-4 sm:px-6 lg:px-8"
+  phx-hook="NostrAuth"
+  id="nostr-auth"
+>
+  <div class="max-w-md mx-auto">
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">Nostr Authentication</h1>
+      <p class="text-gray-600">
+        Connect with your Nostr identity to access personalized features
+      </p>
+    </div>
+
+    <%= case @auth_step do %>
+      <% :check_support -> %>
+        <div class="bg-white p-6 rounded-lg shadow-md text-center">
+          <div class="animate-spin h-8 w-8 mx-auto mb-4 border-2 border-blue-600 border-t-transparent rounded-full">
+          </div>
+          <p class="text-gray-600">Checking for Nostr extension...</p>
+        </div>
+      <% :no_support -> %>
+        <div class="bg-white p-6 rounded-lg shadow-md">
+          <div class="text-center mb-6">
+            <div class="h-12 w-12 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+              <svg
+                class="h-6 w-6 text-red-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                />
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">No Nostr Extension Found</h3>
+            <p class="text-gray-600 mb-6">
+              To use Nostr authentication, you need a compatible browser extension.
+            </p>
+          </div>
+
+          <div class="space-y-4">
+            <h4 class="font-medium text-gray-900">Recommended Extensions:</h4>
+            <div class="space-y-3">
+              <a
+                href="https://getalby.com/"
+                target="_blank"
+                class="flex items-center p-3 border border-gray-200 rounded-lg hover:border-orange-300 hover:bg-orange-50 transition-colors"
+              >
+                <div class="h-10 w-10 bg-orange-500 rounded-lg flex items-center justify-center mr-3">
+                  <span class="text-white font-bold">A</span>
+                </div>
+                <div>
+                  <div class="font-medium text-gray-900">Alby</div>
+                  <div class="text-sm text-gray-600">Lightning & Nostr extension</div>
+                </div>
+              </a>
+
+              <a
+                href="https://github.com/fiatjaf/nos2x"
+                target="_blank"
+                class="flex items-center p-3 border border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 transition-colors"
+              >
+                <div class="h-10 w-10 bg-purple-500 rounded-lg flex items-center justify-center mr-3">
+                  <span class="text-white font-bold">N</span>
+                </div>
+                <div>
+                  <div class="font-medium text-gray-900">nos2x</div>
+                  <div class="text-sm text-gray-600">Nostr key management</div>
+                </div>
+              </a>
+            </div>
+
+            <div class="pt-4 border-t border-gray-200">
+              <button phx-click="nostr_support_status" class="w-full btn-primary">
+                Recheck for Extension
+              </button>
+            </div>
+          </div>
+        </div>
+      <% :ready_to_auth -> %>
+        <div class="bg-white p-6 rounded-lg shadow-md">
+          <div class="text-center mb-6">
+            <div class="h-12 w-12 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
+              <svg
+                class="h-6 w-6 text-green-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Nostr Extension Detected</h3>
+            <p class="text-gray-600 mb-4">Ready to authenticate with your Nostr identity</p>
+
+            <%= if @extensions != [] do %>
+              <div class="mb-4">
+                <p class="text-sm text-gray-500 mb-2">Detected extensions:</p>
+                <div class="flex flex-wrap gap-2 justify-center">
+                  <%= for extension <- @extensions do %>
+                    <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                      {extension}
+                    </span>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+
+          <%= if @current_user do %>
+            <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+              <h4 class="font-medium text-gray-900 mb-2">Current Identity</h4>
+              <p class="text-sm text-gray-600 mb-1">
+                <span class="font-medium">Public Key:</span> {User.short_pubkey(@current_user)}
+              </p>
+              <p class="text-sm text-gray-600">
+                <span class="font-medium">Address:</span> {User.short_npub(@current_user)}
+              </p>
+            </div>
+          <% end %>
+
+          <button phx-click="start_login" class="w-full btn-primary mb-4" disabled={@loading}>
+            <%= if @loading do %>
+              <div class="flex items-center justify-center">
+                <div class="animate-spin h-4 w-4 mr-2 border-2 border-white border-t-transparent rounded-full">
+                </div>
+                Authenticating...
+              </div>
+            <% else %>
+              Authenticate with Nostr
+            <% end %>
+          </button>
+
+          <%= if @error_message do %>
+            <div class="p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p class="text-sm text-red-600">{@error_message}</p>
+            </div>
+          <% end %>
+        </div>
+      <% :waiting_for_signature -> %>
+        <div class="bg-white p-6 rounded-lg shadow-md text-center">
+          <div class="h-12 w-12 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
+            <div class="animate-spin h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full">
+            </div>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">Waiting for Signature</h3>
+          <p class="text-gray-600 mb-4">
+            Please sign the authentication event in your Nostr extension
+          </p>
+
+          <div class="text-xs text-gray-500 bg-gray-50 p-3 rounded-lg">
+            Challenge: <span class="font-mono">{String.slice(@challenge || "", 0, 16)}...</span>
+          </div>
+        </div>
+      <% :authenticated -> %>
+        <div class="bg-white p-6 rounded-lg shadow-md">
+          <div class="text-center mb-6">
+            <div class="h-12 w-12 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
+              <svg
+                class="h-6 w-6 text-green-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Successfully Authenticated!</h3>
+            <p class="text-gray-600">Welcome to Sammelkarten</p>
+          </div>
+
+          <%= if @current_user do %>
+            <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+              <h4 class="font-medium text-gray-900 mb-3">Your Nostr Identity</h4>
+
+              <div class="space-y-2">
+                <div class="flex items-center">
+                  <span class="text-sm font-medium text-gray-700 w-20">Name:</span>
+                  <span class="text-sm text-gray-600">{User.display_name(@current_user)}</span>
+                </div>
+
+                <div class="flex items-center">
+                  <span class="text-sm font-medium text-gray-700 w-20">Address:</span>
+                  <span class="text-sm text-gray-600 font-mono">
+                    {User.short_npub(@current_user)}
+                  </span>
+                </div>
+
+                <div class="flex items-center">
+                  <span class="text-sm font-medium text-gray-700 w-20">Status:</span>
+                  <span class="text-sm text-green-600 font-medium">Connected</span>
+                </div>
+              </div>
+            </div>
+            
+<!-- Profile Management -->
+            <div class="mb-6">
+              <h4 class="font-medium text-gray-900 mb-3">Profile Management</h4>
+              <form phx-submit="update_profile">
+                <div class="grid grid-cols-1 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                      Display Name
+                    </label>
+                    <input
+                      type="text"
+                      name="profile[display_name]"
+                      value={@current_user.display_name || ""}
+                      class="input-professional"
+                      placeholder="Your display name"
+                    />
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                    <input
+                      type="text"
+                      name="profile[name]"
+                      value={@current_user.name || ""}
+                      class="input-professional"
+                      placeholder="Your name"
+                    />
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">About</label>
+                    <textarea
+                      name="profile[about]"
+                      rows="3"
+                      class="input-professional"
+                      placeholder="Tell us about yourself..."
+                    ><%= @current_user.about || "" %></textarea>
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                      Picture URL
+                    </label>
+                    <input
+                      type="url"
+                      name="profile[picture]"
+                      value={@current_user.picture || ""}
+                      class="input-professional"
+                      placeholder="https://example.com/avatar.jpg"
+                    />
+                  </div>
+                </div>
+
+                <div class="mt-4">
+                  <button type="submit" class="btn-primary w-full">
+                    Update Profile
+                  </button>
+                </div>
+              </form>
+            </div>
+          <% end %>
+          
+<!-- Navigation to App Features -->
+          <div class="space-y-3">
+            <button
+              phx-click="go_to_portfolio"
+              class="w-full btn-secondary flex items-center justify-center"
+            >
+              <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H7m2 0v-5a2 2 0 012-2h2a2 2 0 012 2v5m-6 0V9a2 2 0 012-2h2a2 2 0 012 2v5"
+                />
+              </svg>
+              View My Portfolio
+            </button>
+
+            <button
+              phx-click="go_to_trading"
+              class="w-full btn-secondary flex items-center justify-center"
+            >
+              <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+                />
+              </svg>
+              Start Trading
+            </button>
+
+            <div class="flex space-x-3">
+              <.link navigate="/cards" class="flex-1 btn-secondary text-center">
+                Browse Cards
+              </.link>
+
+              <.link navigate="/market" class="flex-1 btn-secondary text-center">
+                Market Data
+              </.link>
+            </div>
+
+            <button
+              phx-click="logout"
+              class="w-full btn-outline-secondary text-red-600 border-red-200 hover:bg-red-50"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+    <% end %>
+  </div>
+</div>

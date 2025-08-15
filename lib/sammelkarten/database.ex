@@ -57,8 +57,25 @@ defmodule Sammelkarten.Database do
     # Create user_preferences table
     create_user_preferences_table()
 
+    # Create Nostr-related tables
+    create_nostr_users_table()
+    create_user_collections_table()
+    create_user_trades_table()
+    create_user_portfolios_table()
+
     # Wait for tables to be available
-    :mnesia.wait_for_tables([:cards, :price_history, :user_preferences], 5000)
+    :mnesia.wait_for_tables(
+      [
+        :cards,
+        :price_history,
+        :user_preferences,
+        :nostr_users,
+        :user_collections,
+        :user_trades,
+        :user_portfolios
+      ],
+      5000
+    )
   end
 
   defp create_cards_table do
@@ -168,12 +185,177 @@ defmodule Sammelkarten.Database do
     :mnesia.info()
   end
 
+  defp create_nostr_users_table do
+    table_def = [
+      attributes: [
+        # Primary key - hex public key
+        :pubkey,
+        # Bech32 encoded public key
+        :npub,
+        # User name from metadata
+        :name,
+        # Display name from metadata
+        :display_name,
+        # About text from metadata
+        :about,
+        # Profile picture URL
+        :picture,
+        # NIP-05 identifier
+        :nip05,
+        # Lightning address
+        :lud16,
+        # When metadata was last updated
+        :metadata_updated_at,
+        # When user record was created
+        :created_at,
+        # Last activity timestamp
+        :last_seen
+      ],
+      ram_copies: [node()],
+      type: :set
+    ]
+
+    case :mnesia.create_table(:nostr_users, table_def) do
+      {:atomic, :ok} ->
+        Logger.info("Nostr users table created successfully")
+
+      {:aborted, {:already_exists, :nostr_users}} ->
+        Logger.info("Nostr users table already exists")
+
+      {:aborted, reason} ->
+        Logger.error("Failed to create nostr users table: #{inspect(reason)}")
+    end
+  end
+
+  defp create_user_collections_table do
+    table_def = [
+      attributes: [
+        # Unique identifier
+        :id,
+        # Owner's public key
+        :user_pubkey,
+        # Card identifier
+        :card_id,
+        # Number of cards owned
+        :quantity,
+        # When the cards were acquired
+        :acquired_at,
+        # Price paid for the cards
+        :acquisition_price,
+        # Optional notes
+        :notes
+      ],
+      ram_copies: [node()],
+      type: :set,
+      index: [:user_pubkey, :card_id]
+    ]
+
+    case :mnesia.create_table(:user_collections, table_def) do
+      {:atomic, :ok} ->
+        Logger.info("User collections table created successfully")
+
+      {:aborted, {:already_exists, :user_collections}} ->
+        Logger.info("User collections table already exists")
+
+      {:aborted, reason} ->
+        Logger.error("Failed to create user collections table: #{inspect(reason)}")
+    end
+  end
+
+  defp create_user_trades_table do
+    table_def = [
+      attributes: [
+        # Unique trade identifier
+        :id,
+        # Trader's public key
+        :user_pubkey,
+        # Card being traded
+        :card_id,
+        # "buy" or "sell"
+        :trade_type,
+        # Number of cards
+        :quantity,
+        # Price per card in cents
+        :price,
+        # Total trade value
+        :total_value,
+        # Other party's pubkey (if completed)
+        :counterparty_pubkey,
+        # "open", "completed", "cancelled"
+        :status,
+        # When trade was created
+        :created_at,
+        # When trade was completed
+        :completed_at,
+        # Associated Nostr event ID
+        :nostr_event_id
+      ],
+      ram_copies: [node()],
+      type: :ordered_set,
+      index: [:user_pubkey, :card_id, :status, :created_at]
+    ]
+
+    case :mnesia.create_table(:user_trades, table_def) do
+      {:atomic, :ok} ->
+        Logger.info("User trades table created successfully")
+
+      {:aborted, {:already_exists, :user_trades}} ->
+        Logger.info("User trades table already exists")
+
+      {:aborted, reason} ->
+        Logger.error("Failed to create user trades table: #{inspect(reason)}")
+    end
+  end
+
+  defp create_user_portfolios_table do
+    table_def = [
+      attributes: [
+        # Primary key - user's public key
+        :user_pubkey,
+        # Total portfolio value in cents
+        :total_value,
+        # Total number of cards owned
+        :total_cards,
+        # Number of unique cards owned
+        :unique_cards,
+        # When portfolio was last calculated
+        :last_calculated,
+        # 24h performance percentage
+        :performance_24h,
+        # 7d performance percentage
+        :performance_7d,
+        # 30d performance percentage
+        :performance_30d
+      ],
+      ram_copies: [node()],
+      type: :set
+    ]
+
+    case :mnesia.create_table(:user_portfolios, table_def) do
+      {:atomic, :ok} ->
+        Logger.info("User portfolios table created successfully")
+
+      {:aborted, {:already_exists, :user_portfolios}} ->
+        Logger.info("User portfolios table already exists")
+
+      {:aborted, reason} ->
+        Logger.error("Failed to create user portfolios table: #{inspect(reason)}")
+    end
+  end
+
   @doc """
   Reset all tables (WARNING: This will delete all data!)
   """
   def reset_tables do
     Logger.warning("Resetting all Mnesia tables - ALL DATA WILL BE LOST!")
 
+    # Delete Nostr tables
+    :mnesia.delete_table(:user_portfolios)
+    :mnesia.delete_table(:user_trades)
+    :mnesia.delete_table(:user_collections)
+    :mnesia.delete_table(:nostr_users)
+
+    # Delete existing tables
     :mnesia.delete_table(:user_preferences)
     :mnesia.delete_table(:price_history)
     :mnesia.delete_table(:cards)

@@ -99,7 +99,7 @@ defmodule Sammelkarten.CardsTest do
 
   test "get_card_by_slug/1 finds card by slug" do
     attrs = %{
-      name: "Jonas Nick", 
+      name: "Jonas Nick",
       image_path: "/images/cards/JONAS_NICK.jpg",
       current_price: 100,
       rarity: "rare",
@@ -109,31 +109,32 @@ defmodule Sammelkarten.CardsTest do
 
     {:ok, card} = Cards.create_card(attrs)
     assert card.slug == "jonas_nick"
-    
+
     {:ok, found} = Cards.get_card_by_slug("jonas_nick")
     assert found.id == card.id
     assert found.name == card.name
     assert found.slug == "jonas_nick"
-    
+
     # Test not found
     assert {:error, :not_found} = Cards.get_card_by_slug("nonexistent")
   end
-  
+
   test "slug generation from image path" do
     test_cases = [
       {"/images/cards/JONAS_NICK.jpg", "jonas_nick"},
       {"/images/cards/TOXIC_BOOSTER.jpg", "toxic_booster"},
       {"/images/cards/BitcoinHotel_Holo.jpg", "bitcoinhotel_holo"}
     ]
-    
+
     for {image_path, expected_slug} <- test_cases do
-      {:ok, card} = Cards.create_card(%{
-        name: "Test Card",
-        image_path: image_path,
-        current_price: 100,
-        rarity: "common"
-      })
-      
+      {:ok, card} =
+        Cards.create_card(%{
+          name: "Test Card",
+          image_path: image_path,
+          current_price: 100,
+          rarity: "common"
+        })
+
       assert card.slug == expected_slug
     end
   end

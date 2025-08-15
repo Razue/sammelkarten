@@ -101,7 +101,10 @@ defmodule Sammelkarten.PriceUpdater do
     # Schedule the first update only if auto_refresh is enabled
     state = schedule_next_update(state)
 
-    Logger.info("Price updater started with #{state.interval}ms interval, auto_refresh: #{auto_refresh_enabled}")
+    Logger.info(
+      "Price updater started with #{state.interval}ms interval, auto_refresh: #{auto_refresh_enabled}"
+    )
+
     {:ok, state}
   end
 
@@ -148,7 +151,7 @@ defmodule Sammelkarten.PriceUpdater do
 
     state = cancel_timer(state)
     new_state = %{state | auto_refresh_enabled: enabled}
-    
+
     # If enabling auto_refresh, schedule next update; if disabling, don't schedule
     new_state = if enabled, do: schedule_next_update(new_state), else: new_state
 

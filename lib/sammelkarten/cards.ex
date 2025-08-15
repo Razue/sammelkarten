@@ -22,8 +22,9 @@ defmodule Sammelkarten.Cards do
     transaction_result =
       :mnesia.transaction(fn ->
         :mnesia.write(
-          {:cards, card.id, card.name, card.slug, card.image_path, card.current_price, card.price_change_24h,
-           card.price_change_percentage, card.rarity, card.description, card.last_updated}
+          {:cards, card.id, card.name, card.slug, card.image_path, card.current_price,
+           card.price_change_24h, card.price_change_percentage, card.rarity, card.description,
+           card.last_updated}
         )
       end)
 
@@ -59,7 +60,7 @@ defmodule Sammelkarten.Cards do
   """
   def get_card_by_slug(slug) do
     match_spec = [{{:cards, :_, :_, slug, :_, :_, :_, :_, :_, :_, :_}, [], [:"$_"]}]
-    
+
     case :mnesia.transaction(fn -> :mnesia.select(:cards, match_spec) end) do
       {:atomic, []} ->
         {:error, :not_found}
@@ -117,8 +118,8 @@ defmodule Sammelkarten.Cards do
         :mnesia.transaction(fn ->
           # Update card
           :mnesia.write(
-            {:cards, updated_card.id, updated_card.name, updated_card.slug, updated_card.image_path,
-             updated_card.current_price, updated_card.price_change_24h,
+            {:cards, updated_card.id, updated_card.name, updated_card.slug,
+             updated_card.image_path, updated_card.current_price, updated_card.price_change_24h,
              updated_card.price_change_percentage, updated_card.rarity, updated_card.description,
              updated_card.last_updated}
           )
@@ -185,8 +186,8 @@ defmodule Sammelkarten.Cards do
 
   # Private helpers
   defp card_from_record(
-         {:cards, id, name, slug, image_path, current_price, price_change_24h, price_change_percentage,
-          rarity, description, last_updated}
+         {:cards, id, name, slug, image_path, current_price, price_change_24h,
+          price_change_percentage, rarity, description, last_updated}
        ) do
     %Card{
       id: id,

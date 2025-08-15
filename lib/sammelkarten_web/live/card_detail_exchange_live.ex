@@ -129,17 +129,21 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
   # Generate base trader data with quantities and timestamps
   defp generate_base_trader_data(card) do
     all_traders = Enum.shuffle(@pseudonym_names)
-    
+
     Enum.map(all_traders, fn name ->
       trader_seed = :erlang.phash2({card.id, name})
       :rand.seed(:exsss, {trader_seed, trader_seed + 1, trader_seed + 2})
-      
+
       %{
         trader: name,
-        offer_quantity: 1 + :rand.uniform(9),  # 1-10
-        search_quantity: 1 + :rand.uniform(9), # 1-10
-        offer_minutes_ago: :rand.uniform(180), # 0-180 minutes
-        search_minutes_ago: :rand.uniform(240) # 0-240 minutes
+        # 1-10
+        offer_quantity: 1 + :rand.uniform(9),
+        # 1-10
+        search_quantity: 1 + :rand.uniform(9),
+        # 0-180 minutes
+        offer_minutes_ago: :rand.uniform(180),
+        # 0-240 minutes
+        search_minutes_ago: :rand.uniform(240)
       }
     end)
   end
@@ -155,7 +159,8 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
   # Build search traders list
   defp build_search_traders(trader_data, search_count) do
     trader_data
-    |> Enum.drop(1) # Start from index 1 to get different traders
+    # Start from index 1 to get different traders
+    |> Enum.drop(1)
     |> Enum.take(search_count)
     |> Enum.map(&format_search_trader/1)
     |> Enum.sort_by(& &1.search_quantity, :desc)

@@ -30,6 +30,7 @@ defmodule SammelkartenWeb.PortfolioLive do
       |> assign(:search_results, [])
       |> assign(:show_search_dropdown, false)
       |> assign(:selected_card, nil)
+      |> assign(:editing_item, nil)
 
     # Check if user is authenticated
     case get_nostr_user_from_session(session) do
@@ -257,6 +258,69 @@ defmodule SammelkartenWeb.PortfolioLive do
       end
     else
       socket = put_flash(socket, :error, "Authentication required")
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("edit_quantity", %{"collection_id" => collection_id}, socket) do
+    if socket.assigns.authenticated do
+      # Find the collection item to edit
+      collection_item = Enum.find(socket.assigns.collection, fn item -> item.id == collection_id end)
+      
+      if collection_item do
+        socket = assign(socket, :editing_item, collection_item)
+        {:noreply, socket}
+      else
+        socket = put_flash(socket, :error, "Collection item not found")
+        {:noreply, socket}
+      end
+    else
+      socket = put_flash(socket, :error, "Authentication required")
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("cancel_edit", _params, socket) do
+    socket = assign(socket, :editing_item, nil)
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("save_quantity", %{"new_quantity" => quantity_str}, socket) do
+    if socket.assigns.authenticated and socket.assigns.editing_item do
+      collection_id = socket.assigns.editing_item.id
+      user_pubkey = socket.assigns.current_user.pubkey
+
+      case Integer.parse(quantity_str) do
+        {quantity, _} when quantity > 0 ->
+          case update_collection_quantity(user_pubkey, collection_id, quantity) do
+            {:ok, _} ->
+              # Reload collection data
+              send(self(), :load_portfolio_data)
+
+              socket = 
+                socket
+                |> assign(:editing_item, nil)
+                |> put_flash(:info, "Quantity updated successfully")
+              {:noreply, socket}
+
+            {:error, reason} ->
+              socket = put_flash(socket, :error, "Failed to update quantity: #{reason}")
+              {:noreply, socket}
+          end
+
+        {0, _} ->
+          # Remove if quantity is 0
+          handle_event("remove_from_collection", %{"collection_id" => collection_id}, socket)
+
+        _ ->
+          socket = put_flash(socket, :error, "Please enter a valid quantity")
+          {:noreply, socket}
+      end
+    else
+      socket = put_flash(socket, :error, "Please select an item to edit")
       {:noreply, socket}
     end
   end

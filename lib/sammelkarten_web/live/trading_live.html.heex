@@ -101,12 +101,12 @@
                     <button phx-click="filter_offers" phx-value-type="buy" class={"px-4 py-2 rounded-lg text-label-md
                       transition-colors #{if @filter_type=="buy" , do: "bg-success text-success-foreground" ,
                       else: "bg-card text-text hover:bg-card-hover" }"}>
-                      🟢 Buy Orders
+                      🛒 Buy Orders
                     </button>
                     <button phx-click="filter_offers" phx-value-type="sell" class={"px-4 py-2 rounded-lg text-label-md
                       transition-colors #{if @filter_type=="sell" , do: "bg-destructive text-destructive-foreground" ,
                       else: "bg-card text-text hover:bg-card-hover" }"}>
-                      🔴 Sell Orders
+                      💰 Sell Orders
                     </button>
                   </div>
 
@@ -179,29 +179,35 @@
                                     <!-- Offer Type and Quantity -->
                                     <div class="flex items-center justify-between">
                                       <div class="flex items-center space-x-2">
-                                        <%= if offer.offer_type=="buy" do %>
-                                          <!-- Buy Offer Icon -->
-                                          <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13h10M17 21a2 2 0 100-4 2 2 0 000 4zM9 21a2 2 0 100-4 2 2 0 000 4z"></path>
-                                          </svg>
-                                          <span class="text-heading-lg text-green-600 dark:text-green-400">
-                                            <%= offer.quantity %>
-                                          </span>
-                                          <span class="text-label-sm text-green-500 dark:text-green-400">
-                                            <%= if offer.quantity==1, do: "card", else: "cards" %>
-                                          </span>
-                                          <% else %>
+                                        <%= cond do %>
+                                          <% offer.offer_type == "buy" -> %>
+                                            <!-- Buy Offer Icon -->
+                                            <span class="text-xl text-green-600">🛒</span>
+                                            <span class="text-heading-lg text-green-600 dark:text-green-400">
+                                              <%= offer.quantity %>
+                                            </span>
+                                            <span class="text-label-sm text-green-500 dark:text-green-400">
+                                              <%= if offer.quantity==1, do: "card", else: "cards" %>
+                                            </span>
+                                          <% offer.offer_type == "sell" -> %>
                                             <!-- Sell Offer Icon -->
-                                            <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-                                            </svg>
+                                            <span class="text-xl text-red-600">💰</span>
                                             <span class="text-heading-lg text-red-600 dark:text-red-400">
                                               <%= offer.quantity %>
                                             </span>
                                             <span class="text-label-sm text-red-500 dark:text-red-400">
                                               <%= if offer.quantity==1, do: "card", else: "cards" %>
                                             </span>
-                                            <% end %>
+                                          <% true -> %>
+                                            <!-- Exchange Offer Icon -->
+                                            <span class="text-xl text-blue-600">🔄</span>
+                                            <span class="text-heading-lg text-blue-600 dark:text-blue-400">
+                                              <%= offer.quantity %>
+                                            </span>
+                                            <span class="text-label-sm text-blue-500 dark:text-blue-400">
+                                              <%= if offer.quantity==1, do: "card", else: "cards" %>
+                                            </span>
+                                          <% end %>
                                       </div>
                                       <!-- Price per card -->
                                       <div class="text-right">
@@ -243,13 +249,21 @@
                                       <% else %>
                                         <%= if @authenticated do %>
                                           <!-- Other user's offer - clickable -->
-                                          <button phx-click="accept_offer" phx-value-offer_id={offer.id} class={"w-full py-3 px-4 rounded-lg font-medium text-body-md transition-colors #{if offer.offer_type == "buy", do: "bg-green-600 hover:bg-green-700 text-white", else: "bg-red-600 hover:bg-red-700 text-white"}"}>
-                                            <%= if offer.offer_type == "buy", do: "💰 Sell to This Buyer", else: "🛒 Buy from This Seller" %>
+                                          <button phx-click="accept_offer" phx-value-offer_id={offer.id} class={"w-full py-3 px-4 rounded-lg font-medium text-body-md transition-colors #{cond do; offer.offer_type == "buy" -> "bg-green-600 hover:bg-green-700 text-white"; offer.offer_type == "sell" -> "bg-red-600 hover:bg-red-700 text-white"; true -> "bg-blue-600 hover:bg-blue-700 text-white"; end}"}>
+                                            <%= cond do %>
+                                              <% offer.offer_type == "buy" -> %>💰 Sell to This Buyer
+                                              <% offer.offer_type == "sell" -> %>🛒 Buy from This Seller
+                                              <% true -> %>🔄 Accept Exchange
+                                            <% end %>
                                           </button>
                                           <% else %>
                                             <!-- Not authenticated - grayed out button -->
                                             <div class="w-full py-3 px-4 bg-gray-300 dark:bg-gray-600 rounded-lg text-center text-gray-500 dark:text-gray-400 text-body-md cursor-not-allowed opacity-60">
-                                              <%= if offer.offer_type == "buy", do: "💰 Sell to This Buyer", else: "🛒 Buy from This Seller" %>
+                                              <%= cond do %>
+                                                <% offer.offer_type == "buy" -> %>💰 Sell to This Buyer
+                                                <% offer.offer_type == "sell" -> %>🛒 Buy from This Seller
+                                                <% true -> %>🔄 Accept Exchange
+                                              <% end %>
                                             </div>
                                             <% end %>
                                         <% end %>
@@ -315,29 +329,35 @@
                                       <!-- Offer Type and Quantity -->
                                       <div class="flex items-center justify-between">
                                         <div class="flex items-center space-x-2">
-                                          <%= if offer.offer_type=="buy" do %>
-                                            <!-- Buy Offer Icon -->
-                                            <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13h10M17 21a2 2 0 100-4 2 2 0 000 4zM9 21a2 2 0 100-4 2 2 0 000 4z"></path>
-                                            </svg>
-                                            <span class="text-heading-lg text-green-600 dark:text-green-400">
-                                              <%= offer.quantity %>
-                                            </span>
-                                            <span class="text-label-sm text-green-500 dark:text-green-400">
-                                              <%= if offer.quantity==1, do: "card", else: "cards" %>
-                                            </span>
-                                            <% else %>
+                                          <%= cond do %>
+                                            <% offer.offer_type == "buy" -> %>
+                                              <!-- Buy Offer Icon -->
+                                              <span class="text-xl text-green-600">🛒</span>
+                                              <span class="text-heading-lg text-green-600 dark:text-green-400">
+                                                <%= offer.quantity %>
+                                              </span>
+                                              <span class="text-label-sm text-green-500 dark:text-green-400">
+                                                <%= if offer.quantity==1, do: "card", else: "cards" %>
+                                              </span>
+                                            <% offer.offer_type == "sell" -> %>
                                               <!-- Sell Offer Icon -->
-                                              <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-                                              </svg>
+                                              <span class="text-xl text-red-600">💰</span>
                                               <span class="text-heading-lg text-red-600 dark:text-red-400">
                                                 <%= offer.quantity %>
                                               </span>
                                               <span class="text-label-sm text-red-500 dark:text-red-400">
                                                 <%= if offer.quantity==1, do: "card", else: "cards" %>
                                               </span>
-                                              <% end %>
+                                            <% true -> %>
+                                              <!-- Exchange Offer Icon -->
+                                              <span class="text-xl text-blue-600">🔄</span>
+                                              <span class="text-heading-lg text-blue-600 dark:text-blue-400">
+                                                <%= offer.quantity %>
+                                              </span>
+                                              <span class="text-label-sm text-blue-500 dark:text-blue-400">
+                                                <%= if offer.quantity==1, do: "card", else: "cards" %>
+                                              </span>
+                                            <% end %>
                                         </div>
                                         <!-- Price per card -->
                                         <div class="text-right">
@@ -513,10 +533,10 @@
                                 <label class="block text-label-md font-medium text-text mb-2">
                                   Offer Type <span class="text-destructive">*</span>
                                 </label>
-                                <div class="grid grid-cols-2 gap-3">
+                                <div class="grid grid-cols-3 gap-3">
                                   <button type="button" phx-click="select_offer_type" phx-value-type="buy"
                                     class={"w-full rounded-lg border-2 p-4 text-center transition-all duration-200 #{if @selected_offer_type == "buy", do: "border-success bg-success/10 shadow-md", else: "border-border hover:border-success hover:bg-card-hover"}"}>
-                                    <div class="text-2xl mb-2">🟢</div>
+                                    <div class="text-2xl mb-2">🛒</div>
                                     <div class="text-body-md font-medium text-text">Buy Order</div>
                                     <div class="text-label-sm text-secondary">I want to buy</div>
                                     <%= if @selected_offer_type == "buy" do %>
@@ -526,24 +546,37 @@
 
                                   <button type="button" phx-click="select_offer_type" phx-value-type="sell"
                                     class={"w-full rounded-lg border-2 p-4 text-center transition-all duration-200 #{if @selected_offer_type == "sell", do: "border-destructive bg-destructive/10 shadow-md", else: "border-border hover:border-destructive hover:bg-card-hover"}"}>
-                                    <div class="text-2xl mb-2">🔴</div>
+                                    <div class="text-2xl mb-2">💰</div>
                                     <div class="text-body-md font-medium text-text">Sell Order</div>
                                     <div class="text-label-sm text-secondary">I want to sell</div>
                                     <%= if @selected_offer_type == "sell" do %>
                                       <div class="mt-2 text-destructive text-label-sm font-medium">✓ Selected</div>
                                     <% end %>
                                   </button>
+
+                                  <button type="button" phx-click="select_offer_type" phx-value-type="exchange"
+                                    class={"w-full rounded-lg border-2 p-4 text-center transition-all duration-200 #{if @selected_offer_type == "exchange", do: "border-primary bg-primary/10 shadow-md", else: "border-border hover:border-primary hover:bg-card-hover"}"}>
+                                    <div class="text-2xl mb-2">🔄</div>
+                                    <div class="text-body-md font-medium text-text">Exchange</div>
+                                    <div class="text-label-sm text-secondary">Card for card</div>
+                                    <%= if @selected_offer_type == "exchange" do %>
+                                      <div class="mt-2 text-primary text-label-sm font-medium">✓ Selected</div>
+                                    <% end %>
+                                  </button>
                                 </div>
                                 <%= if @selected_offer_type do %>
-                                  <div class="mt-3 p-3 bg-success/5 border border-success/20 rounded-lg">
-                                    <div class="flex items-center gap-2 text-success text-label-sm">
-                                      <div class="w-2 h-2 bg-success rounded-full"></div>
+                                  <div class={"mt-3 p-3 rounded-lg #{if @selected_offer_type == "exchange", do: "bg-primary/5 border border-primary/20", else: "bg-success/5 border border-success/20"}"}>
+                                    <div class={"flex items-center gap-2 text-label-sm #{if @selected_offer_type == "exchange", do: "text-primary", else: "text-success"}"}>
+                                      <div class={"w-2 h-2 rounded-full #{if @selected_offer_type == "exchange", do: "bg-primary", else: "bg-success"}"}></div>
                                       <%= if @selected_offer_type=="buy" do %>
                                         You're creating a <strong>Buy Order</strong> - other users can sell their cards
                                         to you
-                                        <% else %>
+                                        <% elsif @selected_offer_type == "sell" %>
                                           You're creating a <strong>Sell Order</strong> - other users can buy cards from
                                           you
+                                        <% else %>
+                                          You're creating an <strong>Exchange Offer</strong> - other users can trade cards
+                                          directly with you (no money involved)
                                           <% end %>
                                     </div>
                                   </div>
@@ -700,15 +733,18 @@
                           <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                             <%= for exchange <- @exchange_offers do %>
                               <div class="card-professional p-6">
-                                <div class="flex items-center gap-2 mb-4">
-                                  <span class="text-label-sm text-secondary">Trader:</span>
-                                  <span class="text-label-sm font-mono text-text">
-                                    <%= exchange.user_short %>
-                                  </span>
-                                </div>
+                                <!-- Clickable Card Details Area -->
+                                <.link navigate={"/trading/exchanges/#{exchange.offering_card.slug}"} 
+                                       class="block hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200 cursor-pointer rounded p-2 -m-2 mb-2">
+                                  <div class="flex items-center gap-2 mb-4">
+                                    <span class="text-label-sm text-secondary">Trader:</span>
+                                    <span class="text-label-sm font-mono text-text">
+                                      <%= exchange.user_short %>
+                                    </span>
+                                  </div>
 
-                                <!-- Exchange Details -->
-                                <div class="flex items-center gap-4 mb-4">
+                                  <!-- Exchange Details -->
+                                  <div class="flex items-center gap-4 mb-4">
                                   <!-- Offering Card -->
                                   <div class="flex-1 text-center">
                                     <div class="w-16 h-20 mx-auto mb-2 bg-gray-100 dark:bg-gray-700 rounded overflow-hidden">
@@ -723,9 +759,9 @@
                                     </div>
                                   </div>
 
-                                  <!-- Exchange Arrow -->
+                                  <!-- Exchange Symbol -->
                                   <div class="text-2xl text-primary">
-                                    ⇄
+                                    🔄
                                   </div>
 
                                   <!-- Wanted Card(s) -->
@@ -771,6 +807,7 @@
                                     <% end %>
                                   </div>
                                 </div>
+                                </.link>
 
                                 <!-- Action -->
                                 <%= if @authenticated and @current_user && exchange.user_pubkey == @current_user.pubkey do %>

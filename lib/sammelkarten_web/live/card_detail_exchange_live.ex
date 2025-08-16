@@ -108,7 +108,7 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
 
   @impl true
   def handle_event("go_back", _params, socket) do
-    {:noreply, push_navigate(socket, to: "/")}
+    {:noreply, push_navigate(socket, to: "/trading/exchanges")}
   end
 
   # Generate combined trader data for both offers and searches
@@ -120,13 +120,13 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
     search_count = calculate_search_quantity(card)
     trader_data = generate_base_trader_data(card)
 
-    offer_traders = build_offer_traders(trader_data, offer_count)
-    search_traders = build_search_traders(trader_data, search_count)
+    offer_traders = build_offer_traders(trader_data, offer_count, card)
+    search_traders = build_search_traders(trader_data, search_count, card)
 
     {offer_traders, search_traders}
   end
 
-  # Generate base trader data with quantities and timestamps
+  # Generate base trader data with exchange bundles and timestamps
   defp generate_base_trader_data(card) do
     all_traders = Enum.shuffle(@pseudonym_names)
 
@@ -134,12 +134,14 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
       trader_seed = :erlang.phash2({card.id, name})
       :rand.seed(:exsss, {trader_seed, trader_seed + 1, trader_seed + 2})
 
+      # Generate realistic exchange bundles
+      offer_bundle = generate_offer_bundle(card, trader_seed)
+      search_bundle = generate_search_bundle(card, trader_seed + 100)
+
       %{
         trader: name,
-        # 1-10
-        offer_quantity: 1 + :rand.uniform(9),
-        # 1-10
-        search_quantity: 1 + :rand.uniform(9),
+        offer_bundle: offer_bundle,
+        search_bundle: search_bundle,
         # 0-180 minutes
         offer_minutes_ago: :rand.uniform(180),
         # 0-240 minutes
@@ -149,29 +151,29 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
   end
 
   # Build offer traders list
-  defp build_offer_traders(trader_data, offer_count) do
+  defp build_offer_traders(trader_data, offer_count, _card) do
     trader_data
     |> Enum.take(offer_count)
     |> Enum.map(&format_offer_trader/1)
-    |> Enum.sort_by(& &1.offer_quantity, :desc)
+    |> Enum.sort_by(&calculate_bundle_value(&1.offer_bundle), :desc)
   end
 
   # Build search traders list
-  defp build_search_traders(trader_data, search_count) do
+  defp build_search_traders(trader_data, search_count, _card) do
     trader_data
     # Start from index 1 to get different traders
     |> Enum.drop(1)
     |> Enum.take(search_count)
     |> Enum.map(&format_search_trader/1)
-    |> Enum.sort_by(& &1.search_quantity, :desc)
+    |> Enum.sort_by(&calculate_bundle_value(&1.search_bundle), :desc)
   end
 
   # Format trader for offers section
   defp format_offer_trader(trader) do
     %{
       trader: trader.trader,
-      offer_quantity: trader.offer_quantity,
-      search_quantity: trader.search_quantity,
+      offer_bundle: trader.offer_bundle,
+      search_bundle: trader.search_bundle,
       minutes_ago: trader.offer_minutes_ago
     }
   end
@@ -180,8 +182,8 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
   defp format_search_trader(trader) do
     %{
       trader: trader.trader,
-      offer_quantity: trader.offer_quantity,
-      search_quantity: trader.search_quantity,
+      offer_bundle: trader.offer_bundle,
+      search_bundle: trader.search_bundle,
       minutes_ago: trader.search_minutes_ago
     }
   end
@@ -234,6 +236,88 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
     max(0, min(12, base_quantity + variation))
   end
 
+  # Generate realistic offer bundle - what trader is offering
+  defp generate_offer_bundle(current_card, seed) do
+    :rand.seed(:exsss, {seed, seed + 1, seed + 2})
+    
+    # 70% chance of offering multiple cards, 30% single card
+    if :rand.uniform(100) <= 70 do
+      generate_multi_card_bundle(current_card, :offer, seed)
+    else
+      generate_single_card_bundle(current_card, :offer, seed)
+    end
+  end
+
+  # Generate realistic search bundle - what trader wants in return
+  defp generate_search_bundle(current_card, seed) do
+    :rand.seed(:exsss, {seed, seed + 1, seed + 2})
+    
+    # 60% chance of wanting multiple cards, 40% single card
+    if :rand.uniform(100) <= 60 do
+      generate_multi_card_bundle(current_card, :search, seed)
+    else
+      generate_single_card_bundle(current_card, :search, seed)
+    end
+  end
+
+  # Generate single card bundle
+  defp generate_single_card_bundle(current_card, type, seed) do
+    :rand.seed(:exsss, {seed, seed + 10, seed + 20})
+    
+    quantity = case type do
+      :offer -> 1 + :rand.uniform(3)  # 1-4 of current card
+      :search -> 1 + :rand.uniform(2) # 1-3 of current card
+    end
+    
+    [{current_card.name, quantity, current_card.rarity}]
+  end
+
+  # Generate multi-card bundle with variety
+  defp generate_multi_card_bundle(current_card, _type, seed) do
+    :rand.seed(:exsss, {seed, seed + 30, seed + 40})
+    
+    # Available card pool (realistic card names from the project)
+    card_pool = [
+      {"Satoshi", "mythic"}, {"Bitcoin Hotel", "legendary"}, {"Christian Decker", "legendary"},
+      {"Der Gigi", "legendary"}, {"Jonas Nick", "epic"}, {"Blocktrainer", "epic"},
+      {"Markus Turm", "epic"}, {"Zitadelle", "epic"}, {"Seed or Chris", "rare"},
+      {"BitcoinHotel Holo", "rare"}, {"Der Pleb", "uncommon"}, {"Pleb Rap", "uncommon"},
+      {"FAB", "uncommon"}, {"Dennis", "uncommon"}, {"Maurice Effekt", "common"},
+      {"Paddepadde", "common"}, {"Netdiver", "common"}, {"Toxic Booster", "common"}
+    ]
+    
+    # Include the current card
+    bundle = [{current_card.name, 1 + :rand.uniform(2), current_card.rarity}]
+    
+    # Add 1-3 other cards
+    num_other_cards = 1 + :rand.uniform(2)
+    other_cards = card_pool 
+                  |> Enum.filter(fn {name, _} -> name != current_card.name end)
+                  |> Enum.shuffle()
+                  |> Enum.take(num_other_cards)
+                  |> Enum.map(fn {name, rarity} -> {name, 1 + :rand.uniform(2), rarity} end)
+    
+    bundle ++ other_cards
+  end
+
+  # Calculate total value of a bundle for sorting
+  defp calculate_bundle_value(bundle) do
+    bundle
+    |> Enum.map(fn {_name, quantity, rarity} ->
+      rarity_value = case String.downcase(rarity) do
+        "mythic" -> 100
+        "legendary" -> 80
+        "epic" -> 60
+        "rare" -> 40
+        "uncommon" -> 20
+        "common" -> 10
+        _ -> 10
+      end
+      quantity * rarity_value
+    end)
+    |> Enum.sum()
+  end
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -263,7 +347,7 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
               <nav class="flex" aria-label="Breadcrumb">
                 <ol class="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
                   <li>
-                    <.link navigate="/" class="hover:text-gray-700 dark:hover:text-gray-300">
+                    <.link navigate="/trading/exchanges" class="hover:text-gray-700 dark:hover:text-gray-300">
                       Card Collection Exchange
                     </.link>
                   </li>
@@ -367,26 +451,70 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
                   </div>
 
                   <%= if length(@offer_traders) > 0 do %>
-                    <div class="space-y-3">
+                    <div class="space-y-4">
                       <%= for offer <- @offer_traders do %>
-                        <div class="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                          <div class="flex items-center space-x-3">
-                            <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                              <span class="text-white text-xs font-bold">
-                                {String.slice(offer.trader, 0, 1)}
-                              </span>
+                        <div class="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                          <!-- Trader Header -->
+                          <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center space-x-3">
+                              <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                                <span class="text-white text-xs font-bold">
+                                  {String.slice(offer.trader, 0, 1)}
+                                </span>
+                              </div>
+                              <div>
+                                <p class="font-medium text-gray-900 dark:text-white">{offer.trader}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">
+                                  {format_time_ago(offer.minutes_ago)} ago
+                                </p>
+                              </div>
                             </div>
-                            <div>
-                              <p class="font-medium text-gray-900 dark:text-white">{offer.trader}</p>
-                              <p class="text-xs text-gray-500 dark:text-gray-400">
-                                {format_time_ago(offer.minutes_ago)} ago
-                              </p>
-                            </div>
+                            <span class="text-xs font-medium text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-800 px-2 py-1 rounded-full">
+                              OFFERING
+                            </span>
                           </div>
-                          <div class="text-right">
-                            <p class="font-semibold text-green-600 dark:text-green-400 text-xl">
-                              🔍 {offer.offer_quantity} → {offer.search_quantity}
-                            </p>
+                          
+                          <!-- Exchange Visual -->
+                          <div class="flex items-center space-x-4">
+                            <!-- What they're offering -->
+                            <div class="flex-1">
+                              <p class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">Offering</p>
+                              <div class="space-y-1">
+                                <%= for {card_name, quantity, rarity} <- offer.offer_bundle do %>
+                                  <div class="flex items-center justify-between p-2 bg-white dark:bg-gray-800 rounded border">
+                                    <div class="flex items-center space-x-2">
+                                      <span class={["w-2 h-2 rounded-full", rarity_dot_color(rarity)]}></span>
+                                      <span class="text-sm font-medium text-gray-900 dark:text-white">{card_name}</span>
+                                    </div>
+                                    <span class="text-sm font-bold text-green-600 dark:text-green-400">×{quantity}</span>
+                                  </div>
+                                <% end %>
+                              </div>
+                            </div>
+                            
+                            <!-- Exchange Arrow -->
+                            <div class="flex flex-col items-center justify-center px-2">
+                              <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                              </svg>
+                              <span class="text-xs text-gray-500 mt-1">FOR</span>
+                            </div>
+                            
+                            <!-- What they want -->
+                            <div class="flex-1">
+                              <p class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">Wants</p>
+                              <div class="space-y-1">
+                                <%= for {card_name, quantity, rarity} <- offer.search_bundle do %>
+                                  <div class="flex items-center justify-between p-2 bg-white dark:bg-gray-800 rounded border">
+                                    <div class="flex items-center space-x-2">
+                                      <span class={["w-2 h-2 rounded-full", rarity_dot_color(rarity)]}></span>
+                                      <span class="text-sm font-medium text-gray-900 dark:text-white">{card_name}</span>
+                                    </div>
+                                    <span class="text-sm font-bold text-blue-600 dark:text-blue-400">×{quantity}</span>
+                                  </div>
+                                <% end %>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       <% end %>
@@ -428,26 +556,70 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
                   </div>
 
                   <%= if length(@search_traders) > 0 do %>
-                    <div class="space-y-3">
+                    <div class="space-y-4">
                       <%= for search <- @search_traders do %>
-                        <div class="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                          <div class="flex items-center space-x-3">
-                            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                              <span class="text-white text-xs font-bold">
-                                {String.slice(search.trader, 0, 1)}
-                              </span>
+                        <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                          <!-- Trader Header -->
+                          <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center space-x-3">
+                              <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                                <span class="text-white text-xs font-bold">
+                                  {String.slice(search.trader, 0, 1)}
+                                </span>
+                              </div>
+                              <div>
+                                <p class="font-medium text-gray-900 dark:text-white">{search.trader}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">
+                                  {format_time_ago(search.minutes_ago)} ago
+                                </p>
+                              </div>
                             </div>
-                            <div>
-                              <p class="font-medium text-gray-900 dark:text-white">{search.trader}</p>
-                              <p class="text-xs text-gray-500 dark:text-gray-400">
-                                {format_time_ago(search.minutes_ago)} ago
-                              </p>
-                            </div>
+                            <span class="text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-800 px-2 py-1 rounded-full">
+                              SEARCHING
+                            </span>
                           </div>
-                          <div class="text-right">
-                            <p class="font-semibold text-blue-600 dark:text-blue-400 text-xl">
-                              🔍 {search.offer_quantity} → {search.search_quantity}
-                            </p>
+                          
+                          <!-- Exchange Visual -->
+                          <div class="flex items-center space-x-4">
+                            <!-- What they want -->
+                            <div class="flex-1">
+                              <p class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">Looking For</p>
+                              <div class="space-y-1">
+                                <%= for {card_name, quantity, rarity} <- search.search_bundle do %>
+                                  <div class="flex items-center justify-between p-2 bg-white dark:bg-gray-800 rounded border">
+                                    <div class="flex items-center space-x-2">
+                                      <span class={["w-2 h-2 rounded-full", rarity_dot_color(rarity)]}></span>
+                                      <span class="text-sm font-medium text-gray-900 dark:text-white">{card_name}</span>
+                                    </div>
+                                    <span class="text-sm font-bold text-blue-600 dark:text-blue-400">×{quantity}</span>
+                                  </div>
+                                <% end %>
+                              </div>
+                            </div>
+                            
+                            <!-- Exchange Arrow -->
+                            <div class="flex flex-col items-center justify-center px-2">
+                              <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18"></path>
+                              </svg>
+                              <span class="text-xs text-gray-500 mt-1">FOR</span>
+                            </div>
+                            
+                            <!-- What they're offering -->
+                            <div class="flex-1">
+                              <p class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">Offering</p>
+                              <div class="space-y-1">
+                                <%= for {card_name, quantity, rarity} <- search.offer_bundle do %>
+                                  <div class="flex items-center justify-between p-2 bg-white dark:bg-gray-800 rounded border">
+                                    <div class="flex items-center space-x-2">
+                                      <span class={["w-2 h-2 rounded-full", rarity_dot_color(rarity)]}></span>
+                                      <span class="text-sm font-medium text-gray-900 dark:text-white">{card_name}</span>
+                                    </div>
+                                    <span class="text-sm font-bold text-green-600 dark:text-green-400">×{quantity}</span>
+                                  </div>
+                                <% end %>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       <% end %>
@@ -511,6 +683,14 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
     do: "bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-200"
 
   defp rarity_color_class(_), do: "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+
+  defp rarity_dot_color("common"), do: "bg-gray-400"
+  defp rarity_dot_color("uncommon"), do: "bg-green-400"
+  defp rarity_dot_color("rare"), do: "bg-blue-400"
+  defp rarity_dot_color("epic"), do: "bg-purple-400"
+  defp rarity_dot_color("legendary"), do: "bg-yellow-400"
+  defp rarity_dot_color("mythic"), do: "bg-red-400"
+  defp rarity_dot_color(_), do: "bg-gray-400"
 
   defp format_datetime(%DateTime{} = dt) do
     dt

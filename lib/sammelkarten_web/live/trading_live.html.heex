@@ -16,7 +16,7 @@
           <div class="mt-4 sm:mt-0 text-label-md">
             <div class="flex items-center gap-2 text-success">
               <div class="w-2 h-2 bg-success rounded-full"></div>
-              Authenticated as <%= @current_user.display_name || @current_user.name || "Unknown" %>
+              Authenticated as <%= (@current_user && (@current_user.display_name || @current_user.name)) || "Unknown" %>
             </div>
           </div>
           <% else %>
@@ -30,20 +30,20 @@
     </div>
   </div>
 
-  <%= if @authenticated do %>
-    <!-- Main Trading Interface -->
-    <div class="max-w-7xl mx-auto px-4 py-8">
-      <!-- Tab Navigation -->
-      <div class="flex flex-wrap border-b border-border mb-8">
-        <button phx-click="change_tab" phx-value-tab="active_offers" class={"px-6 py-3 text-body-md font-medium
-          border-b-2 transition-colors #{if @active_tab=="active_offers" , do: "border-primary text-primary" ,
-          else: "border-transparent text-secondary hover:text-text" }"}>
-          🟢 Active Offers
-          <span class="ml-2 px-2 py-0.5 bg-secondary text-background rounded-full text-label-sm">
-            <%= length(@active_offers) %>
-          </span>
-        </button>
+  <!-- Main Trading Interface -->
+  <div class="max-w-7xl mx-auto px-4 py-8">
+    <!-- Tab Navigation -->
+    <div class="flex flex-wrap border-b border-border mb-8">
+      <button phx-click="change_tab" phx-value-tab="active_offers" class={"px-6 py-3 text-body-md font-medium
+        border-b-2 transition-colors #{if @active_tab=="active_offers" , do: "border-primary text-primary" ,
+        else: "border-transparent text-secondary hover:text-text" }"}>
+        🟢 Active Offers
+        <span class="ml-2 px-2 py-0.5 bg-secondary text-background rounded-full text-label-sm">
+          <%= length(@active_offers) %>
+        </span>
+      </button>
 
+      <%= if @authenticated do %>
         <button phx-click="change_tab" phx-value-tab="my_offers" class={"px-6 py-3 text-body-md font-medium border-b-2
           transition-colors #{if @active_tab=="my_offers" , do: "border-primary text-primary" ,
           else: "border-transparent text-secondary hover:text-text" }"}>
@@ -67,7 +67,8 @@
           else: "border-transparent text-secondary hover:text-text" }"}>
           ➕ Create Offer
         </button>
-      </div>
+      <% end %>
+    </div>
 
       <!-- Loading State -->
       <%= if @loading do %>
@@ -77,8 +78,8 @@
         </div>
         <% else %>
           <!-- Tab Content -->
-          <%= case @active_tab do %>
-            <% "active_offers" -> %>
+          <%= case {@active_tab, @authenticated} do %>
+            <% {"active_offers", _} -> %>
               <div>
                 <!-- Filters and Search -->
                 <div class="flex flex-col sm:flex-row gap-4 mb-6">
@@ -132,7 +133,7 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                       <%= for offer <- filter_and_sort_offers(@active_offers, @search_query, @filter_type, @sort_by) do
                         %>
-                        <div class={"card-grid-item card-professional card-hover block overflow-hidden #{if offer.user_pubkey == @current_user.pubkey, do: "border-2 border-primary/50 bg-primary/5", else: "cursor-pointer"}"}>
+                        <div class={"card-grid-item card-professional card-hover block overflow-hidden #{if @current_user && offer.user_pubkey == @current_user.pubkey, do: "border-2 border-primary/50 bg-primary/5", else: "cursor-pointer"}"}>
                           <!-- Card Image -->
                           <%= if Map.has_key?(offer, :card) do %>
                             <div class="aspect-w-3 aspect-h-4 bg-gray-100 dark:bg-gray-700 overflow-hidden">
@@ -224,17 +225,24 @@
                                   <!-- Action -->
                                   <div class="mt-4">
                                     <!-- Action Button -->
-                                    <%= if offer.user_pubkey==@current_user.pubkey do %>
+                                    <%= if @authenticated and @current_user && offer.user_pubkey==@current_user.pubkey do %>
                                       <!-- User's own offer - not clickable -->
                                       <div
                                         class="w-full py-3 px-4 bg-gray-100 dark:bg-gray-700 rounded-lg text-center text-gray-500 dark:text-gray-400 text-body-md">
                                         🚫 Cannot trade with yourself
                                       </div>
                                       <% else %>
-                                        <!-- Other user's offer - clickable -->
-                                        <button phx-click="accept_offer" phx-value-offer_id={offer.id} class={"w-full py-3 px-4 rounded-lg font-medium text-body-md transition-colors #{if offer.offer_type == "buy", do: "bg-green-600 hover:bg-green-700 text-white", else: "bg-red-600 hover:bg-red-700 text-white"}"}>
-                                          <%= if offer.offer_type == "buy", do: "💰 Sell to This Buyer", else: "🛒 Buy from This Seller" %>
-                                        </button>
+                                        <%= if @authenticated do %>
+                                          <!-- Other user's offer - clickable -->
+                                          <button phx-click="accept_offer" phx-value-offer_id={offer.id} class={"w-full py-3 px-4 rounded-lg font-medium text-body-md transition-colors #{if offer.offer_type == "buy", do: "bg-green-600 hover:bg-green-700 text-white", else: "bg-red-600 hover:bg-red-700 text-white"}"}>
+                                            <%= if offer.offer_type == "buy", do: "💰 Sell to This Buyer", else: "🛒 Buy from This Seller" %>
+                                          </button>
+                                          <% else %>
+                                            <!-- Not authenticated - grayed out button -->
+                                            <div class="w-full py-3 px-4 bg-gray-300 dark:bg-gray-600 rounded-lg text-center text-gray-500 dark:text-gray-400 text-body-md cursor-not-allowed opacity-60">
+                                              <%= if offer.offer_type == "buy", do: "💰 Sell to This Buyer", else: "🛒 Buy from This Seller" %>
+                                            </div>
+                                            <% end %>
                                         <% end %>
                                   </div>
                                 </div>
@@ -244,7 +252,7 @@
                     <% end %>
               </div>
 
-              <% "my_offers" -> %>
+              <% {"my_offers", true} -> %>
                 <div>
                   <%= if length(@my_offers)==0 do %>
                     <div class="text-center py-12">
@@ -373,7 +381,7 @@
                       <% end %>
                 </div>
 
-                <% "trade_history" -> %>
+                <% {"trade_history", true} -> %>
                   <div>
                     <%= if length(@trade_history)==0 do %>
                       <div class="text-center py-12">
@@ -428,7 +436,7 @@
                                 </div>
                               </div>
 
-                              <%= if trade.seller_pubkey==@current_user.pubkey do %>
+                              <%= if @current_user && trade.seller_pubkey==@current_user.pubkey do %>
                                 <div
                                   class="mt-2 inline-flex items-center px-2 py-1 rounded-full bg-success/20 text-success text-label-xs">
                                   💰 Sold
@@ -445,7 +453,7 @@
                         <% end %>
                   </div>
 
-                  <% "create_offer" -> %>
+                  <% {"create_offer", true} -> %>
                     <div class="max-w-2xl mx-auto">
                       <%= if not @show_create_form do %>
                         <!-- Show Create Form Button -->
@@ -575,46 +583,30 @@
                     <% end %>
                       <% end %>
     </div>
-    <% else %>
-      <!-- Unauthenticated State -->
-      <div class="max-w-4xl mx-auto px-4 py-16 text-center">
-        <div class="text-8xl mb-8">🔐</div>
-        <h2 class="text-heading-lg font-semibold text-text mb-4">
-          Nostr Authentication Required
-        </h2>
-        <p class="text-body-lg text-secondary mb-8 max-w-2xl mx-auto">
-          The P2P Trading system uses Nostr for decentralized authentication and trade broadcasting.
-          Connect your Nostr identity to start trading cards with other users.
-        </p>
-        <.link navigate="/auth" class="btn-primary text-body-md px-8 py-4">
-          🔑 Connect with Nostr
-        </.link>
 
-        <div class="mt-16 grid gap-8 md:grid-cols-3 text-left">
-          <div class="card-professional p-6">
-            <div class="text-3xl mb-4">🔄</div>
-            <h3 class="text-heading-xs font-semibold text-text mb-2">Real P2P Trading</h3>
-            <p class="text-body-sm text-secondary">
-              Direct trader-to-trader exchanges without intermediaries. Your trades are broadcast via Nostr events.
+    <!-- Authentication Notice for Non-authenticated Users -->
+    <%= if not @authenticated do %>
+      <div class="mt-8 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-6">
+        <div class="flex items-center">
+          <div class="text-blue-600 dark:text-blue-400 mr-4">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <div class="flex-1">
+            <h3 class="text-body-md font-medium text-blue-900 dark:text-blue-100">
+              Connect with Nostr to start trading
+            </h3>
+            <p class="text-body-sm text-blue-700 dark:text-blue-300 mt-1">
+              You can browse active offers, but need Nostr authentication to create offers and execute trades.
             </p>
           </div>
-
-          <div class="card-professional p-6">
-            <div class="text-3xl mb-4">⚡</div>
-            <h3 class="text-heading-xs font-semibold text-text mb-2">Lightning Fast</h3>
-            <p class="text-body-sm text-secondary">
-              Real-time trade matching and execution. See offers and complete trades instantly.
-            </p>
-          </div>
-
-          <div class="card-professional p-6">
-            <div class="text-3xl mb-4">🔒</div>
-            <h3 class="text-heading-xs font-semibold text-text mb-2">Decentralized</h3>
-            <p class="text-body-sm text-secondary">
-              No central authority. Your identity and trades are secured by cryptographic signatures.
-            </p>
+          <div>
+            <.link navigate="/auth" class="btn-primary ml-4">
+              🔑 Connect with Nostr
+            </.link>
           </div>
         </div>
       </div>
-      <% end %>
+    <% end %>
 </div>

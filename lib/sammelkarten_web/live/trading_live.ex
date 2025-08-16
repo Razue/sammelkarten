@@ -64,11 +64,19 @@ defmodule SammelkartenWeb.TradingLive do
         {:ok, socket}
 
       {:error, :not_authenticated} ->
-        # Redirect to authentication page
+        # Show reduced functionality without authentication
         socket =
           socket
-          |> put_flash(:error, "Please authenticate with Nostr to access trading features")
-          |> push_navigate(to: "/auth")
+          |> assign(:authenticated, false)
+          |> assign(:current_user, nil)
+          |> assign(:loading, true)
+
+        # Load only active offers for non-authenticated users
+        if connected?(socket) do
+          send(self(), :load_limited_trading_data)
+        else
+          send(self(), :load_limited_trading_data)
+        end
 
         {:ok, socket}
     end
@@ -111,14 +119,38 @@ defmodule SammelkartenWeb.TradingLive do
   end
 
   @impl true
+  def handle_info(:load_limited_trading_data, socket) do
+    # Load only active offers for non-authenticated users
+    active_offers = load_active_offers(nil)
+
+    # Load available cards for display purposes
+    available_cards =
+      case Cards.list_cards() do
+        {:ok, cards} -> cards
+        {:error, _} -> []
+      end
+
+    socket =
+      socket
+      |> assign(:active_offers, active_offers)
+      |> assign(:my_offers, [])
+      |> assign(:trade_history, [])
+      |> assign(:available_cards, available_cards)
+      |> assign(:loading, false)
+
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_info({:price_update, _card_id}, socket) do
     if socket.assigns.authenticated do
       # Reload trading data when prices update
       send(self(), :load_trading_data)
-      {:noreply, socket}
     else
-      {:noreply, socket}
+      # Reload limited data for non-authenticated users
+      send(self(), :load_limited_trading_data)
     end
+    {:noreply, socket}
   end
 
   @impl true

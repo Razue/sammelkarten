@@ -50,11 +50,12 @@ defmodule SammelkartenWeb.PortfolioLive do
         {:ok, socket}
 
       {:error, :not_authenticated} ->
-        # Redirect to authentication page
+        # Show unauthenticated state
         socket =
           socket
-          |> put_flash(:error, "Please authenticate with Nostr to view your portfolio")
-          |> push_navigate(to: "/auth")
+          |> assign(:authenticated, false)
+          |> assign(:current_user, nil)
+          |> assign(:loading, false)
 
         {:ok, socket}
     end

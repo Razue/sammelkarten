@@ -1,16 +1,48 @@
-<div class="container mx-auto px-4 py-6 max-w-7xl">
-  <!-- Page Header -->
-  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
-    <div>
-      <h1 class="text-display-sm font-bold text-gray-900 mb-2">My Portfolio</h1>
-      <%= if @current_user do %>
-        <p class="text-body-md text-gray-600">
-          Welcome back, <span class="font-medium">
-            <%= Sammelkarten.Nostr.User.display_name(@current_user) %>
-          </span>
-        </p>
-        <% end %>
+<div class="bg-background min-h-screen">
+  <!-- Header -->
+  <div class="bg-card-professional border-b border-border">
+    <div class="max-w-7xl mx-auto px-4 py-6">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 class="text-display-md font-semibold text-text mb-2">
+            📊 My Portfolio
+          </h1>
+          <p class="text-body-md text-secondary">
+            Track your card collection and portfolio performance
+          </p>
+        </div>
+
+        <%= if @authenticated do %>
+          <div class="mt-4 sm:mt-0 text-label-md">
+            <div class="flex items-center gap-2 text-success">
+              <div class="w-2 h-2 bg-success rounded-full"></div>
+              Authenticated as <%= (@current_user && (@current_user.display_name || @current_user.name)) || "Unknown" %>
+            </div>
+          </div>
+          <% else %>
+            <div class="mt-4 sm:mt-0">
+              <.link navigate="/auth" class="btn-primary">
+                🔑 Authenticate with Nostr
+              </.link>
+            </div>
+            <% end %>
+      </div>
     </div>
+  </div>
+
+  <%= if @authenticated do %>
+    <div class="container mx-auto px-4 py-6 max-w-7xl">
+      <!-- Page Header -->
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+        <div>
+          <%= if @current_user do %>
+            <p class="text-body-md text-gray-600">
+              Welcome back, <span class="font-medium">
+                <%= Sammelkarten.Nostr.User.display_name(@current_user) %>
+              </span>
+            </p>
+            <% end %>
+        </div>
 
     <!-- Card Search and Actions -->
     <div class="flex flex-col sm:flex-row gap-3 mt-4 sm:mt-0">
@@ -396,4 +428,47 @@
               </div>
               <% end %>
                 <% end %>
+    </div>
+    <% else %>
+      <!-- Unauthenticated State -->
+      <div class="max-w-4xl mx-auto px-4 py-16 text-center">
+        <div class="text-8xl mb-8">🔐</div>
+        <h2 class="text-heading-lg font-semibold text-text mb-4">
+          Nostr Authentication Required
+        </h2>
+        <p class="text-body-lg text-secondary mb-8 max-w-2xl mx-auto">
+          Your personal portfolio tracks your card collection, performance metrics, and investment returns. 
+          Connect your Nostr identity to start building and managing your collection.
+        </p>
+        <.link navigate="/auth" class="btn-primary text-body-md px-8 py-4">
+          🔑 Connect with Nostr
+        </.link>
+
+        <div class="mt-16 grid gap-8 md:grid-cols-3 text-left">
+          <div class="card-professional p-6">
+            <div class="text-3xl mb-4">📊</div>
+            <h3 class="text-heading-xs font-semibold text-text mb-2">Portfolio Tracking</h3>
+            <p class="text-body-sm text-secondary">
+              Track your collection value, profit/loss, and performance metrics in real-time with comprehensive analytics.
+            </p>
+          </div>
+
+          <div class="card-professional p-6">
+            <div class="text-3xl mb-4">🃏</div>
+            <h3 class="text-heading-xs font-semibold text-text mb-2">Collection Management</h3>
+            <p class="text-body-sm text-secondary">
+              Organize your cards, track acquisition prices, and monitor individual card performance over time.
+            </p>
+          </div>
+
+          <div class="card-professional p-6">
+            <div class="text-3xl mb-4">📈</div>
+            <h3 class="text-heading-xs font-semibold text-text mb-2">Investment Insights</h3>
+            <p class="text-body-sm text-secondary">
+              Get detailed insights into your best and worst performing cards with profit/loss calculations.
+            </p>
+          </div>
+        </div>
+      </div>
+      <% end %>
 </div>

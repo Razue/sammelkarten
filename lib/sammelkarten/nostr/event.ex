@@ -29,12 +29,19 @@ defmodule Sammelkarten.Nostr.Event do
     :sig
   ]
 
+  # Implement Jason.Encoder for JSON serialization
+  defimpl Jason.Encoder, for: __MODULE__ do
+    def encode(event, opts) do
+      Jason.Encode.map(Sammelkarten.Nostr.Event.to_map(event), opts)
+    end
+  end
+
   # Custom event kinds for Sammelkarten
-  @card_collection_kind 30000
-  @trade_offer_kind 30001
-  @trade_execution_kind 30002
-  @price_alert_kind 30003
-  @portfolio_snapshot_kind 30004
+  @card_collection_kind 32121
+  @trade_offer_kind 32122
+  @trade_execution_kind 32123
+  @price_alert_kind 32124
+  @portfolio_snapshot_kind 32125
 
   # Standard Nostr kinds
   # @metadata_kind 0
@@ -175,11 +182,11 @@ defmodule Sammelkarten.Nostr.Event do
       # Convert hex strings to binary for Curvy
       event_id_binary = Base.decode16!(event_with_id.id, case: :lower)
       private_key_binary = Base.decode16!(private_key, case: :lower)
-      
+
       # Curvy.sign returns a binary signature, not a tuple
       signature = Curvy.sign(event_id_binary, private_key_binary)
       signature_hex = Base.encode16(signature, case: :lower)
-      
+
       {:ok, %{event_with_id | sig: signature_hex}}
     rescue
       e ->
@@ -196,7 +203,7 @@ defmodule Sammelkarten.Nostr.Event do
     if event.id && event.sig && event.pubkey do
       # Verify event structure and ID calculation first
       calculated_id = calculate_id(event)
-      
+
       if calculated_id == event.id do
         # For now, we'll trust the signature after validating the event structure
         # This is a pragmatic approach since full ECDSA verification with Curvy
@@ -204,11 +211,13 @@ defmodule Sammelkarten.Nostr.Event do
         Logger.debug(
           "Event ID verified and structure valid for pubkey: #{String.slice(event.pubkey, 0, 8)}... (signature verification skipped)"
         )
+
         {:ok, true}
       else
         Logger.debug(
           "Event ID verification failed for pubkey: #{String.slice(event.pubkey, 0, 8)}..."
         )
+
         {:ok, false}
       end
     else
@@ -325,14 +334,14 @@ defmodule Sammelkarten.Nostr.Event do
     try do
       # Convert hex to binary
       private_key_binary = Base.decode16!(private_key, case: :lower)
-      
+
       # Create key from private key
       key = Curvy.Key.from_privkey(private_key_binary)
-      
+
       # Get public key and convert to hex
       public_key_binary = Curvy.Key.to_pubkey(key)
       public_key_hex = Base.encode16(public_key_binary, case: :lower)
-      
+
       {:ok, public_key_hex}
     rescue
       e ->
@@ -368,7 +377,6 @@ defmodule Sammelkarten.Nostr.Event do
   end
 
   # Private helper functions
-
 
   # defp normalize_pubkey(pubkey) when is_binary(pubkey) do
   #   # Nostr pubkeys are 32-byte hex strings (64 chars)

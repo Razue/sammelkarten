@@ -416,7 +416,7 @@ export const NostrTrading = {
       const pubkey = await window.nostr.getPublicKey();
       
       const tradeEvent = {
-        kind: 30001, // Custom trade offer kind
+        kind: 32122, // Custom trade offer kind
         pubkey: pubkey,
         created_at: Math.floor(Date.now() / 1000),
         tags: [
@@ -452,7 +452,7 @@ export const NostrTrading = {
       const pubkey = await window.nostr.getPublicKey();
       
       const acceptEvent = {
-        kind: 30002, // Custom trade execution kind
+        kind: 32123, // Custom trade execution kind
         pubkey: pubkey,
         created_at: Math.floor(Date.now() / 1000),
         tags: [

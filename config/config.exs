@@ -63,11 +63,11 @@ config :sammelkarten, :nostr,
   ],
   # Custom Sammelkarten event kinds
   custom_kinds: %{
-    card_collection: 30000,
-    trade_offer: 30001,
-    trade_execution: 30002,
-    price_alert: 30003,
-    portfolio_snapshot: 30004
+    card_collection: 32121,
+    trade_offer: 32122,
+    trade_execution: 32123,
+    price_alert: 32124,
+    portfolio_snapshot: 32125
   },
   # Connection settings
   connection_timeout: 10_000,

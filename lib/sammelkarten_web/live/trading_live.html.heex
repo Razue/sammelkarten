@@ -88,19 +88,19 @@
               <div class="flex flex-col sm:flex-row gap-4 mb-6">
                 <div class="flex gap-2">
                   <button 
-                    phx-click="filter" 
+                    phx-click="filter_offers" 
                     phx-value-type="all"
                     class={"px-4 py-2 rounded-lg text-label-md transition-colors #{if @filter_type == "all", do: "bg-primary text-primary-foreground", else: "bg-card text-text hover:bg-card-hover"}"}>
                     All
                   </button>
                   <button 
-                    phx-click="filter" 
+                    phx-click="filter_offers" 
                     phx-value-type="buy"
                     class={"px-4 py-2 rounded-lg text-label-md transition-colors #{if @filter_type == "buy", do: "bg-success text-success-foreground", else: "bg-card text-text hover:bg-card-hover"}"}>
                     🟢 Buy Orders
                   </button>
                   <button 
-                    phx-click="filter" 
+                    phx-click="filter_offers" 
                     phx-value-type="sell"
                     class={"px-4 py-2 rounded-lg text-label-md transition-colors #{if @filter_type == "sell", do: "bg-destructive text-destructive-foreground", else: "bg-card text-text hover:bg-card-hover"}"}>
                     🔴 Sell Orders
@@ -109,19 +109,19 @@
                 
                 <div class="flex gap-2">
                   <button 
-                    phx-click="sort" 
+                    phx-click="sort_offers" 
                     phx-value-by="newest"
                     class={"px-4 py-2 rounded-lg text-label-md transition-colors #{if @sort_by == "newest", do: "bg-primary text-primary-foreground", else: "bg-card text-text hover:bg-card-hover"}"}>
                     Newest
                   </button>
                   <button 
-                    phx-click="sort" 
+                    phx-click="sort_offers" 
                     phx-value-by="price_low"
                     class={"px-4 py-2 rounded-lg text-label-md transition-colors #{if @sort_by == "price_low", do: "bg-primary text-primary-foreground", else: "bg-card text-text hover:bg-card-hover"}"}>
                     Price ↑
                   </button>
                   <button 
-                    phx-click="sort" 
+                    phx-click="sort_offers" 
                     phx-value-by="price_high"
                     class={"px-4 py-2 rounded-lg text-label-md transition-colors #{if @sort_by == "price_high", do: "bg-primary text-primary-foreground", else: "bg-card text-text hover:bg-card-hover"}"}>
                     Price ↓
@@ -139,77 +139,132 @@
                   </p>
                 </div>
               <% else %>
-                <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   <%= for offer <- filter_and_sort_offers(@active_offers, @search_query, @filter_type, @sort_by) do %>
-                    <div class="card-professional p-6 hover:scale-[1.02] transition-transform duration-200">
-                      <!-- Offer Header -->
-                      <div class="flex items-center justify-between mb-4">
-                        <div class={"inline-flex items-center px-3 py-1 rounded-full text-label-sm font-medium #{if offer.offer_type == "buy", do: "bg-success/20 text-success", else: "bg-destructive/20 text-destructive"}"}>
-                          <%= if offer.offer_type == "buy", do: "🟢 BUY", else: "🔴 SELL" %>
+                    <div class={"card-grid-item card-professional card-hover block overflow-hidden #{if offer.user_pubkey == @current_user.pubkey, do: "border-2 border-primary/50 bg-primary/5", else: "cursor-pointer"}"}>
+                      <!-- Card Image -->
+                      <%= if Map.has_key?(offer, :card) do %>
+                        <div class="aspect-w-3 aspect-h-4 bg-gray-100 dark:bg-gray-700 overflow-hidden">
+                          <img src={offer.card.image_path} alt={offer.card.name}
+                            class="card-image-hover w-full h-48 object-cover object-top" loading="lazy" />
                         </div>
-                        <div class="text-label-sm text-secondary">
-                          <%= time_ago(offer.created_at) %>
+                      <% else %>
+                        <div class="w-full h-48 bg-muted flex items-center justify-center">
+                          <div class="text-6xl text-muted-foreground">?</div>
                         </div>
-                      </div>
+                      <% end %>
 
-                      <!-- Card Info -->
-                      <div class="flex items-center gap-3 mb-4">
-                        <%= if Map.has_key?(offer, :card) do %>
-                          <img src={offer.card.image_path} 
-                               alt={offer.card.name}
-                               class="w-12 h-12 object-cover rounded-lg">
-                          <div>
-                            <h4 class="text-body-md font-medium text-text"><%= offer.card.name %></h4>
-                            <div class="text-label-sm text-secondary capitalize">
-                              <%= offer.card.rarity %> • Quantity: <%= offer.quantity %>
+                      <!-- Card Content -->
+                      <div class="p-4">
+                        <!-- Card Name and Offer Type -->
+                        <div class="flex items-start justify-between mb-4">
+                          <%= if Map.has_key?(offer, :card) do %>
+                            <h3 class="text-heading-md text-gray-900 dark:text-white truncate flex-1">
+                              <%= offer.card.name %>
+                            </h3>
+                            <span class={"ml-2 px-2.5 py-1 text-label-sm rounded-full shrink-0 #{rarity_color(offer.card.rarity)}"}>
+                              <%= offer.card.rarity %>
+                            </span>
+                          <% else %>
+                            <h3 class="text-heading-md text-gray-900 dark:text-white truncate flex-1">
+                              Unknown Card
+                            </h3>
+                          <% end %>
+                        </div>
+
+                        <!-- Trading Information -->
+                        <div class="space-y-3">
+                          <!-- Offer Type and Quantity -->
+                          <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                              <%= if offer.offer_type == "buy" do %>
+                                <!-- Buy Offer Icon -->
+                                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                                <span class="text-heading-lg text-green-600 dark:text-green-400">
+                                  <%= offer.quantity %>
+                                </span>
+                                <span class="text-label-sm text-green-500 dark:text-green-400">
+                                  wants to buy
+                                </span>
+                              <% else %>
+                                <!-- Sell Offer Icon -->
+                                <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                                </svg>
+                                <span class="text-heading-lg text-red-600 dark:text-red-400">
+                                  <%= offer.quantity %>
+                                </span>
+                                <span class="text-label-sm text-red-500 dark:text-red-400">
+                                  wants to sell
+                                </span>
+                              <% end %>
+                            </div>
+                            <!-- Price per card -->
+                            <div class="text-right">
+                              <div class="text-heading-sm font-semibold text-gray-900 dark:text-white">
+                                <%= format_price(offer.price) %>
+                              </div>
+                              <div class="text-label-xs text-gray-500 dark:text-gray-400">
+                                per card
+                              </div>
                             </div>
                           </div>
-                        <% else %>
-                          <div class="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
-                            <div class="text-muted-foreground">?</div>
-                          </div>
-                          <div>
-                            <h4 class="text-body-md font-medium text-text">Unknown Card</h4>
-                            <div class="text-label-sm text-secondary">
-                              Quantity: <%= offer.quantity %>
+
+                          <!-- Total Value and Trader Info -->
+                          <div class="flex items-center justify-between">
+                            <div>
+                              <div class="text-label-sm text-gray-600 dark:text-gray-400">Total</div>
+                              <div class="text-heading-xs font-bold text-gray-900 dark:text-white">
+                                <%= format_price(offer.total_value) %>
+                              </div>
+                            </div>
+                            <div class="text-right">
+                              <div class="text-label-sm text-gray-600 dark:text-gray-400">Trader</div>
+                              <div class="text-label-sm font-mono text-gray-900 dark:text-white">
+                                <%= offer.user_short %>
+                              </div>
                             </div>
                           </div>
-                        <% end %>
-                      </div>
+                        </div>
 
-                      <!-- Price Info -->
-                      <div class="space-y-2 mb-4">
-                        <div class="flex justify-between items-center">
-                          <span class="text-label-md text-secondary">Price per Card:</span>
-                          <span class="text-body-md font-medium text-text">
-                            <%= format_price(offer.price) %>
-                          </span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                          <span class="text-label-md text-secondary">Total Value:</span>
-                          <span class="text-heading-xs font-semibold text-text">
-                            <%= format_price(offer.total_value) %>
-                          </span>
+                        <!-- Status and Action -->
+                        <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                          <!-- Badges and Time -->
+                          <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center gap-2">
+                              <div class={"inline-flex items-center px-2 py-1 rounded-full text-label-xs font-medium #{if offer.offer_type == "buy", do: "bg-green-100 text-green-700 dark:bg-green-800 dark:text-green-200", else: "bg-red-100 text-red-700 dark:bg-red-800 dark:text-red-200"}"}>
+                                <%= if offer.offer_type == "buy", do: "🟢 BUY ORDER", else: "🔴 SELL ORDER" %>
+                              </div>
+                              <%= if offer.user_pubkey == @current_user.pubkey do %>
+                                <div class="inline-flex items-center px-2 py-1 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-800 dark:text-blue-200 text-label-xs font-medium">
+                                  👤 YOUR OFFER
+                                </div>
+                              <% end %>
+                            </div>
+                            <div class="text-label-xs text-gray-500 dark:text-gray-400">
+                              <%= time_ago(offer.created_at) %>
+                            </div>
+                          </div>
+
+                          <!-- Action Button -->
+                          <%= if offer.user_pubkey == @current_user.pubkey do %>
+                            <!-- User's own offer - not clickable -->
+                            <div class="w-full py-3 px-4 bg-gray-100 dark:bg-gray-700 rounded-lg text-center text-gray-500 dark:text-gray-400 text-body-md">
+                              🚫 Cannot trade with yourself
+                            </div>
+                          <% else %>
+                            <!-- Other user's offer - clickable -->
+                            <button 
+                              phx-click="accept_offer" 
+                              phx-value-offer_id={offer.id}
+                              class={"w-full py-3 px-4 rounded-lg font-medium text-body-md transition-colors #{if offer.offer_type == "buy", do: "bg-green-600 hover:bg-green-700 text-white", else: "bg-red-600 hover:bg-red-700 text-white"}"}>
+                              <%= if offer.offer_type == "buy", do: "💰 Sell to This Buyer", else: "🛒 Buy from This Seller" %>
+                            </button>
+                          <% end %>
                         </div>
                       </div>
-
-                      <!-- Trader Info -->
-                      <div class="flex items-center justify-between mb-4">
-                        <div class="text-label-sm text-secondary">
-                          Trader: <span class="font-mono"><%= offer.user_short %></span>
-                        </div>
-                        <div class="text-label-xs text-muted">
-                          Expires: <%= time_ago(offer.expires_at) %>
-                        </div>
-                      </div>
-
-                      <!-- Action Button -->
-                      <button 
-                        phx-click="accept_offer" 
-                        phx-value-trade_id={offer.id}
-                        class={"w-full btn-secondary py-3 font-medium #{if offer.offer_type == "buy", do: "text-success hover:bg-success/10", else: "text-destructive hover:bg-destructive/10"}"}>
-                        <%= if offer.offer_type == "buy", do: "💰 Sell to This Buyer", else: "🛒 Buy from This Seller" %>
-                      </button>
                     </div>
                   <% end %>
                 </div>
@@ -233,64 +288,127 @@
                   </button>
                 </div>
               <% else %>
-                <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   <%= for offer <- @my_offers do %>
-                    <div class="card-professional p-6">
-                      <!-- Offer Header -->
-                      <div class="flex items-center justify-between mb-4">
-                        <div class={"inline-flex items-center px-3 py-1 rounded-full text-label-sm font-medium #{if offer.offer_type == "buy", do: "bg-success/20 text-success", else: "bg-destructive/20 text-destructive"}"}>
-                          <%= if offer.offer_type == "buy", do: "🟢 BUY", else: "🔴 SELL" %>
+                    <div class="card-grid-item card-professional card-hover block overflow-hidden border-2 border-blue-200 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/20">
+                      <!-- Card Image -->
+                      <%= if Map.has_key?(offer, :card) do %>
+                        <div class="aspect-w-3 aspect-h-4 bg-gray-100 dark:bg-gray-700 overflow-hidden">
+                          <img src={offer.card.image_path} alt={offer.card.name}
+                            class="card-image-hover w-full h-48 object-cover object-top" loading="lazy" />
                         </div>
-                        <div class="text-label-sm text-secondary">
-                          <%= time_ago(offer.created_at) %>
+                      <% else %>
+                        <div class="w-full h-48 bg-muted flex items-center justify-center">
+                          <div class="text-6xl text-muted-foreground">?</div>
                         </div>
-                      </div>
+                      <% end %>
 
-                      <!-- Card Info -->
-                      <div class="flex items-center gap-3 mb-4">
-                        <%= if Map.has_key?(offer, :card) do %>
-                          <img src={offer.card.image_path} 
-                               alt={offer.card.name}
-                               class="w-12 h-12 object-cover rounded-lg">
-                          <div>
-                            <h4 class="text-body-md font-medium text-text"><%= offer.card.name %></h4>
-                            <div class="text-label-sm text-secondary capitalize">
-                              <%= offer.card.rarity %> • Quantity: <%= offer.quantity %>
+                      <!-- Card Content -->
+                      <div class="p-4">
+                        <!-- Card Name and Rarity -->
+                        <div class="flex items-start justify-between mb-4">
+                          <%= if Map.has_key?(offer, :card) do %>
+                            <h3 class="text-heading-md text-gray-900 dark:text-white truncate flex-1">
+                              <%= offer.card.name %>
+                            </h3>
+                            <span class={"ml-2 px-2.5 py-1 text-label-sm rounded-full shrink-0 #{rarity_color(offer.card.rarity)}"}>
+                              <%= offer.card.rarity %>
+                            </span>
+                          <% else %>
+                            <h3 class="text-heading-md text-gray-900 dark:text-white truncate flex-1">
+                              Unknown Card
+                            </h3>
+                          <% end %>
+                        </div>
+
+                        <!-- Trading Information -->
+                        <div class="space-y-3">
+                          <!-- Offer Type and Quantity -->
+                          <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                              <%= if offer.offer_type == "buy" do %>
+                                <!-- Buy Offer Icon -->
+                                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                                <span class="text-heading-lg text-green-600 dark:text-green-400">
+                                  <%= offer.quantity %>
+                                </span>
+                                <span class="text-label-sm text-green-500 dark:text-green-400">
+                                  you want to buy
+                                </span>
+                              <% else %>
+                                <!-- Sell Offer Icon -->
+                                <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                                </svg>
+                                <span class="text-heading-lg text-red-600 dark:text-red-400">
+                                  <%= offer.quantity %>
+                                </span>
+                                <span class="text-label-sm text-red-500 dark:text-red-400">
+                                  you want to sell
+                                </span>
+                              <% end %>
+                            </div>
+                            <!-- Price per card -->
+                            <div class="text-right">
+                              <div class="text-heading-sm font-semibold text-gray-900 dark:text-white">
+                                <%= format_price(offer.price) %>
+                              </div>
+                              <div class="text-label-xs text-gray-500 dark:text-gray-400">
+                                per card
+                              </div>
                             </div>
                           </div>
-                        <% end %>
-                      </div>
 
-                      <!-- Price Info -->
-                      <div class="space-y-2 mb-4">
-                        <div class="flex justify-between items-center">
-                          <span class="text-label-md text-secondary">Price per Card:</span>
-                          <span class="text-body-md font-medium text-text">
-                            <%= format_price(offer.price) %>
-                          </span>
+                          <!-- Total Value and Status -->
+                          <div class="flex items-center justify-between">
+                            <div>
+                              <div class="text-label-sm text-gray-600 dark:text-gray-400">Total Value</div>
+                              <div class="text-heading-xs font-bold text-gray-900 dark:text-white">
+                                <%= format_price(offer.total_value) %>
+                              </div>
+                            </div>
+                            <div class="text-right">
+                              <div class="text-label-sm text-gray-600 dark:text-gray-400">Status</div>
+                              <div class="text-label-sm font-medium text-green-600 dark:text-green-400">
+                                ✅ Active
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                        <div class="flex justify-between items-center">
-                          <span class="text-label-md text-secondary">Total Value:</span>
-                          <span class="text-heading-xs font-semibold text-text">
-                            <%= format_price(offer.total_value) %>
-                          </span>
+
+                        <!-- Action Area -->
+                        <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                          <!-- Badges and Time -->
+                          <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center gap-2">
+                              <div class={"inline-flex items-center px-2 py-1 rounded-full text-label-xs font-medium #{if offer.offer_type == "buy", do: "bg-green-100 text-green-700 dark:bg-green-800 dark:text-green-200", else: "bg-red-100 text-red-700 dark:bg-red-800 dark:text-red-200"}"}>
+                                <%= if offer.offer_type == "buy", do: "🟢 YOUR BUY ORDER", else: "🔴 YOUR SELL ORDER" %>
+                              </div>
+                            </div>
+                            <div class="text-label-xs text-gray-500 dark:text-gray-400">
+                              <%= time_ago(offer.created_at) %>
+                            </div>
+                          </div>
+
+                          <!-- Expiry Info -->
+                          <div class="mb-3 text-center">
+                            <div class="text-label-xs text-gray-500 dark:text-gray-400">
+                              Expires: <%= time_ago(offer.expires_at) %>
+                            </div>
+                          </div>
+
+                          <!-- Cancel Button -->
+                          <button 
+                            phx-click="cancel_offer" 
+                            phx-value-offer_id={offer.id}
+                            class="w-full py-3 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium text-body-md transition-colors"
+                            data-confirm="Are you sure you want to cancel this offer?">
+                            🗑️ Cancel Offer
+                          </button>
                         </div>
                       </div>
-
-                      <!-- Status Info -->
-                      <div class="text-label-sm text-secondary mb-4">
-                        Status: <span class="text-success">Active</span><br>
-                        Expires: <%= time_ago(offer.expires_at) %>
-                      </div>
-
-                      <!-- Action Button -->
-                      <button 
-                        phx-click="cancel_offer" 
-                        phx-value-trade_id={offer.id}
-                        class="w-full btn-secondary text-destructive hover:bg-destructive/10 py-3 font-medium"
-                        data-confirm="Are you sure you want to cancel this offer?">
-                        🗑️ Cancel Offer
-                      </button>
                     </div>
                   <% end %>
                 </div>

@@ -78,8 +78,9 @@ defmodule SammelkartenWeb.TradingLive do
   def handle_info(:load_trading_data, socket) do
     if socket.assigns.authenticated do
       user_pubkey = socket.assigns.current_user.pubkey
+      Logger.info("Loading trading data for user #{User.short_pubkey(%{pubkey: user_pubkey})}")
 
-      # Load active trade offers (excluding user's own offers)
+      # Load active trade offers (including user's own offers)
       active_offers = load_active_offers(user_pubkey)
 
       # Load user's own offers
@@ -293,32 +294,6 @@ defmodule SammelkartenWeb.TradingLive do
     end
   end
 
-  @impl true
-  def handle_event("accept_offer", %{"trade_id" => trade_id}, socket) do
-    if socket.assigns.authenticated do
-      user_pubkey = socket.assigns.current_user.pubkey
-
-      case execute_trade(trade_id, user_pubkey) do
-        {:ok, trade_execution} ->
-          # Create trade execution event
-          execution_event = Event.trade_execution(user_pubkey, trade_execution)
-          Client.publish_event(execution_event)
-
-          # Reload trading data
-          send(self(), :load_trading_data)
-
-          socket = put_flash(socket, :info, "Trade executed successfully!")
-          {:noreply, socket}
-
-        {:error, reason} ->
-          socket = put_flash(socket, :error, "Failed to execute trade: #{reason}")
-          {:noreply, socket}
-      end
-    else
-      socket = put_flash(socket, :error, "Authentication required")
-      {:noreply, socket}
-    end
-  end
 
   @impl true
   def handle_event("cancel_offer", %{"offer_id" => offer_id}, socket) do
@@ -345,30 +320,13 @@ defmodule SammelkartenWeb.TradingLive do
 
   @impl true
   def handle_event("filter_offers", %{"type" => filter_type}, socket) do
-    active_offers =
-      socket.assigns.active_offers
-      |> filter_offers(filter_type)
-      |> sort_offers(socket.assigns.sort_by)
-
-    socket =
-      socket
-      |> assign(:filter_type, filter_type)
-      |> assign(:active_offers, active_offers)
-
+    socket = assign(socket, :filter_type, filter_type)
     {:noreply, socket}
   end
 
   @impl true
   def handle_event("sort_offers", %{"by" => sort_by}, socket) do
-    active_offers =
-      socket.assigns.active_offers
-      |> sort_offers(sort_by)
-
-    socket =
-      socket
-      |> assign(:sort_by, sort_by)
-      |> assign(:active_offers, active_offers)
-
+    socket = assign(socket, :sort_by, sort_by)
     {:noreply, socket}
   end
 
@@ -401,18 +359,31 @@ defmodule SammelkartenWeb.TradingLive do
     end
   end
 
-  defp load_active_offers(exclude_user_pubkey) do
-    # Load all cards and generate realistic active offers based on them (similar to DashboardExchangeLive)
-    case Cards.list_cards() do
-      {:ok, cards} ->
-        cards
-        |> Enum.filter(fn _ -> should_have_active_offers?() end)
-        |> Enum.map(&generate_active_offer(&1, exclude_user_pubkey))
-        |> Enum.filter(fn offer -> offer != nil end)
-        |> sort_offers("newest")
+  defp load_active_offers(_user_pubkey) do
+    # Load all open offers from all users (including current user)
+    try do
+      transaction = fn ->
+        # Get all open offers
+        :mnesia.match_object(
+          {:user_trades, :_, :_, :_, :_, :_, :_, :_, :_, "open", :_, :_, :_}
+        )
+      end
 
-      {:error, reason} ->
-        Logger.error("Failed to load cards for active offers: #{inspect(reason)}")
+      case :mnesia.transaction(transaction) do
+        {:atomic, trade_records} ->
+          Logger.info("Found #{length(trade_records)} total active offers (including user's own offers)")
+          trade_records
+          |> Enum.map(&format_trade_offer/1)
+          |> Enum.filter(fn offer -> offer != nil end)
+          |> sort_offers("newest")
+
+        {:aborted, reason} ->
+          Logger.error("Failed to load active offers: #{inspect(reason)}")
+          []
+      end
+    rescue
+      e ->
+        Logger.error("Error loading active offers: #{inspect(e)}")
         []
     end
   end
@@ -421,12 +392,13 @@ defmodule SammelkartenWeb.TradingLive do
     try do
       transaction = fn ->
         :mnesia.match_object(
-          {:user_trades, :_, user_pubkey, :_, :_, :_, :_, :_, "open", :_, :_, :_}
+          {:user_trades, :_, user_pubkey, :_, :_, :_, :_, :_, :_, "open", :_, :_, :_}
         )
       end
 
       case :mnesia.transaction(transaction) do
         {:atomic, trade_records} ->
+          Logger.info("Found #{length(trade_records)} user trade records for #{User.short_pubkey(%{pubkey: user_pubkey})}")
           trade_records
           |> Enum.map(&format_trade_offer/1)
           |> Enum.filter(fn offer -> offer != nil end)
@@ -446,25 +418,21 @@ defmodule SammelkartenWeb.TradingLive do
   defp load_trade_history(user_pubkey) do
     try do
       transaction = fn ->
-        # Load completed trades where user was the trader
-        user_trades =
-          :mnesia.match_object(
-            {:user_trades, :_, user_pubkey, :_, :_, :_, :_, :_, "completed", :_, :_, :_}
-          )
-
-        # Load completed trades where user was the counterparty
-        counterparty_trades =
-          :mnesia.match_object(
-            {:user_trades, :_, :_, :_, :_, :_, :_, user_pubkey, "completed", :_, :_, :_}
-          )
-
-        user_trades ++ counterparty_trades
+        # Load completed trades where user was involved (either as seller or buyer)
+        all_completed_trades = :mnesia.match_object(
+          {:user_trades, :_, :_, :_, :_, :_, :_, :_, :_, "completed", :_, :_, :_}
+        )
+        
+        # Filter to include only trades where the current user was involved
+        Enum.filter(all_completed_trades, fn 
+          {_, _, seller_pubkey, _, _, _, _, _, buyer_pubkey, "completed", _, _, _} ->
+            seller_pubkey == user_pubkey or buyer_pubkey == user_pubkey
+        end)
       end
 
       case :mnesia.transaction(transaction) do
         {:atomic, trade_records} ->
           trade_records
-          |> Enum.uniq()
           |> Enum.map(&format_trade_execution/1)
           |> Enum.filter(fn trade -> trade != nil end)
           |> Enum.sort_by(fn trade -> trade.completed_at end, :desc)
@@ -589,18 +557,25 @@ defmodule SammelkartenWeb.TradingLive do
           if DateTime.compare(DateTime.utc_now(), expires_at) == :lt do
             completed_at = DateTime.utc_now()
 
+            # Determine actual seller and buyer based on offer type
+            {actual_seller_pubkey, actual_buyer_pubkey} = 
+              case trade_type do
+                "sell" -> {seller_pubkey, buyer_pubkey}  # Offer creator is selling
+                "buy" -> {buyer_pubkey, seller_pubkey}   # Offer creator is buying
+              end
+
             # Update offer to completed
             executed_record = {
               :user_trades,
               offer_id,
-              seller_pubkey,
+              actual_seller_pubkey,
               card_id,
               trade_type,
               quantity,
               price,
               total_value,
               # counterparty_pubkey
-              buyer_pubkey,
+              actual_buyer_pubkey,
               "completed",
               created_at,
               completed_at,
@@ -614,8 +589,8 @@ defmodule SammelkartenWeb.TradingLive do
             # Create trade execution data for Nostr event
             execution_data = %{
               trade_id: offer_id,
-              buyer_pubkey: buyer_pubkey,
-              seller_pubkey: seller_pubkey,
+              buyer_pubkey: actual_buyer_pubkey,
+              seller_pubkey: actual_seller_pubkey,
               card_id: card_id,
               price: price,
               quantity: quantity,
@@ -691,6 +666,39 @@ defmodule SammelkartenWeb.TradingLive do
     :crypto.strong_rand_bytes(16) |> Base.encode16(case: :lower)
   end
 
+  # Helper function to create sample offers for testing
+  def create_sample_offers do
+    # Sample trader pubkeys
+    sample_traders = [
+      "npub1seedorchris1234567890abcdef",
+      "npub1fab1234567890abcdef123456",
+      "npub1altan1234567890abcdef1234",
+      "npub1sticker21m1234567890abcd",
+      "npub1markus_turm1234567890abc"
+    ]
+
+    case Sammelkarten.Cards.list_cards() do
+      {:ok, cards} ->
+        sample_cards = Enum.take(cards, 5)
+        
+        Enum.zip(sample_traders, sample_cards)
+        |> Enum.each(fn {trader_pubkey, card} ->
+          # Create a buy offer
+          offer_type = if :rand.uniform(2) == 1, do: "buy", else: "sell"
+          price_variation = (:rand.uniform(20) - 10) / 100  # -10% to +10%
+          price = trunc(card.current_price * (1 + price_variation))
+          quantity = :rand.uniform(3)
+          
+          create_trade_offer(trader_pubkey, card.id, offer_type, price, quantity, nil)
+        end)
+        
+        Logger.info("Created sample trading offers for testing")
+        
+      {:error, _} ->
+        Logger.error("Failed to load cards for sample offers")
+    end
+  end
+
   # View helper functions that match the current TradingLive implementation
 
   def format_price(price_cents) do
@@ -698,9 +706,9 @@ defmodule SammelkartenWeb.TradingLive do
   end
 
   def format_datetime(datetime) do
+    # Format datetime in UTC (no timezone shift to avoid dependency issues)
     datetime
-    |> DateTime.shift_zone!("Europe/Berlin")
-    |> Calendar.strftime("%d.%m.%Y %H:%M")
+    |> Calendar.strftime("%d.%m.%Y %H:%M UTC")
   end
 
   def time_ago(datetime) do
@@ -742,74 +750,16 @@ defmodule SammelkartenWeb.TradingLive do
     Enum.filter(offers, fn offer -> offer.offer_type == filter_type end)
   end
 
-  # Helper functions for generating realistic active offers (based on DashboardExchangeLive pattern)
-  
-  defp should_have_active_offers? do
-    # About 40% of cards should have active offers at any time
-    :rand.uniform(100) <= 40
-  end
-
-  defp generate_active_offer(card, exclude_user_pubkey) do
-    # Generate a realistic trading offer for this card
-    base_seed = :erlang.phash2({card.id, "trade_offer", DateTime.utc_now() |> DateTime.to_date()})
-    :rand.seed(:exsss, {base_seed, base_seed + 1, base_seed + 2})
-
-    # Determine offer type based on card characteristics
-    offer_type = if :rand.uniform(100) <= 60, do: "buy", else: "sell"
-    
-    # Calculate realistic price based on current card price
-    price_variation = (:rand.uniform(20) - 10) / 100  # -10% to +10%
-    price = trunc(card.current_price * (1 + price_variation))
-    
-    # Generate quantity (1-3 for most offers)
-    quantity = case String.downcase(card.rarity) do
-      "mythic" -> 1
-      "legendary" -> :rand.uniform(2)
-      _ -> :rand.uniform(3)
-    end
-
-    # Generate a pseudonym trader (similar to exchange live)
-    trader_pubkey = generate_pseudonym_trader_pubkey(card, base_seed)
-    
-    # Skip if this would be the current user
-    if trader_pubkey == exclude_user_pubkey do
-      nil
-    else
-      %{
-        id: generate_trade_id(),
-        user_pubkey: trader_pubkey,
-        user_short: generate_short_pubkey(trader_pubkey),
-        card: card,
-        offer_type: offer_type,
-        price: price,
-        quantity: quantity,
-        created_at: DateTime.utc_now() |> DateTime.add(-:rand.uniform(3600 * 12), :second), # Random time in last 12 hours
-        expires_at: DateTime.utc_now() |> DateTime.add(:rand.uniform(3600 * 24), :second), # Random time in next 24 hours
-        total_value: price * quantity
-      }
+  def rarity_color(rarity) do
+    case String.downcase(rarity) do
+      "common" -> "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
+      "uncommon" -> "bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-200"
+      "rare" -> "bg-blue-100 text-blue-800 dark:bg-blue-700 dark:text-blue-200"
+      "epic" -> "bg-purple-100 text-purple-800 dark:bg-purple-700 dark:text-purple-200"
+      "legendary" -> "bg-yellow-100 text-yellow-800 dark:bg-yellow-700 dark:text-yellow-200"
+      "mythic" -> "bg-red-100 text-red-800 dark:bg-red-700 dark:text-red-200"
+      _ -> "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
     end
   end
 
-  defp generate_pseudonym_trader_pubkey(_card, base_seed) do
-    # Generate a consistent but fake pubkey for this card/day combination
-    traders = [
-      "npub1seedorchris123", "npub1fab456", "npub1altan789", "npub1sticker21m", 
-      "npub1markus_turm", "npub1maulwurf", "npub1bitcoinbaer", "npub1satsstacker",
-      "npub1nokyc", "npub1noderunner42", "npub1lightning", "npub1hodler",
-      "npub1stacksats", "npub1orangepill", "npub1toxic21"
-    ]
-    trader_index = rem(base_seed, length(traders))
-    Enum.at(traders, trader_index)
-  end
-
-  defp generate_short_pubkey(pubkey) do
-    # Generate a short version like "npub1...xyz"
-    if String.length(pubkey) > 8 do
-      start = String.slice(pubkey, 0, 8)
-      ending = String.slice(pubkey, -3, 3)
-      "#{start}...#{ending}"
-    else
-      pubkey
-    end
-  end
 end

@@ -11,35 +11,9 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
 
   use SammelkartenWeb, :live_view
 
-  alias Sammelkarten.Cards
-
-  @pseudonym_names [
-    "Seedorchris",
-    "Fab",
-    "Altan",
-    "Sticker21M",
-    "Markus_Turm",
-    "Maulwurf",
-    "BitcoinBär",
-    "SatsStacker",
-    "PlsbtcOnTwitter",
-    "DerHodler",
-    "LightningJoe",
-    "CryptoKai",
-    "NoKYC",
-    "WhyNotBitcoin",
-    "BitBoxer",
-    "ColdCardUser",
-    "NodeRunner42",
-    "OrangePixel",
-    "StackingSats",
-    "BitcoinBeliever",
-    "LedgerLegend",
-    "WalletWise",
-    "HashPower",
-    "SeedPhrase",
-    "PrivateKey"
-  ]
+  alias Sammelkarten.{Cards, Formatter}
+  alias Sammelkarten.Nostr.User
+  require Logger
 
   @impl true
   def mount(%{"slug" => card_slug}, _session, socket) do
@@ -48,6 +22,8 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
         if connected?(socket) do
           # Subscribe to price updates for this specific card using the card ID
           Phoenix.PubSub.subscribe(Sammelkarten.PubSub, "card_prices:#{card.id}")
+          # Subscribe to trade events for real-time updates
+          Phoenix.PubSub.subscribe(Sammelkarten.PubSub, "trade_events")
         end
 
         mount_with_card(card, socket)
@@ -61,8 +37,8 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
   end
 
   defp mount_with_card(card, socket) do
-    # Generate combined trader data for this card
-    {offer_traders, search_traders} = generate_combined_trader_data(card)
+    # Load real exchange data from database
+    {offer_traders, search_traders} = load_real_exchange_data(card)
 
     socket =
       socket
@@ -91,8 +67,8 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
   def handle_info({:price_updated, updated_card}, socket) do
     # Update the card if it matches the one we're displaying
     if socket.assigns.card && socket.assigns.card.id == updated_card.id do
-      # Regenerate combined trader data
-      {offer_traders, search_traders} = generate_combined_trader_data(updated_card)
+      # Reload real exchange data
+      {offer_traders, search_traders} = load_real_exchange_data(updated_card)
 
       socket =
         socket
@@ -107,216 +83,281 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
   end
 
   @impl true
+  def handle_info({:new_trade_offer, _offer}, socket) do
+    # Reload exchange data when new offers are created
+    if socket.assigns.card do
+      {offer_traders, search_traders} = load_real_exchange_data(socket.assigns.card)
+      
+      socket =
+        socket
+        |> assign(:offer_traders, offer_traders)
+        |> assign(:search_traders, search_traders)
+      
+      {:noreply, socket}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
   def handle_event("go_back", _params, socket) do
     {:noreply, push_navigate(socket, to: "/trading/exchanges")}
   end
 
-  # Generate combined trader data for both offers and searches
-  defp generate_combined_trader_data(card) do
-    base_seed = :erlang.phash2({card.id, "combined"})
-    :rand.seed(:exsss, {base_seed, base_seed + 1, base_seed + 2})
-
-    offer_count = calculate_offer_quantity(card)
-    search_count = calculate_search_quantity(card)
-    trader_data = generate_base_trader_data(card)
-
-    offer_traders = build_offer_traders(trader_data, offer_count, card)
-    search_traders = build_search_traders(trader_data, search_count, card)
-
-    {offer_traders, search_traders}
+  # Load real exchange data from database
+  defp load_real_exchange_data(card) do
+    try do
+      # Load regular trading offers (buy/sell) for this card
+      regular_offers = load_regular_offers_for_card(card.id)
+      
+      # Load exchange offers involving this card
+      exchange_offers = load_exchange_offers_for_card(card.id)
+      
+      # Separate into offers and searches based on the trade type and involvement
+      offer_traders = format_offers_for_display(regular_offers, exchange_offers, card, :offer)
+      search_traders = format_offers_for_display(regular_offers, exchange_offers, card, :search)
+      
+      {offer_traders, search_traders}
+    rescue
+      e ->
+        Logger.error("Error loading exchange data for card #{card.id}: #{inspect(e)}")
+        {[], []}
+    end
   end
 
-  # Generate base trader data with exchange bundles and timestamps
-  defp generate_base_trader_data(card) do
-    all_traders = Enum.shuffle(@pseudonym_names)
+  # Load regular buy/sell offers for this card
+  defp load_regular_offers_for_card(card_id) do
+    try do
+      transaction = fn ->
+        :mnesia.match_object(
+          {:user_trades, :_, :_, card_id, :_, :_, :_, :_, :_, "open", :_, :_, :_}
+        )
+      end
 
-    Enum.map(all_traders, fn name ->
-      trader_seed = :erlang.phash2({card.id, name})
-      :rand.seed(:exsss, {trader_seed, trader_seed + 1, trader_seed + 2})
+      case :mnesia.transaction(transaction) do
+        {:atomic, trade_records} ->
+          Logger.info("Found #{length(trade_records)} regular offers for card #{card_id}")
+          trade_records
+          |> Enum.filter(fn {_, _, _, _, trade_type, _, _, _, _, _, _, _, _} -> 
+            trade_type in ["buy", "sell"]
+          end)
+          |> Enum.map(&format_regular_offer/1)
+          |> Enum.filter(fn offer -> offer != nil end)
 
-      # Generate realistic exchange bundles
-      offer_bundle = generate_offer_bundle(card, trader_seed)
-      search_bundle = generate_search_bundle(card, trader_seed + 100)
+        {:aborted, reason} ->
+          Logger.error("Failed to load regular offers: #{inspect(reason)}")
+          []
+      end
+    rescue
+      e ->
+        Logger.error("Error loading regular offers: #{inspect(e)}")
+        []
+    end
+  end
 
+  # Load exchange offers involving this card
+  defp load_exchange_offers_for_card(card_id) do
+    try do
+      transaction = fn ->
+        # Get all exchange offers
+        all_exchanges = :mnesia.match_object(
+          {:user_trades, :_, :_, :_, "exchange", :_, :_, :_, :_, "open", :_, :_, :_}
+        )
+        
+        # Filter to include exchanges involving this card
+        Enum.filter(all_exchanges, fn {_, _, _, offering_card_id, _, _, _, _, wanted_data_json, _, _, _, _} ->
+          # Check if this card is being offered
+          if offering_card_id == card_id do
+            true
+          else
+            # Check if this card is wanted in the exchange
+            case Jason.decode(wanted_data_json || "{}") do
+              {:ok, wanted_data} ->
+                wanted_card_ids = wanted_data["card_ids"] || []
+                card_id in wanted_card_ids or wanted_data["type"] == "open"
+              _ -> false
+            end
+          end
+        end)
+      end
+
+      case :mnesia.transaction(transaction) do
+        {:atomic, exchange_records} ->
+          Logger.info("Found #{length(exchange_records)} exchange offers involving card #{card_id}")
+          exchange_records
+          |> Enum.map(&format_exchange_offer/1)
+          |> Enum.filter(fn offer -> offer != nil end)
+
+        {:aborted, reason} ->
+          Logger.error("Failed to load exchange offers: #{inspect(reason)}")
+          []
+      end
+    rescue
+      e ->
+        Logger.error("Error loading exchange offers: #{inspect(e)}")
+        []
+    end
+  end
+
+  # Format regular trading offer from database record
+  defp format_regular_offer(
+         {_, trade_id, user_pubkey, card_id, trade_type, quantity, price, total_value, _, "open",
+          created_at, _, _}
+       ) do
+    case Cards.get_card(card_id) do
+      {:ok, card} ->
+        minutes_ago = DateTime.diff(DateTime.utc_now(), created_at, :second) |> div(60)
+        
+        %{
+          id: trade_id,
+          trader: User.short_pubkey(%{pubkey: user_pubkey}),
+          trader_pubkey: user_pubkey,
+          offer_type: trade_type,
+          card: card,
+          quantity: quantity,
+          price: price,
+          total_value: total_value,
+          minutes_ago: minutes_ago,
+          created_at: created_at
+        }
+
+      {:error, _} ->
+        nil
+    end
+  end
+
+  # Format exchange offer from database record
+  defp format_exchange_offer(
+         {_, trade_id, user_pubkey, offering_card_id, "exchange", quantity, _wanted_hash, _, 
+          wanted_data_json, "open", created_at, _, _}
+       ) do
+    with {:ok, offering_card} <- Cards.get_card(offering_card_id),
+         {:ok, wanted_data} <- Jason.decode(wanted_data_json || "{}") do
+      
+      wanted_type = wanted_data["type"]
+      wanted_card_ids = wanted_data["card_ids"] || []
+      minutes_ago = DateTime.diff(DateTime.utc_now(), created_at, :second) |> div(60)
+      
+      # Get wanted cards info
+      wanted_cards = case wanted_type do
+        "open" -> [{"Any Card", 1, "common"}] # Open to any card
+        "specific" -> 
+          wanted_card_ids
+          |> Enum.map(&Cards.get_card/1)
+          |> Enum.filter(&match?({:ok, _}, &1))
+          |> Enum.map(fn {:ok, card} -> {card.name, 1, card.rarity} end)
+        _ -> []
+      end
+      
       %{
-        trader: name,
-        offer_bundle: offer_bundle,
-        search_bundle: search_bundle,
-        # 0-180 minutes
-        offer_minutes_ago: :rand.uniform(180),
-        # 0-240 minutes
-        search_minutes_ago: :rand.uniform(240)
+        id: trade_id,
+        trader: User.short_pubkey(%{pubkey: user_pubkey}),
+        trader_pubkey: user_pubkey,
+        offer_type: "exchange",
+        offering_card: offering_card,
+        offering_bundle: [{offering_card.name, quantity, offering_card.rarity}],
+        wanted_cards: wanted_cards,
+        wanted_type: wanted_type,
+        quantity: quantity,
+        minutes_ago: minutes_ago,
+        created_at: created_at
       }
-    end)
+    else
+      _ -> nil
+    end
   end
 
-  # Build offer traders list
-  defp build_offer_traders(trader_data, offer_count, _card) do
-    trader_data
-    |> Enum.take(offer_count)
-    |> Enum.map(&format_offer_trader/1)
-    |> Enum.sort_by(&calculate_bundle_value(&1.offer_bundle), :desc)
+  # Format offers for display, separating into offers and searches
+  defp format_offers_for_display(regular_offers, exchange_offers, current_card, display_type) do
+    case display_type do
+      :offer ->
+        # Show sell offers (people offering this card) and exchange offers offering this card
+        sell_offers = Enum.filter(regular_offers, &(&1.offer_type == "sell"))
+        exchange_offering_card = Enum.filter(exchange_offers, fn offer ->
+          offer.offering_card.id == current_card.id
+        end)
+        
+        # Convert to unified format
+        formatted_sells = Enum.map(sell_offers, &format_as_offer_display/1)
+        formatted_exchanges = Enum.map(exchange_offering_card, &format_exchange_as_offer_display/1)
+        
+        (formatted_sells ++ formatted_exchanges)
+        |> Enum.sort_by(&(&1.minutes_ago), :asc)
+        |> Enum.take(8) # Limit to 8 for display
+        
+      :search ->
+        # Show buy offers (people searching for this card) and exchange offers wanting this card
+        buy_offers = Enum.filter(regular_offers, &(&1.offer_type == "buy"))
+        exchange_wanting_card = Enum.filter(exchange_offers, fn offer ->
+          case offer.wanted_type do
+            "open" -> true
+            "specific" -> Enum.any?(offer.wanted_cards, fn {name, _, _} -> 
+              String.downcase(name) == String.downcase(current_card.name)
+            end)
+            _ -> false
+          end
+        end)
+        
+        # Convert to unified format
+        formatted_buys = Enum.map(buy_offers, &format_as_search_display/1)
+        formatted_exchanges = Enum.map(exchange_wanting_card, &format_exchange_as_search_display/1)
+        
+        (formatted_buys ++ formatted_exchanges)
+        |> Enum.sort_by(&(&1.minutes_ago), :asc)
+        |> Enum.take(8) # Limit to 8 for display
+    end
   end
 
-  # Build search traders list
-  defp build_search_traders(trader_data, search_count, _card) do
-    trader_data
-    # Start from index 1 to get different traders
-    |> Enum.drop(1)
-    |> Enum.take(search_count)
-    |> Enum.map(&format_search_trader/1)
-    |> Enum.sort_by(&calculate_bundle_value(&1.search_bundle), :desc)
-  end
-
-  # Format trader for offers section
-  defp format_offer_trader(trader) do
+  # Format regular sell offer for display
+  defp format_as_offer_display(offer) do
     %{
-      trader: trader.trader,
-      offer_bundle: trader.offer_bundle,
-      search_bundle: trader.search_bundle,
-      minutes_ago: trader.offer_minutes_ago
+      trader: offer.trader,
+      trader_pubkey: offer.trader_pubkey,
+      offer_bundle: [{offer.card.name, offer.quantity, offer.card.rarity}],
+      search_bundle: [{"Bitcoin Sats", offer.total_value, "currency"}], # What they want in return
+      minutes_ago: offer.minutes_ago,
+      offer_type: "sell",
+      price: offer.price
     }
   end
 
-  # Format trader for searches section
-  defp format_search_trader(trader) do
+  # Format regular buy offer for display
+  defp format_as_search_display(offer) do
     %{
-      trader: trader.trader,
-      offer_bundle: trader.offer_bundle,
-      search_bundle: trader.search_bundle,
-      minutes_ago: trader.search_minutes_ago
+      trader: offer.trader,
+      trader_pubkey: offer.trader_pubkey,
+      offer_bundle: [{"Bitcoin Sats", offer.total_value, "currency"}], # What they're offering
+      search_bundle: [{offer.card.name, offer.quantity, offer.card.rarity}], # What they want
+      minutes_ago: offer.minutes_ago,
+      offer_type: "buy",
+      price: offer.price
     }
   end
 
-  # Generate offer quantity - same logic as exchange dashboard
-  defp calculate_offer_quantity(card) do
-    base_seed = :erlang.phash2({card.id, "offer"})
-    :rand.seed(:exsss, {base_seed, base_seed + 1, base_seed + 2})
-
-    price_factor = min(card.current_price / 5000, 2.0)
-
-    rarity_factor =
-      case String.downcase(card.rarity) do
-        "common" -> 1.5
-        "uncommon" -> 1.2
-        "rare" -> 1.0
-        "epic" -> 0.7
-        "legendary" -> 0.4
-        "mythic" -> 0.2
-        _ -> 1.0
-      end
-
-    base_quantity = trunc(1.0 / price_factor * rarity_factor * 3)
-    variation = :rand.uniform(8) - 4
-    # Max 8 for detail view
-    max(0, min(8, base_quantity + variation))
+  # Format exchange offer for display (offering this card)
+  defp format_exchange_as_offer_display(exchange) do
+    %{
+      trader: exchange.trader,
+      trader_pubkey: exchange.trader_pubkey,
+      offer_bundle: exchange.offering_bundle,
+      search_bundle: exchange.wanted_cards,
+      minutes_ago: exchange.minutes_ago,
+      offer_type: "exchange"
+    }
   end
 
-  # Generate search quantity - same logic as exchange dashboard
-  defp calculate_search_quantity(card) do
-    base_seed = :erlang.phash2({card.id, "search"})
-    :rand.seed(:exsss, {base_seed + 10, base_seed + 20, base_seed + 30})
-
-    price_factor = min(card.current_price / 5000, 2.0)
-
-    rarity_factor =
-      case String.downcase(card.rarity) do
-        "common" -> 0.3
-        "uncommon" -> 0.6
-        "rare" -> 1.0
-        "epic" -> 1.4
-        "legendary" -> 1.8
-        "mythic" -> 2.1
-        _ -> 1.0
-      end
-
-    base_quantity = trunc(price_factor * rarity_factor * 3.5)
-    variation = :rand.uniform(6) - 3
-    # Max 12 for detail view
-    max(0, min(12, base_quantity + variation))
+  # Format exchange offer for display (wanting this card)
+  defp format_exchange_as_search_display(exchange) do
+    %{
+      trader: exchange.trader,
+      trader_pubkey: exchange.trader_pubkey,
+      offer_bundle: exchange.offering_bundle, # What they're offering
+      search_bundle: exchange.wanted_cards,   # What they want (includes current card)
+      minutes_ago: exchange.minutes_ago,
+      offer_type: "exchange"
+    }
   end
 
-  # Generate realistic offer bundle - what trader is offering
-  defp generate_offer_bundle(current_card, seed) do
-    :rand.seed(:exsss, {seed, seed + 1, seed + 2})
-    
-    # 70% chance of offering multiple cards, 30% single card
-    if :rand.uniform(100) <= 70 do
-      generate_multi_card_bundle(current_card, :offer, seed)
-    else
-      generate_single_card_bundle(current_card, :offer, seed)
-    end
-  end
-
-  # Generate realistic search bundle - what trader wants in return
-  defp generate_search_bundle(current_card, seed) do
-    :rand.seed(:exsss, {seed, seed + 1, seed + 2})
-    
-    # 60% chance of wanting multiple cards, 40% single card
-    if :rand.uniform(100) <= 60 do
-      generate_multi_card_bundle(current_card, :search, seed)
-    else
-      generate_single_card_bundle(current_card, :search, seed)
-    end
-  end
-
-  # Generate single card bundle
-  defp generate_single_card_bundle(current_card, type, seed) do
-    :rand.seed(:exsss, {seed, seed + 10, seed + 20})
-    
-    quantity = case type do
-      :offer -> 1 + :rand.uniform(3)  # 1-4 of current card
-      :search -> 1 + :rand.uniform(2) # 1-3 of current card
-    end
-    
-    [{current_card.name, quantity, current_card.rarity}]
-  end
-
-  # Generate multi-card bundle with variety
-  defp generate_multi_card_bundle(current_card, _type, seed) do
-    :rand.seed(:exsss, {seed, seed + 30, seed + 40})
-    
-    # Available card pool (realistic card names from the project)
-    card_pool = [
-      {"Satoshi", "mythic"}, {"Bitcoin Hotel", "legendary"}, {"Christian Decker", "legendary"},
-      {"Der Gigi", "legendary"}, {"Jonas Nick", "epic"}, {"Blocktrainer", "epic"},
-      {"Markus Turm", "epic"}, {"Zitadelle", "epic"}, {"Seed or Chris", "rare"},
-      {"BitcoinHotel Holo", "rare"}, {"Der Pleb", "uncommon"}, {"Pleb Rap", "uncommon"},
-      {"FAB", "uncommon"}, {"Dennis", "uncommon"}, {"Maurice Effekt", "common"},
-      {"Paddepadde", "common"}, {"Netdiver", "common"}, {"Toxic Booster", "common"}
-    ]
-    
-    # Include the current card
-    bundle = [{current_card.name, 1 + :rand.uniform(2), current_card.rarity}]
-    
-    # Add 1-3 other cards
-    num_other_cards = 1 + :rand.uniform(2)
-    other_cards = card_pool 
-                  |> Enum.filter(fn {name, _} -> name != current_card.name end)
-                  |> Enum.shuffle()
-                  |> Enum.take(num_other_cards)
-                  |> Enum.map(fn {name, rarity} -> {name, 1 + :rand.uniform(2), rarity} end)
-    
-    bundle ++ other_cards
-  end
-
-  # Calculate total value of a bundle for sorting
-  defp calculate_bundle_value(bundle) do
-    bundle
-    |> Enum.map(fn {_name, quantity, rarity} ->
-      rarity_value = case String.downcase(rarity) do
-        "mythic" -> 100
-        "legendary" -> 80
-        "epic" -> 60
-        "rare" -> 40
-        "uncommon" -> 20
-        "common" -> 10
-        _ -> 10
-      end
-      quantity * rarity_value
-    end)
-    |> Enum.sum()
-  end
 
   @impl true
   def render(assigns) do
@@ -656,12 +697,12 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
   # Helper functions
 
   defp format_price(price_in_sats) when is_integer(price_in_sats) do
-    Sammelkarten.Formatter.format_german_price(price_in_sats)
+    Formatter.format_german_price(price_in_sats)
   end
 
   defp format_price(price) when is_float(price) do
     price_sats = trunc(price)
-    Sammelkarten.Formatter.format_german_price(price_sats)
+    Formatter.format_german_price(price_sats)
   end
 
   defp rarity_color_class("common"),
@@ -690,6 +731,7 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
   defp rarity_dot_color("epic"), do: "bg-purple-400"
   defp rarity_dot_color("legendary"), do: "bg-yellow-400"
   defp rarity_dot_color("mythic"), do: "bg-red-400"
+  defp rarity_dot_color("currency"), do: "bg-orange-400"
   defp rarity_dot_color(_), do: "bg-gray-400"
 
   defp format_datetime(%DateTime{} = dt) do

@@ -91,7 +91,8 @@ if command -v jq >/dev/null 2>&1; then
       cost_per_hour=$(echo "$active_block" | jq -r '.burnRate.costPerHour // empty')
       tot_tokens=$(echo "$active_block" | jq -r '.totalTokens // empty')
       tpm=$(echo "$active_block" | jq -r '.burnRate.tokensPerMinute // empty')
-      
+      remaining=$(echo "$active_block" | jq -r '.projection.remainingMinutes // empty')
+
       # Session time calculation
       reset_time_str=$(echo "$active_block" | jq -r '.usageLimitResetTime // .endTime // empty')
       start_time_str=$(echo "$active_block" | jq -r '.startTime // empty')
@@ -104,7 +105,8 @@ if command -v jq >/dev/null 2>&1; then
         remaining=$(( end_sec - now_sec )); (( remaining<0 )) && remaining=0
         rh=$(( remaining / 3600 )); rm=$(( (remaining % 3600) / 60 ))
         end_hm=$(fmt_time_hm "$end_sec")
-        session_txt="$(printf '%dh %dm until reset at %s (%d%%)' "$rh" "$rm" "$end_hm" "$session_pct")"
+        # session_txt="$(printf '%dh %dm until reset at %s (%d%%)' "$rh" "$rm" "$end_hm" "$session_pct")"
+        session_txt="$(printf '%dh %dm until reset at %s' "$rh" "$rm" "$end_hm")"
         session_bar=$(progress_bar "$session_pct" 10)
       fi
     fi
@@ -137,7 +139,7 @@ fi
 # tokens
 if [ -n "$tot_tokens" ] && [[ "$tot_tokens" =~ ^[0-9]+$ ]]; then
   if [ -n "$tpm" ] && [[ "$tpm" =~ ^[0-9.]+$ ]] && true; then
-    printf '  📊 %s%s tok (%.0f tpm)%s' "$(usage_color)" "$tot_tokens" "$tpm" "$(rst)"
+    printf '  📊 %s%s tok (%.0f tpm) (%d min left)%s' "$(usage_color)" "$tot_tokens" "$tpm" "$remaining" "$(rst)"
   else
     printf '  📊 %s%s tok%s' "$(usage_color)" "$tot_tokens" "$(rst)"
   fi

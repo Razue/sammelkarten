@@ -29,6 +29,9 @@ defmodule SammelkartenWeb.Router do
     live "/donation", DonationLive, :index
     live "/auth", NostrAuthLive, :index
     live "/portfolio", PortfolioLive, :index
+    live "/analytics", AnalyticsLive, :index
+    live "/insights", MarketInsightsLive, :index
+    live "/leaderboards", LeaderboardsLive, :index
     live "/trading", TradingLive, :index
     live "/trading/exchanges", DashboardExchangeLive, :index
     live "/trading/exchanges/:slug", CardDetailExchangeLive, :show

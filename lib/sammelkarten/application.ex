@@ -23,6 +23,10 @@ defmodule Sammelkarten.Application do
       Sammelkarten.PriceUpdater,
       # Start the Nostr client for relay connections
       Sammelkarten.Nostr.Client,
+      # Start the trading bot system
+      Sammelkarten.TradingBot,
+      # Start the market maker system
+      {Sammelkarten.MarketMaker, [pubkey: "sammelkarten_market_maker"]},
       # Start to serve requests, typically the last entry
       SammelkartenWeb.Endpoint
     ]

@@ -1,0 +1,319 @@
+<div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-display-lg font-bold text-gray-900 mb-2">Trading Analytics</h1>
+      <p class="text-body-base text-gray-600">Comprehensive analysis of your trading performance and portfolio growth</p>
+    </div>
+
+    <!-- Period Selector and Controls -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+          <label class="text-label-medium font-medium text-gray-700">Analysis Period:</label>
+          <select 
+            class="input-professional"
+            phx-change="change_period"
+            name="period"
+          >
+            <option value="7" selected={@period == 7}>Last 7 Days</option>
+            <option value="30" selected={@period == 30}>Last 30 Days</option>
+            <option value="90" selected={@period == 90}>Last 90 Days</option>
+            <option value="180" selected={@period == 180}>Last 6 Months</option>
+            <option value="365" selected={@period == 365}>Last Year</option>
+          </select>
+        </div>
+        <button 
+          class="btn-primary"
+          phx-click="refresh_analytics"
+          disabled={@loading}
+        >
+          <%= if @loading do %>
+            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Loading...
+          <% else %>
+            Refresh Data
+          <% end %>
+        </button>
+      </div>
+    </div>
+
+    <%= if @error do %>
+      <!-- Error Message -->
+      <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <h3 class="text-sm font-medium text-red-800">Error Loading Analytics</h3>
+            <div class="mt-2 text-sm text-red-700"><%= @error %></div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <%= if @loading do %>
+      <!-- Loading State -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+        <svg class="animate-spin mx-auto h-12 w-12 text-blue-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">Loading Analytics</h3>
+        <p class="text-gray-600">Analyzing your trading performance and portfolio data...</p>
+      </div>
+    <% else %>
+      <%= if @performance do %>
+        <!-- Performance Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <!-- Performance Score -->
+          <div class="card-professional">
+            <div class="p-6">
+              <h3 class="text-label-large font-semibold text-gray-900 mb-2">Performance Score</h3>
+              <div class={"text-display-sm font-bold #{score_color(@performance.performance_score)}"}>
+                <%= format_number(@performance.performance_score) %>
+              </div>
+              <p class="text-body-small text-gray-600 mt-1">Out of 100</p>
+            </div>
+          </div>
+
+          <!-- Total Trades -->
+          <div class="card-professional">
+            <div class="p-6">
+              <h3 class="text-label-large font-semibold text-gray-900 mb-2">Total Trades</h3>
+              <div class="text-display-sm font-bold text-gray-900">
+                <%= format_number(@performance.total_trades) %>
+              </div>
+              <p class="text-body-small text-gray-600 mt-1">In <%= @period %> days</p>
+            </div>
+          </div>
+
+          <!-- Portfolio Growth -->
+          <div class="card-professional">
+            <div class="p-6">
+              <h3 class="text-label-large font-semibold text-gray-900 mb-2">Portfolio Return</h3>
+              <div class={"text-display-sm font-bold #{performance_color(@performance.portfolio_growth.growth_rate)}"}>
+                <%= format_percentage(@performance.portfolio_growth.growth_rate) %>
+              </div>
+              <p class="text-body-small text-gray-600 mt-1">Total return</p>
+            </div>
+          </div>
+
+          <!-- Total Volume -->
+          <div class="card-professional">
+            <div class="p-6">
+              <h3 class="text-label-large font-semibold text-gray-900 mb-2">Trading Volume</h3>
+              <div class="text-display-sm font-bold text-gray-900">
+                <%= format_currency(@performance.trading_metrics.total_volume) %>
+              </div>
+              <p class="text-body-small text-gray-600 mt-1">Total traded</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detailed Analytics Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <!-- Trading Metrics -->
+          <div class="card-professional">
+            <div class="p-6">
+              <h3 class="text-heading-sm font-bold text-gray-900 mb-4">Trading Metrics</h3>
+              <div class="space-y-4">
+                <div class="flex justify-between">
+                  <span class="text-body-base text-gray-600">Buy Trades</span>
+                  <span class="text-body-base font-semibold text-green-600">
+                    <%= format_number(@performance.trading_metrics.buy_trades) %>
+                  </span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-body-base text-gray-600">Sell Trades</span>
+                  <span class="text-body-base font-semibold text-red-600">
+                    <%= format_number(@performance.trading_metrics.sell_trades) %>
+                  </span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-body-base text-gray-600">Average Trade Size</span>
+                  <span class="text-body-base font-semibold text-gray-900">
+                    <%= format_currency(@performance.trading_metrics.avg_trade_size) %>
+                  </span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-body-base text-gray-600">Trade Frequency</span>
+                  <span class="text-body-base font-semibold text-gray-900">
+                    <%= format_number(@performance.trading_metrics.trade_frequency) %>/day
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Risk Metrics -->
+          <div class="card-professional">
+            <div class="p-6">
+              <h3 class="text-heading-sm font-bold text-gray-900 mb-4">Risk Analysis</h3>
+              <div class="space-y-4">
+                <div class="flex justify-between">
+                  <span class="text-body-base text-gray-600">Portfolio Volatility</span>
+                  <span class="text-body-base font-semibold text-gray-900">
+                    <%= format_percentage(@performance.risk_metrics.volatility) %>
+                  </span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-body-base text-gray-600">Maximum Drawdown</span>
+                  <span class="text-body-base font-semibold text-red-600">
+                    <%= format_percentage(@performance.risk_metrics.max_drawdown) %>
+                  </span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-body-base text-gray-600">VaR (95%)</span>
+                  <span class="text-body-base font-semibold text-orange-600">
+                    <%= format_percentage(@performance.risk_metrics.var_95) %>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Profitability Analysis -->
+        <div class="card-professional mb-8">
+          <div class="p-6">
+            <h3 class="text-heading-sm font-bold text-gray-900 mb-4">Profitability Analysis</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div class="text-center">
+                <div class={"text-display-sm font-bold #{performance_color(@performance.profitability.realized_pnl)} mb-2"}>
+                  <%= format_currency(@performance.profitability.realized_pnl) %>
+                </div>
+                <p class="text-body-small text-gray-600">Realized P&L</p>
+              </div>
+              <div class="text-center">
+                <div class="text-display-sm font-bold text-green-600 mb-2">
+                  <%= format_percentage(@performance.profitability.win_rate) %>
+                </div>
+                <p class="text-body-small text-gray-600">Win Rate</p>
+              </div>
+              <div class="text-center">
+                <div class="text-display-sm font-bold text-blue-600 mb-2">
+                  <%= format_number(@performance.profitability.profit_factor) %>
+                </div>
+                <p class="text-body-small text-gray-600">Profit Factor</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <%= if @insights do %>
+          <!-- Trading Insights -->
+          <div class="card-professional mb-8">
+            <div class="p-6">
+              <h3 class="text-heading-sm font-bold text-gray-900 mb-4">Trading Insights</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Strengths -->
+                <div>
+                  <h4 class="text-label-large font-semibold text-green-700 mb-3">Strengths</h4>
+                  <ul class="space-y-2">
+                    <%= for strength <- @insights.strengths do %>
+                      <li class="flex items-center text-body-small text-gray-700">
+                        <svg class="h-4 w-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <%= String.replace(strength, "_", " ") |> String.capitalize() %>
+                      </li>
+                    <% end %>
+                  </ul>
+                </div>
+
+                <!-- Areas for Improvement -->
+                <div>
+                  <h4 class="text-label-large font-semibold text-orange-700 mb-3">Areas for Improvement</h4>
+                  <ul class="space-y-2">
+                    <%= for weakness <- @insights.weaknesses do %>
+                      <li class="flex items-center text-body-small text-gray-700">
+                        <svg class="h-4 w-4 text-orange-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                        </svg>
+                        <%= String.replace(weakness, "_", " ") |> String.capitalize() %>
+                      </li>
+                    <% end %>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- Recommendations -->
+              <%= if length(@insights.recommendations) > 0 do %>
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                  <h4 class="text-label-large font-semibold text-blue-700 mb-3">Recommendations</h4>
+                  <ul class="space-y-2">
+                    <%= for recommendation <- @insights.recommendations do %>
+                      <li class="flex items-start text-body-small text-gray-700">
+                        <svg class="h-4 w-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                        </svg>
+                        <%= String.replace(recommendation, "_", " ") |> String.capitalize() %>
+                      </li>
+                    <% end %>
+                  </ul>
+                </div>
+              <% end %>
+
+              <!-- Risk Assessment -->
+              <div class="mt-6 pt-6 border-t border-gray-200">
+                <div class="flex items-center justify-between">
+                  <h4 class="text-label-large font-semibold text-gray-900">Risk Profile</h4>
+                  <div class="flex items-center">
+                    <span class={"text-body-base font-semibold #{risk_level_color(@insights.risk_assessment.risk_level)}"}>
+                      <%= capitalize_atom(@insights.risk_assessment.risk_level) %>
+                    </span>
+                    <span class="ml-2 text-body-small text-gray-600">
+                      (<%= @insights.risk_assessment.risk_score %>/100)
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% end %>
+
+        <!-- Card Preferences -->
+        <%= if @performance.card_preferences.favorite_cards != [] do %>
+          <div class="card-professional">
+            <div class="p-6">
+              <h3 class="text-heading-sm font-bold text-gray-900 mb-4">Trading Preferences</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h4 class="text-label-large font-semibold text-gray-700 mb-3">Most Traded Cards</h4>
+                  <div class="space-y-2">
+                    <%= for {card_id, count} <- Enum.take(@performance.card_preferences.favorite_cards, 5) do %>
+                      <div class="flex justify-between items-center">
+                        <span class="text-body-small text-gray-700"><%= card_id %></span>
+                        <span class="text-body-small font-semibold text-gray-900">
+                          <%= format_number(count) %> trades
+                        </span>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+                <div>
+                  <h4 class="text-label-large font-semibold text-gray-700 mb-3">Diversification</h4>
+                  <div class="flex items-center justify-center">
+                    <div class="text-center">
+                      <div class="text-display-sm font-bold text-blue-600">
+                        <%= format_percentage(@performance.card_preferences.diversification_score) %>
+                      </div>
+                      <p class="text-body-small text-gray-600">Diversification Score</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      <% end %>
+    <% end %>
+  </div>
+</div>

@@ -1,0 +1,454 @@
+<div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-display-lg font-bold text-gray-900 mb-2">Market Insights</h1>
+      <p class="text-body-base text-gray-600">Cross-user trading patterns and market analysis</p>
+    </div>
+
+    <!-- Controls -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+          <label class="text-label-medium font-medium text-gray-700">Analysis Period:</label>
+          <select 
+            class="input-professional"
+            phx-change="change_period"
+            name="period"
+          >
+            <option value="7" selected={@period == 7}>Last 7 Days</option>
+            <option value="30" selected={@period == 30}>Last 30 Days</option>
+            <option value="90" selected={@period == 90}>Last 90 Days</option>
+            <option value="180" selected={@period == 180}>Last 6 Months</option>
+          </select>
+        </div>
+        <button 
+          class="btn-primary"
+          phx-click="refresh_insights"
+          disabled={@loading}
+        >
+          <%= if @loading do %>
+            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Loading...
+          <% else %>
+            Refresh Data
+          <% end %>
+        </button>
+      </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <nav class="flex space-x-2">
+          <button
+            class={tab_class(@active_tab, "patterns")}
+            phx-click="change_tab"
+            phx-value-tab="patterns"
+          >
+            📊 Trading Patterns
+          </button>
+          <button
+            class={tab_class(@active_tab, "trends")}
+            phx-click="change_tab"
+            phx-value-tab="trends"
+          >
+            📈 Market Trends
+          </button>
+          <button
+            class={tab_class(@active_tab, "network")}
+            phx-click="change_tab"
+            phx-value-tab="network"
+          >
+            🕸️ Trading Network
+          </button>
+          <button
+            class={tab_class(@active_tab, "health")}
+            phx-click="change_tab"
+            phx-value-tab="health"
+          >
+            💚 Market Health
+          </button>
+        </nav>
+      </div>
+
+      <!-- Tab Content -->
+      <div class="p-6">
+        <%= if @error do %>
+          <!-- Error Message -->
+          <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div class="flex">
+              <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <div class="ml-3">
+                <h3 class="text-sm font-medium text-red-800">Error Loading Market Insights</h3>
+                <div class="mt-2 text-sm text-red-700"><%= @error %></div>
+              </div>
+            </div>
+          </div>
+        <% end %>
+
+        <%= if @loading do %>
+          <!-- Loading State -->
+          <div class="text-center py-12">
+            <svg class="animate-spin mx-auto h-12 w-12 text-blue-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">Analyzing Market Data</h3>
+            <p class="text-gray-600">Processing cross-user trading patterns and market trends...</p>
+          </div>
+        <% else %>
+          <!-- Trading Patterns Tab -->
+          <%= if @active_tab == "patterns" and @patterns do %>
+            <div class="space-y-6">
+              <!-- Overview Stats -->
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="bg-gray-50 rounded-lg p-4">
+                  <h4 class="text-label-medium font-semibold text-gray-700 mb-1">Total Trades</h4>
+                  <div class="text-heading-sm font-bold text-gray-900">
+                    <%= format_number(@patterns.total_trades) %>
+                  </div>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-4">
+                  <h4 class="text-label-medium font-semibold text-gray-700 mb-1">Unique Traders</h4>
+                  <div class="text-heading-sm font-bold text-gray-900">
+                    <%= format_number(@patterns.unique_traders) %>
+                  </div>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-4">
+                  <h4 class="text-label-medium font-semibold text-gray-700 mb-1">Trading Volume</h4>
+                  <div class="text-heading-sm font-bold text-gray-900">
+                    <%= format_currency(@patterns.trading_volume) %>
+                  </div>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-4">
+                  <h4 class="text-label-medium font-semibold text-gray-700 mb-1">Daily Velocity</h4>
+                  <div class="text-heading-sm font-bold text-gray-900">
+                    <%= format_currency(@patterns.trading_velocity) %>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Market Sentiment -->
+              <div class="bg-gray-50 rounded-lg p-6">
+                <h3 class="text-heading-sm font-bold text-gray-900 mb-4">Market Sentiment</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div class="text-center">
+                    <div class={"text-display-sm font-bold #{sentiment_color(@patterns.market_sentiment.market_mood)} mb-2"}>
+                      <%= capitalize_atom(@patterns.market_sentiment.market_mood) %>
+                    </div>
+                    <p class="text-body-small text-gray-600">Overall Mood</p>
+                  </div>
+                  <div class="text-center">
+                    <div class="text-display-sm font-bold text-green-600 mb-2">
+                      <%= format_percentage(@patterns.market_sentiment.buy_pressure) %>
+                    </div>
+                    <p class="text-body-small text-gray-600">Buy Pressure</p>
+                  </div>
+                  <div class="text-center">
+                    <div class="text-display-sm font-bold text-red-600 mb-2">
+                      <%= format_percentage(@patterns.market_sentiment.sell_pressure) %>
+                    </div>
+                    <p class="text-body-small text-gray-600">Sell Pressure</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Popular Cards -->
+              <div class="bg-gray-50 rounded-lg p-6">
+                <h3 class="text-heading-sm font-bold text-gray-900 mb-4">Card Popularity Rankings</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <!-- By Volume -->
+                  <div>
+                    <h4 class="text-label-large font-semibold text-gray-700 mb-3">Top by Volume</h4>
+                    <div class="space-y-2">
+                      <%= for {card_id, stats} <- Enum.take(@patterns.card_popularity.by_volume, 5) do %>
+                        <div class="flex justify-between items-center text-body-small">
+                          <span class="text-gray-700"><%= card_id %></span>
+                          <span class="font-semibold text-gray-900">
+                            <%= format_currency(stats.total_volume) %>
+                          </span>
+                        </div>
+                      <% end %>
+                    </div>
+                  </div>
+
+                  <!-- By Trades -->
+                  <div>
+                    <h4 class="text-label-large font-semibold text-gray-700 mb-3">Top by Trades</h4>
+                    <div class="space-y-2">
+                      <%= for {card_id, stats} <- Enum.take(@patterns.card_popularity.by_trades, 5) do %>
+                        <div class="flex justify-between items-center text-body-small">
+                          <span class="text-gray-700"><%= card_id %></span>
+                          <span class="font-semibold text-gray-900">
+                            <%= format_number(stats.trade_count) %> trades
+                          </span>
+                        </div>
+                      <% end %>
+                    </div>
+                  </div>
+
+                  <!-- By Traders -->
+                  <div>
+                    <h4 class="text-label-large font-semibold text-gray-700 mb-3">Top by Traders</h4>
+                    <div class="space-y-2">
+                      <%= for {card_id, stats} <- Enum.take(@patterns.card_popularity.by_traders, 5) do %>
+                        <div class="flex justify-between items-center text-body-small">
+                          <span class="text-gray-700"><%= card_id %></span>
+                          <span class="font-semibold text-gray-900">
+                            <%= format_number(stats.unique_traders) %> traders
+                          </span>
+                        </div>
+                      <% end %>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% end %>
+
+          <!-- Market Trends Tab -->
+          <%= if @active_tab == "trends" and @trends do %>
+            <div class="space-y-6">
+              <!-- Trend Overview -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-gray-50 rounded-lg p-6">
+                  <h3 class="text-heading-sm font-bold text-gray-900 mb-4">Volume Trends</h3>
+                  <div class="flex items-center justify-between">
+                    <span class="text-body-base text-gray-600">Direction</span>
+                    <span class={"text-body-base font-semibold #{trend_color(@trends.volume_trend.direction)}"}>
+                      <%= capitalize_atom(@trends.volume_trend.direction) %>
+                    </span>
+                  </div>
+                  <div class="flex items-center justify-between mt-2">
+                    <span class="text-body-base text-gray-600">Magnitude</span>
+                    <span class="text-body-base font-semibold text-gray-900">
+                      <%= format_percentage(@trends.volume_trend.magnitude) %>
+                    </span>
+                  </div>
+                </div>
+
+                <div class="bg-gray-50 rounded-lg p-6">
+                  <h3 class="text-heading-sm font-bold text-gray-900 mb-4">Activity Trends</h3>
+                  <div class="flex items-center justify-between">
+                    <span class="text-body-base text-gray-600">Users</span>
+                    <span class={"text-body-base font-semibold #{trend_color(@trends.activity_trend.users)}"}>
+                      <%= capitalize_atom(@trends.activity_trend.users) %>
+                    </span>
+                  </div>
+                  <div class="flex items-center justify-between mt-2">
+                    <span class="text-body-base text-gray-600">Trades</span>
+                    <span class={"text-body-base font-semibold #{trend_color(@trends.activity_trend.trades)}"}>
+                      <%= capitalize_atom(@trends.activity_trend.trades) %>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Trending Cards and Traders -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-gray-50 rounded-lg p-6">
+                  <h3 class="text-heading-sm font-bold text-gray-900 mb-4">Trending Cards</h3>
+                  <div class="space-y-2">
+                    <%= for card <- @trends.popular_cards do %>
+                      <div class="flex items-center">
+                        <div class="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                        <span class="text-body-base text-gray-700"><%= card %></span>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+
+                <div class="bg-gray-50 rounded-lg p-6">
+                  <h3 class="text-heading-sm font-bold text-gray-900 mb-4">Emerging Traders</h3>
+                  <div class="space-y-2">
+                    <%= for trader <- @trends.emerging_traders do %>
+                      <div class="flex items-center">
+                        <div class="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
+                        <span class="text-body-base text-gray-700 font-mono text-xs">
+                          <%= String.slice(trader, 0, 12) %>...
+                        </span>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Price Momentum -->
+              <div class="bg-gray-50 rounded-lg p-6">
+                <h3 class="text-heading-sm font-bold text-gray-900 mb-4">Price Momentum</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div class="text-center">
+                    <div class={"text-display-sm font-bold #{trend_color(@trends.price_momentum.direction)} mb-2"}>
+                      <%= capitalize_atom(@trends.price_momentum.direction) %>
+                    </div>
+                    <p class="text-body-small text-gray-600">Direction</p>
+                  </div>
+                  <div class="text-center">
+                    <div class="text-display-sm font-bold text-blue-600 mb-2">
+                      <%= format_percentage(@trends.price_momentum.strength) %>
+                    </div>
+                    <p class="text-body-small text-gray-600">Strength</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% end %>
+
+          <!-- Trading Network Tab -->
+          <%= if @active_tab == "network" and @network do %>
+            <div class="space-y-6">
+              <!-- Network Overview -->
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="bg-gray-50 rounded-lg p-4">
+                  <h4 class="text-label-medium font-semibold text-gray-700 mb-1">Network Nodes</h4>
+                  <div class="text-heading-sm font-bold text-gray-900">
+                    <%= format_number(@network.total_nodes) %>
+                  </div>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-4">
+                  <h4 class="text-label-medium font-semibold text-gray-700 mb-1">Trading Pairs</h4>
+                  <div class="text-heading-sm font-bold text-gray-900">
+                    <%= format_number(@network.total_edges) %>
+                  </div>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-4">
+                  <h4 class="text-label-medium font-semibold text-gray-700 mb-1">Network Density</h4>
+                  <div class="text-heading-sm font-bold text-gray-900">
+                    <%= format_percentage(@network.network_density) %>
+                  </div>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-4">
+                  <h4 class="text-label-medium font-semibold text-gray-700 mb-1">Avg Influence</h4>
+                  <div class="text-heading-sm font-bold text-gray-900">
+                    <%= format_percentage(@network.influence_metrics.avg_influence) %>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Central Traders -->
+              <div class="bg-gray-50 rounded-lg p-6">
+                <h3 class="text-heading-sm font-bold text-gray-900 mb-4">Central Traders</h3>
+                <div class="space-y-2">
+                  <%= for trader <- @network.central_traders do %>
+                    <div class="flex items-center justify-between">
+                      <span class="text-body-base text-gray-700 font-mono text-sm">
+                        <%= String.slice(trader, 0, 16) %>...
+                      </span>
+                      <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">
+                        Central
+                      </span>
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+
+              <!-- Trading Clusters -->
+              <div class="bg-gray-50 rounded-lg p-6">
+                <h3 class="text-heading-sm font-bold text-gray-900 mb-4">Trading Clusters</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <%= for cluster <- @network.trading_clusters do %>
+                    <div class="bg-white rounded-lg p-4 border border-gray-200">
+                      <div class="flex items-center justify-between">
+                        <span class="text-body-base text-gray-700">
+                          Cluster Size: <%= format_number(cluster.size) %>
+                        </span>
+                        <span class={"px-2 py-1 rounded text-xs font-medium #{if cluster.activity == :high, do: "bg-green-100 text-green-700", else: "bg-yellow-100 text-yellow-700"}"}>
+                          <%= capitalize_atom(cluster.activity) %> Activity
+                        </span>
+                      </div>
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          <% end %>
+
+          <!-- Market Health Tab -->
+          <%= if @active_tab == "health" and @health do %>
+            <div class="space-y-6">
+              <!-- Health Scores -->
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-gray-50 rounded-lg p-6 text-center">
+                  <h4 class="text-label-large font-semibold text-gray-700 mb-3">Liquidity Score</h4>
+                  <div class={"text-display-sm font-bold #{health_color(@health.liquidity_score)} mb-2"}>
+                    <%= format_number(@health.liquidity_score) %>
+                  </div>
+                  <p class="text-body-small text-gray-600">Out of 100</p>
+                </div>
+
+                <div class="bg-gray-50 rounded-lg p-6 text-center">
+                  <h4 class="text-label-large font-semibold text-gray-700 mb-3">Stability Score</h4>
+                  <div class={"text-display-sm font-bold #{health_color(@health.stability_score)} mb-2"}>
+                    <%= format_number(@health.stability_score) %>
+                  </div>
+                  <p class="text-body-small text-gray-600">Out of 100</p>
+                </div>
+
+                <div class="bg-gray-50 rounded-lg p-6 text-center">
+                  <h4 class="text-label-large font-semibold text-gray-700 mb-3">Market Efficiency</h4>
+                  <div class={"text-display-sm font-bold #{health_color(@health.market_efficiency * 100)} mb-2"}>
+                    <%= format_percentage(@health.market_efficiency) %>
+                  </div>
+                  <p class="text-body-small text-gray-600">Efficiency Rating</p>
+                </div>
+              </div>
+
+              <!-- Risk Metrics -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-gray-50 rounded-lg p-6">
+                  <h3 class="text-heading-sm font-bold text-gray-900 mb-4">Risk Assessment</h3>
+                  <div class="space-y-3">
+                    <div class="flex justify-between">
+                      <span class="text-body-base text-gray-600">Volatility Index</span>
+                      <span class="text-body-base font-semibold text-orange-600">
+                        <%= format_percentage(@health.volatility_index) %>
+                      </span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-body-base text-gray-600">Diversification</span>
+                      <span class="text-body-base font-semibold text-green-600">
+                        <%= format_percentage(@health.diversification_index) %>
+                      </span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-body-base text-gray-600">Risk Level</span>
+                      <span class="text-body-base font-semibold text-yellow-600">
+                        <%= capitalize_atom(@health.risk_concentration.risk_level) %>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="bg-gray-50 rounded-lg p-6">
+                  <h3 class="text-heading-sm font-bold text-gray-900 mb-4">Growth Outlook</h3>
+                  <div class="space-y-3">
+                    <div class="flex justify-between">
+                      <span class="text-body-base text-gray-600">Growth Rate</span>
+                      <span class="text-body-base font-semibold text-green-600">
+                        <%= format_percentage(@health.growth_sustainability.growth_rate) %>
+                      </span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-body-base text-gray-600">Sustainable</span>
+                      <span class={"text-body-base font-semibold #{if @health.growth_sustainability.sustainable, do: "text-green-600", else: "text-red-600"}"}>
+                        <%= if @health.growth_sustainability.sustainable, do: "Yes", else: "No" %>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

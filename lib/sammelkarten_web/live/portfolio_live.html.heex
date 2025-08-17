@@ -354,7 +354,7 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               <%= for item <- @collection do %>
-                <div class="card-grid-item card-professional card-hover block overflow-hidden">
+                <.link navigate={"/#{item.card.slug}"} class="card-grid-item card-professional card-hover block overflow-hidden cursor-pointer">
                   <!-- Card Image -->
                   <div class="aspect-w-3 aspect-h-4 bg-gray-100 dark:bg-gray-700 overflow-hidden">
                     <img
@@ -564,7 +564,7 @@
                       </div>
                     </div>
                   </div>
-                </div>
+                </.link>
               <% end %>
             </div>
           </div>

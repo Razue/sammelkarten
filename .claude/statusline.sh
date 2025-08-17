@@ -124,7 +124,7 @@ fi
 # session time
 if [ -n "$session_txt" ]; then
   printf '  ⌛ %s%s%s' "$(session_color)" "$session_txt" "$(rst)"
-  printf '  %s[%s]%s' "$(session_color)" "$session_bar" "$(rst)"
+  # printf '  %s[%s]%s' "$(session_color)" "$session_bar" "$(rst)"
 fi
 # cost
 # if [ -n "$cost_usd" ] && [[ "$cost_usd" =~ ^[0-9.]+$ ]]; then

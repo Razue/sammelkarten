@@ -237,65 +237,72 @@ defmodule SammelkartenWeb.DashboardExchangeLive do
   defp sort_cards(cards, "price", "asc"), do: Enum.sort_by(cards, & &1.current_price)
   defp sort_cards(cards, "price", "desc"), do: Enum.sort_by(cards, & &1.current_price, :desc)
 
-  # Generate offer quantity - number of people offering this card (0-21)
+  # Calculate real offer quantity from database - number of people offering this card
   defp calculate_offer_quantity(card) do
-    # Use card price and rarity to influence base probability
-    base_seed = :erlang.phash2({card.id, "offer"})
-    :rand.seed(:exsss, {base_seed, base_seed + 1, base_seed + 2})
+    try do
+      transaction = fn ->
+        # Get sell offers for this card
+        sell_offers = :mnesia.match_object(
+          {:user_trades, :_, :_, card.id, "sell", :_, :_, :_, :_, "open", :_, :_, :_}
+        )
 
-    # Higher price cards tend to have fewer offers
-    # Normalize around 50 euros
-    price_factor = min(card.current_price / 5000, 2.0)
+        # Get exchange offers offering this card
+        exchange_offers = :mnesia.match_object(
+          {:user_trades, :_, :_, card.id, "exchange", :_, :_, :_, :_, "open", :_, :_, :_}
+        )
 
-    rarity_factor =
-      case String.downcase(card.rarity) do
-        # More common = more offers
-        "common" -> 1.5
-        "uncommon" -> 1.2
-        "rare" -> 1.0
-        "epic" -> 0.7
-        # Rare cards = fewer offers
-        "legendary" -> 0.4
-        "mythic" -> 0.2
-        _ -> 1.0
+        length(sell_offers) + length(exchange_offers)
       end
 
-    # Calculate base quantity (0-21)
-    base_quantity = trunc(1.0 / price_factor * rarity_factor * 3)
-    # +/- 3 variation
-    variation = :rand.uniform(8) - 4
-    max(0, min(3, base_quantity + variation))
+      case :mnesia.transaction(transaction) do
+        {:atomic, count} -> count
+        {:aborted, _reason} -> 0
+      end
+    rescue
+      _ -> 0
+    end
   end
 
-  # Generate search quantity - number of people searching for this card (0-21)
+  # Calculate real search quantity from database - number of people searching for this card
   defp calculate_search_quantity(card) do
-    # Use card price and rarity to influence base probability
-    base_seed = :erlang.phash2({card.id, "search"})
-    :rand.seed(:exsss, {base_seed, base_seed + 10, base_seed + 20})
+    try do
+      transaction = fn ->
+        # Get buy offers for this card
+        buy_offers = :mnesia.match_object(
+          {:user_trades, :_, :_, card.id, "buy", :_, :_, :_, :_, "open", :_, :_, :_}
+        )
 
-    # Higher price cards tend to have more searches (people want them)
-    # Normalize around 50 euros
-    price_factor = min(card.current_price / 5000, 2.0)
+        # Get exchange offers wanting this card
+        all_exchanges = :mnesia.match_object(
+          {:user_trades, :_, :_, :_, "exchange", :_, :_, :_, :_, "open", :_, :_, :_}
+        )
 
-    rarity_factor =
-      case String.downcase(card.rarity) do
-        # Common cards less in demand
-        "common" -> 0.3
-        "uncommon" -> 0.6
-        "rare" -> 1.0
-        "epic" -> 1.4
-        # Rare cards more in demand
-        "legendary" -> 1.8
-        "mythic" -> 2.1
-        _ -> 1.0
+        # Filter exchanges that want this card
+        wanting_card_exchanges = Enum.filter(all_exchanges, fn 
+          {_, _, _, _, _, _, _, _, wanted_data_json, _, _, _, _} ->
+            case Jason.decode(wanted_data_json || "{}") do
+              {:ok, wanted_data} ->
+                case wanted_data["type"] do
+                  "open" -> true
+                  "specific" ->
+                    wanted_card_ids = wanted_data["card_ids"] || []
+                    card.id in wanted_card_ids
+                  _ -> false
+                end
+              _ -> false
+            end
+        end)
+
+        length(buy_offers) + length(wanting_card_exchanges)
       end
 
-    # Calculate base quantity (0-21)
-    # Scale to ~21 max
-    base_quantity = trunc(price_factor * rarity_factor * 3.5)
-    # +/- 2 variation
-    variation = :rand.uniform(6) - 3
-    max(0, min(21, base_quantity + variation))
+      case :mnesia.transaction(transaction) do
+        {:atomic, count} -> count
+        {:aborted, _reason} -> 0
+      end
+    rescue
+      _ -> 0
+    end
   end
 
   def format_offer_quantity(card) do

@@ -12,9 +12,18 @@ defmodule SammelkartenWeb.CardDetailLive do
   use SammelkartenWeb, :live_view
 
   alias Sammelkarten.Cards
+  # alias Sammelkarten.Nostr.User
+  require Logger
 
   @impl true
-  def mount(%{"slug" => card_slug}, _session, socket) do
+  def mount(%{"slug" => card_slug}, session, socket) do
+    # Check for Nostr authentication for potential future features
+    _nostr_user =
+      case get_nostr_user_from_session(session) do
+        {:ok, user} -> user
+        {:error, :not_authenticated} -> nil
+      end
+
     case Cards.get_card_by_slug(card_slug) do
       {:ok, card} ->
         if connected?(socket) do
@@ -373,5 +382,32 @@ defmodule SammelkartenWeb.CardDetailLive do
       end)
 
     Jason.encode!(chart_data)
+  end
+
+  defp get_nostr_user_from_session(session) do
+    case session do
+      %{"nostr_authenticated" => true, "nostr_user" => user_data} when user_data != nil ->
+        try do
+          user = struct(Sammelkarten.Nostr.User, atomize_keys(user_data))
+          {:ok, user}
+        rescue
+          e ->
+            Logger.error("Failed to load user from session: #{inspect(e)}")
+            {:error, :invalid_user_data}
+        end
+
+      _ ->
+        {:error, :not_authenticated}
+    end
+  end
+
+  defp atomize_keys(map) when is_map(map) do
+    for {key, val} <- map, into: %{} do
+      cond do
+        is_binary(key) -> {String.to_existing_atom(key), val}
+        is_atom(key) -> {key, val}
+        true -> {key, val}
+      end
+    end
   end
 end

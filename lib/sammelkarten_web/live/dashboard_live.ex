@@ -3,14 +3,26 @@ defmodule SammelkartenWeb.DashboardLive do
 
   alias Sammelkarten.Cards
   alias Sammelkarten.Preferences
+  # alias Sammelkarten.Nostr.User
+  require Logger
 
   @impl true
-  def mount(_params, _session, socket) do
-    # Get user ID (for now, use a default user)
-    user_id = "default_user"
+  def mount(_params, session, socket) do
+    # Check for Nostr authentication
+    {user_id, user_preferences} =
+      case get_nostr_user_from_session(session) do
+        {:ok, nostr_user} ->
+          # Use Nostr pubkey as user_id for preferences
+          user_id = nostr_user.pubkey
+          {:ok, prefs} = Preferences.get_user_preferences(user_id)
+          {user_id, prefs}
 
-    # Load user preferences
-    {:ok, user_preferences} = Preferences.get_user_preferences(user_id)
+        {:error, :not_authenticated} ->
+          # Fall back to default user for non-authenticated users
+          user_id = "default_user"
+          {:ok, prefs} = Preferences.get_user_preferences(user_id)
+          {user_id, prefs}
+      end
 
     socket =
       socket
@@ -277,6 +289,33 @@ defmodule SammelkartenWeb.DashboardLive do
       "legendary" -> "bg-yellow-100 text-yellow-800"
       "mythic" -> "bg-red-100 text-red-800"
       _ -> "bg-gray-100 text-gray-800"
+    end
+  end
+
+  defp get_nostr_user_from_session(session) do
+    case session do
+      %{"nostr_authenticated" => true, "nostr_user" => user_data} when user_data != nil ->
+        try do
+          user = struct(Sammelkarten.Nostr.User, atomize_keys(user_data))
+          {:ok, user}
+        rescue
+          e ->
+            Logger.error("Failed to load user from session: #{inspect(e)}")
+            {:error, :invalid_user_data}
+        end
+
+      _ ->
+        {:error, :not_authenticated}
+    end
+  end
+
+  defp atomize_keys(map) when is_map(map) do
+    for {key, val} <- map, into: %{} do
+      cond do
+        is_binary(key) -> {String.to_existing_atom(key), val}
+        is_atom(key) -> {key, val}
+        true -> {key, val}
+      end
     end
   end
 end

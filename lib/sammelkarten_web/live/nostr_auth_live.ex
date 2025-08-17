@@ -127,7 +127,8 @@ defmodule SammelkartenWeb.NostrAuthLive do
               |> assign(:auth_step, :authenticated)
               |> assign(:loading, false)
               |> assign(:error_message, nil)
-              |> put_flash(:info, "Creating session...")
+
+            # |> put_flash(:info, "Creating session...")
 
             Logger.info("User authenticated: #{User.short_pubkey(user)}")
 
@@ -208,7 +209,8 @@ defmodule SammelkartenWeb.NostrAuthLive do
       |> assign(:auth_step, :ready_to_auth)
       |> assign(:challenge, nil)
       |> assign(:error_message, nil)
-      |> put_flash(:info, "Logged out successfully")
+
+    # |> put_flash(:info, "Logged out successfully")
 
     # Clear browser extension session
     socket = push_event(socket, "nostr_logout", %{})
@@ -241,7 +243,8 @@ defmodule SammelkartenWeb.NostrAuthLive do
       socket =
         socket
         |> assign(:current_user, updated_user)
-        |> put_flash(:info, "Profile updated successfully")
+
+      # |> put_flash(:info, "Profile updated successfully")
 
       {:noreply, socket}
     else

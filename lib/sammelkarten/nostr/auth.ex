@@ -78,7 +78,7 @@ defmodule Sammelkarten.Nostr.Auth do
 
             socket =
               socket
-              |> Phoenix.LiveView.put_flash(:info, "Successfully authenticated with Nostr!")
+              # |> Phoenix.LiveView.put_flash(:info, "Successfully authenticated with Nostr!")
               |> Phoenix.LiveView.assign_async(:current_user, user)
               |> Phoenix.LiveView.assign_async(:authenticated, true)
 
@@ -115,7 +115,8 @@ defmodule Sammelkarten.Nostr.Auth do
     socket
     |> Phoenix.LiveView.assign_async(:current_user, nil)
     |> Phoenix.LiveView.assign_async(:authenticated, false)
-    |> Phoenix.LiveView.put_flash(:info, "Successfully logged out")
+
+    # |> Phoenix.LiveView.put_flash(:info, "Successfully logged out")
   end
 
   @doc """

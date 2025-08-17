@@ -208,7 +208,8 @@ defmodule SammelkartenWeb.PortfolioLive do
                 |> assign(:search_term, "")
                 |> assign(:show_search_dropdown, false)
                 |> assign(:search_results, [])
-                |> put_flash(:info, "#{quantity} #{card.name} card(s) added to collection")
+
+              # |> put_flash(:info, "#{quantity} #{card.name} card(s) added to collection")
 
               send(self(), :load_portfolio_data)
               {:noreply, socket}
@@ -244,8 +245,8 @@ defmodule SammelkartenWeb.PortfolioLive do
               # Reload collection data
               send(self(), :load_portfolio_data)
 
-              socket = put_flash(socket, :info, "Card added to collection successfully")
-              {:noreply, socket}
+            # socket = put_flash(socket, :info, "Card added to collection successfully")
+            # {:noreply, socket}
 
             {:error, reason} ->
               socket = put_flash(socket, :error, "Failed to add card: #{reason}")
@@ -266,8 +267,9 @@ defmodule SammelkartenWeb.PortfolioLive do
   def handle_event("edit_quantity", %{"collection_id" => collection_id}, socket) do
     if socket.assigns.authenticated do
       # Find the collection item to edit
-      collection_item = Enum.find(socket.assigns.collection, fn item -> item.id == collection_id end)
-      
+      collection_item =
+        Enum.find(socket.assigns.collection, fn item -> item.id == collection_id end)
+
       if collection_item do
         socket = assign(socket, :editing_item, collection_item)
         {:noreply, socket}
@@ -300,10 +302,12 @@ defmodule SammelkartenWeb.PortfolioLive do
               # Reload collection data
               send(self(), :load_portfolio_data)
 
-              socket = 
+              socket =
                 socket
                 |> assign(:editing_item, nil)
-                |> put_flash(:info, "Quantity updated successfully")
+
+              # |> put_flash(:info, "Quantity updated successfully")
+
               {:noreply, socket}
 
             {:error, reason} ->
@@ -335,8 +339,8 @@ defmodule SammelkartenWeb.PortfolioLive do
           # Reload collection data
           send(self(), :load_portfolio_data)
 
-          socket = put_flash(socket, :info, "Card removed from collection")
-          {:noreply, socket}
+        # socket = put_flash(socket, :info, "Card removed from collection")
+        # {:noreply, socket}
 
         {:error, reason} ->
           socket = put_flash(socket, :error, "Failed to remove card: #{reason}")
@@ -364,8 +368,8 @@ defmodule SammelkartenWeb.PortfolioLive do
               # Reload collection data
               send(self(), :load_portfolio_data)
 
-              socket = put_flash(socket, :info, "Quantity updated successfully")
-              {:noreply, socket}
+            # socket = put_flash(socket, :info, "Quantity updated successfully")
+            # {:noreply, socket}
 
             {:error, reason} ->
               socket = put_flash(socket, :error, "Failed to update quantity: #{reason}")

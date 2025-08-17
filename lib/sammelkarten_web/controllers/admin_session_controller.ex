@@ -7,7 +7,7 @@ defmodule SammelkartenWeb.AdminSessionController do
     if password == admin_password() do
       conn
       |> put_session(:admin_authenticated, true)
-      |> put_flash(:info, "Admin access granted")
+      # |> put_flash(:info, "Admin access granted")
       |> redirect(to: ~p"/admin")
     else
       conn
@@ -19,7 +19,7 @@ defmodule SammelkartenWeb.AdminSessionController do
   def delete(conn, _params) do
     conn
     |> delete_session(:admin_authenticated)
-    |> put_flash(:info, "Logged out successfully")
+    # |> put_flash(:info, "Logged out successfully")
     |> redirect(to: ~p"/cards")
   end
 end

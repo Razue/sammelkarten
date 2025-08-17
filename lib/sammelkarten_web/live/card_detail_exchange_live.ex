@@ -87,12 +87,12 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
     # Reload exchange data when new offers are created
     if socket.assigns.card do
       {offer_traders, search_traders} = load_real_exchange_data(socket.assigns.card)
-      
+
       socket =
         socket
         |> assign(:offer_traders, offer_traders)
         |> assign(:search_traders, search_traders)
-      
+
       {:noreply, socket}
     else
       {:noreply, socket}
@@ -109,14 +109,14 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
     try do
       # Load regular trading offers (buy/sell) for this card
       regular_offers = load_regular_offers_for_card(card.id)
-      
+
       # Load exchange offers involving this card
       exchange_offers = load_exchange_offers_for_card(card.id)
-      
+
       # Separate into offers and searches based on the trade type and involvement
       offer_traders = format_offers_for_display(regular_offers, exchange_offers, card, :offer)
       search_traders = format_offers_for_display(regular_offers, exchange_offers, card, :search)
-      
+
       {offer_traders, search_traders}
     rescue
       e ->
@@ -137,8 +137,9 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
       case :mnesia.transaction(transaction) do
         {:atomic, trade_records} ->
           Logger.info("Found #{length(trade_records)} regular offers for card #{card_id}")
+
           trade_records
-          |> Enum.filter(fn {_, _, _, _, trade_type, _, _, _, _, _, _, _, _} -> 
+          |> Enum.filter(fn {_, _, _, _, trade_type, _, _, _, _, _, _, _, _} ->
             trade_type in ["buy", "sell"]
           end)
           |> Enum.map(&format_regular_offer/1)
@@ -160,12 +161,14 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
     try do
       transaction = fn ->
         # Get all exchange offers
-        all_exchanges = :mnesia.match_object(
-          {:user_trades, :_, :_, :_, "exchange", :_, :_, :_, :_, "open", :_, :_, :_}
-        )
-        
+        all_exchanges =
+          :mnesia.match_object(
+            {:user_trades, :_, :_, :_, "exchange", :_, :_, :_, :_, "open", :_, :_, :_}
+          )
+
         # Filter to include exchanges involving this card
-        Enum.filter(all_exchanges, fn {_, _, _, offering_card_id, _, _, _, _, wanted_data_json, _, _, _, _} ->
+        Enum.filter(all_exchanges, fn {_, _, _, offering_card_id, _, _, _, _, wanted_data_json, _,
+                                       _, _, _} ->
           # Check if this card is being offered
           if offering_card_id == card_id do
             true
@@ -175,7 +178,9 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
               {:ok, wanted_data} ->
                 wanted_card_ids = wanted_data["card_ids"] || []
                 card_id in wanted_card_ids or wanted_data["type"] == "open"
-              _ -> false
+
+              _ ->
+                false
             end
           end
         end)
@@ -183,7 +188,10 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
 
       case :mnesia.transaction(transaction) do
         {:atomic, exchange_records} ->
-          Logger.info("Found #{length(exchange_records)} exchange offers involving card #{card_id}")
+          Logger.info(
+            "Found #{length(exchange_records)} exchange offers involving card #{card_id}"
+          )
+
           exchange_records
           |> Enum.map(&format_exchange_offer/1)
           |> Enum.filter(fn offer -> offer != nil end)
@@ -207,7 +215,7 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
     case Cards.get_card(card_id) do
       {:ok, card} ->
         minutes_ago = DateTime.diff(DateTime.utc_now(), created_at, :second) |> div(60)
-        
+
         %{
           id: trade_id,
           trader: User.short_pubkey(%{pubkey: user_pubkey}),
@@ -228,27 +236,32 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
 
   # Format exchange offer from database record
   defp format_exchange_offer(
-         {_, trade_id, user_pubkey, offering_card_id, "exchange", quantity, _wanted_hash, _, 
+         {_, trade_id, user_pubkey, offering_card_id, "exchange", quantity, _wanted_hash, _,
           wanted_data_json, "open", created_at, _, _}
        ) do
     with {:ok, offering_card} <- Cards.get_card(offering_card_id),
          {:ok, wanted_data} <- Jason.decode(wanted_data_json || "{}") do
-      
       wanted_type = wanted_data["type"]
       wanted_card_ids = wanted_data["card_ids"] || []
       minutes_ago = DateTime.diff(DateTime.utc_now(), created_at, :second) |> div(60)
-      
+
       # Get wanted cards info
-      wanted_cards = case wanted_type do
-        "open" -> [{"Any Card", 1, "common"}] # Open to any card
-        "specific" -> 
-          wanted_card_ids
-          |> Enum.map(&Cards.get_card/1)
-          |> Enum.filter(&match?({:ok, _}, &1))
-          |> Enum.map(fn {:ok, card} -> {card.name, 1, card.rarity} end)
-        _ -> []
-      end
-      
+      wanted_cards =
+        case wanted_type do
+          # Open to any card
+          "open" ->
+            [{"Any Card", 1, "common"}]
+
+          "specific" ->
+            wanted_card_ids
+            |> Enum.map(&Cards.get_card/1)
+            |> Enum.filter(&match?({:ok, _}, &1))
+            |> Enum.map(fn {:ok, card} -> {card.name, 1, card.rarity} end)
+
+          _ ->
+            []
+        end
+
       %{
         id: trade_id,
         trader: User.short_pubkey(%{pubkey: user_pubkey}),
@@ -273,38 +286,53 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
       :offer ->
         # Show sell offers (people offering this card) and exchange offers offering this card
         sell_offers = Enum.filter(regular_offers, &(&1.offer_type == "sell"))
-        exchange_offering_card = Enum.filter(exchange_offers, fn offer ->
-          offer.offering_card.id == current_card.id
-        end)
-        
+
+        exchange_offering_card =
+          Enum.filter(exchange_offers, fn offer ->
+            offer.offering_card.id == current_card.id
+          end)
+
         # Convert to unified format
         formatted_sells = Enum.map(sell_offers, &format_as_offer_display/1)
-        formatted_exchanges = Enum.map(exchange_offering_card, &format_exchange_as_offer_display/1)
-        
+
+        formatted_exchanges =
+          Enum.map(exchange_offering_card, &format_exchange_as_offer_display/1)
+
         (formatted_sells ++ formatted_exchanges)
-        |> Enum.sort_by(&(&1.minutes_ago), :asc)
-        |> Enum.take(8) # Limit to 8 for display
-        
+        |> Enum.sort_by(& &1.minutes_ago, :asc)
+        # Limit to 8 for display
+        |> Enum.take(8)
+
       :search ->
         # Show buy offers (people searching for this card) and exchange offers wanting this card
         buy_offers = Enum.filter(regular_offers, &(&1.offer_type == "buy"))
-        exchange_wanting_card = Enum.filter(exchange_offers, fn offer ->
-          case offer.wanted_type do
-            "open" -> true
-            "specific" -> Enum.any?(offer.wanted_cards, fn {name, _, _} -> 
-              String.downcase(name) == String.downcase(current_card.name)
-            end)
-            _ -> false
-          end
-        end)
-        
+
+        exchange_wanting_card =
+          Enum.filter(exchange_offers, fn offer ->
+            case offer.wanted_type do
+              "open" ->
+                true
+
+              "specific" ->
+                Enum.any?(offer.wanted_cards, fn {name, _, _} ->
+                  String.downcase(name) == String.downcase(current_card.name)
+                end)
+
+              _ ->
+                false
+            end
+          end)
+
         # Convert to unified format
         formatted_buys = Enum.map(buy_offers, &format_as_search_display/1)
-        formatted_exchanges = Enum.map(exchange_wanting_card, &format_exchange_as_search_display/1)
-        
+
+        formatted_exchanges =
+          Enum.map(exchange_wanting_card, &format_exchange_as_search_display/1)
+
         (formatted_buys ++ formatted_exchanges)
-        |> Enum.sort_by(&(&1.minutes_ago), :asc)
-        |> Enum.take(8) # Limit to 8 for display
+        |> Enum.sort_by(& &1.minutes_ago, :asc)
+        # Limit to 8 for display
+        |> Enum.take(8)
     end
   end
 
@@ -314,7 +342,8 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
       trader: offer.trader,
       trader_pubkey: offer.trader_pubkey,
       offer_bundle: [{offer.card.name, offer.quantity, offer.card.rarity}],
-      search_bundle: [{"Bitcoin Sats", offer.total_value, "currency"}], # What they want in return
+      # What they want in return
+      search_bundle: [{"Bitcoin Sats", offer.total_value, "currency"}],
       minutes_ago: offer.minutes_ago,
       offer_type: "sell",
       price: offer.price
@@ -326,8 +355,10 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
     %{
       trader: offer.trader,
       trader_pubkey: offer.trader_pubkey,
-      offer_bundle: [{"Bitcoin Sats", offer.total_value, "currency"}], # What they're offering
-      search_bundle: [{offer.card.name, offer.quantity, offer.card.rarity}], # What they want
+      # What they're offering
+      offer_bundle: [{"Bitcoin Sats", offer.total_value, "currency"}],
+      # What they want
+      search_bundle: [{offer.card.name, offer.quantity, offer.card.rarity}],
       minutes_ago: offer.minutes_ago,
       offer_type: "buy",
       price: offer.price
@@ -351,13 +382,14 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
     %{
       trader: exchange.trader,
       trader_pubkey: exchange.trader_pubkey,
-      offer_bundle: exchange.offering_bundle, # What they're offering
-      search_bundle: exchange.wanted_cards,   # What they want (includes current card)
+      # What they're offering
+      offer_bundle: exchange.offering_bundle,
+      # What they want (includes current card)
+      search_bundle: exchange.wanted_cards,
       minutes_ago: exchange.minutes_ago,
       offer_type: "exchange"
     }
   end
-
 
   @impl true
   def render(assigns) do
@@ -388,7 +420,10 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
               <nav class="flex" aria-label="Breadcrumb">
                 <ol class="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
                   <li>
-                    <.link navigate="/trading/exchanges" class="hover:text-gray-700 dark:hover:text-gray-300">
+                    <.link
+                      navigate="/trading/exchanges"
+                      class="hover:text-gray-700 dark:hover:text-gray-300"
+                    >
                       Card Collection Exchange
                     </.link>
                   </li>
@@ -504,7 +539,9 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
                                 </span>
                               </div>
                               <div>
-                                <p class="font-medium text-gray-900 dark:text-white">{offer.trader}</p>
+                                <p class="font-medium text-gray-900 dark:text-white">
+                                  {offer.trader}
+                                </p>
                                 <p class="text-xs text-gray-500 dark:text-gray-400">
                                   {format_time_ago(offer.minutes_ago)} ago
                                 </p>
@@ -515,43 +552,68 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
                             </span>
                           </div>
                           
-                          <!-- Exchange Visual -->
+    <!-- Exchange Visual -->
                           <div class="flex items-center space-x-4">
                             <!-- What they're offering -->
                             <div class="flex-1">
-                              <p class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">Offering</p>
+                              <p class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">
+                                Offering
+                              </p>
                               <div class="space-y-1">
                                 <%= for {card_name, quantity, rarity} <- offer.offer_bundle do %>
                                   <div class="flex items-center justify-between p-2 bg-white dark:bg-gray-800 rounded border">
                                     <div class="flex items-center space-x-2">
-                                      <span class={["w-2 h-2 rounded-full", rarity_dot_color(rarity)]}></span>
-                                      <span class="text-sm font-medium text-gray-900 dark:text-white">{card_name}</span>
+                                      <span class={["w-2 h-2 rounded-full", rarity_dot_color(rarity)]}>
+                                      </span>
+                                      <span class="text-sm font-medium text-gray-900 dark:text-white">
+                                        {card_name}
+                                      </span>
                                     </div>
-                                    <span class="text-sm font-bold text-green-600 dark:text-green-400">×{quantity}</span>
+                                    <span class="text-sm font-bold text-green-600 dark:text-green-400">
+                                      ×{quantity}
+                                    </span>
                                   </div>
                                 <% end %>
                               </div>
                             </div>
                             
-                            <!-- Exchange Arrow -->
+    <!-- Exchange Arrow -->
                             <div class="flex flex-col items-center justify-center px-2">
-                              <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                              <svg
+                                class="w-8 h-8 text-gray-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="2"
+                                  d="M13 7l5 5m0 0l-5 5m5-5H6"
+                                >
+                                </path>
                               </svg>
                               <span class="text-xs text-gray-500 mt-1">FOR</span>
                             </div>
                             
-                            <!-- What they want -->
+    <!-- What they want -->
                             <div class="flex-1">
-                              <p class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">Wants</p>
+                              <p class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">
+                                Wants
+                              </p>
                               <div class="space-y-1">
                                 <%= for {card_name, quantity, rarity} <- offer.search_bundle do %>
                                   <div class="flex items-center justify-between p-2 bg-white dark:bg-gray-800 rounded border">
                                     <div class="flex items-center space-x-2">
-                                      <span class={["w-2 h-2 rounded-full", rarity_dot_color(rarity)]}></span>
-                                      <span class="text-sm font-medium text-gray-900 dark:text-white">{card_name}</span>
+                                      <span class={["w-2 h-2 rounded-full", rarity_dot_color(rarity)]}>
+                                      </span>
+                                      <span class="text-sm font-medium text-gray-900 dark:text-white">
+                                        {card_name}
+                                      </span>
                                     </div>
-                                    <span class="text-sm font-bold text-blue-600 dark:text-blue-400">×{quantity}</span>
+                                    <span class="text-sm font-bold text-blue-600 dark:text-blue-400">
+                                      ×{quantity}
+                                    </span>
                                   </div>
                                 <% end %>
                               </div>
@@ -609,7 +671,9 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
                                 </span>
                               </div>
                               <div>
-                                <p class="font-medium text-gray-900 dark:text-white">{search.trader}</p>
+                                <p class="font-medium text-gray-900 dark:text-white">
+                                  {search.trader}
+                                </p>
                                 <p class="text-xs text-gray-500 dark:text-gray-400">
                                   {format_time_ago(search.minutes_ago)} ago
                                 </p>
@@ -620,43 +684,68 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
                             </span>
                           </div>
                           
-                          <!-- Exchange Visual -->
+    <!-- Exchange Visual -->
                           <div class="flex items-center space-x-4">
                             <!-- What they want -->
                             <div class="flex-1">
-                              <p class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">Looking For</p>
+                              <p class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">
+                                Looking For
+                              </p>
                               <div class="space-y-1">
                                 <%= for {card_name, quantity, rarity} <- search.search_bundle do %>
                                   <div class="flex items-center justify-between p-2 bg-white dark:bg-gray-800 rounded border">
                                     <div class="flex items-center space-x-2">
-                                      <span class={["w-2 h-2 rounded-full", rarity_dot_color(rarity)]}></span>
-                                      <span class="text-sm font-medium text-gray-900 dark:text-white">{card_name}</span>
+                                      <span class={["w-2 h-2 rounded-full", rarity_dot_color(rarity)]}>
+                                      </span>
+                                      <span class="text-sm font-medium text-gray-900 dark:text-white">
+                                        {card_name}
+                                      </span>
                                     </div>
-                                    <span class="text-sm font-bold text-blue-600 dark:text-blue-400">×{quantity}</span>
+                                    <span class="text-sm font-bold text-blue-600 dark:text-blue-400">
+                                      ×{quantity}
+                                    </span>
                                   </div>
                                 <% end %>
                               </div>
                             </div>
                             
-                            <!-- Exchange Arrow -->
+    <!-- Exchange Arrow -->
                             <div class="flex flex-col items-center justify-center px-2">
-                              <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18"></path>
+                              <svg
+                                class="w-8 h-8 text-gray-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="2"
+                                  d="M7 16l-4-4m0 0l4-4m-4 4h18"
+                                >
+                                </path>
                               </svg>
                               <span class="text-xs text-gray-500 mt-1">FOR</span>
                             </div>
                             
-                            <!-- What they're offering -->
+    <!-- What they're offering -->
                             <div class="flex-1">
-                              <p class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">Offering</p>
+                              <p class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">
+                                Offering
+                              </p>
                               <div class="space-y-1">
                                 <%= for {card_name, quantity, rarity} <- search.offer_bundle do %>
                                   <div class="flex items-center justify-between p-2 bg-white dark:bg-gray-800 rounded border">
                                     <div class="flex items-center space-x-2">
-                                      <span class={["w-2 h-2 rounded-full", rarity_dot_color(rarity)]}></span>
-                                      <span class="text-sm font-medium text-gray-900 dark:text-white">{card_name}</span>
+                                      <span class={["w-2 h-2 rounded-full", rarity_dot_color(rarity)]}>
+                                      </span>
+                                      <span class="text-sm font-medium text-gray-900 dark:text-white">
+                                        {card_name}
+                                      </span>
                                     </div>
-                                    <span class="text-sm font-bold text-green-600 dark:text-green-400">×{quantity}</span>
+                                    <span class="text-sm font-bold text-green-600 dark:text-green-400">
+                                      ×{quantity}
+                                    </span>
                                   </div>
                                 <% end %>
                               </div>

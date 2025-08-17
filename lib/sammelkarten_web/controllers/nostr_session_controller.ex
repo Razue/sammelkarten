@@ -30,7 +30,7 @@ defmodule SammelkartenWeb.NostrSessionController do
         Logger.info("Nostr session created for user: #{User.short_pubkey(user)}")
 
         conn
-        |> put_flash(:info, "Successfully authenticated with Nostr!")
+        # |> put_flash(:info, "Successfully authenticated with Nostr!")
         |> redirect(to: "/portfolio")
 
       {:error, reason} ->
@@ -49,7 +49,7 @@ defmodule SammelkartenWeb.NostrSessionController do
     conn = NostrAuth.clear_nostr_user(conn)
 
     conn
-    |> put_flash(:info, "Logged out successfully")
+    # |> put_flash(:info, "Logged out successfully")
     |> redirect(to: "/")
   end
 

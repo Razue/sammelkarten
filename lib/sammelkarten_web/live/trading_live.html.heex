@@ -16,851 +16,1025 @@
           <div class="mt-4 sm:mt-0 text-label-md">
             <div class="flex items-center gap-2 text-success">
               <div class="w-2 h-2 bg-success rounded-full"></div>
-              Authenticated as <%= (@current_user && (@current_user.display_name || @current_user.name)) || "Unknown" %>
+              Authenticated as {(@current_user &&
+                                   (@current_user.display_name || @current_user.name)) ||
+                "Unknown"}
             </div>
           </div>
-          <% else %>
-            <div class="mt-4 sm:mt-0">
-              <.link navigate="/auth" class="btn-primary">
-                🔑 Authenticate with Nostr
-              </.link>
-            </div>
-            <% end %>
+        <% else %>
+          <div class="mt-4 sm:mt-0">
+            <.link navigate="/auth" class="btn-primary">
+              🔑 Authenticate with Nostr
+            </.link>
+          </div>
+        <% end %>
       </div>
     </div>
   </div>
-
-  <!-- Main Trading Interface -->
+  
+<!-- Main Trading Interface -->
   <div class="max-w-7xl mx-auto px-4 py-8">
     <!-- Tab Navigation -->
     <div class="flex flex-wrap border-b border-border mb-8">
-      <button phx-click="change_tab" phx-value-tab="active_offers" class={"px-6 py-3 text-body-md font-medium
+      <button
+        phx-click="change_tab"
+        phx-value-tab="active_offers"
+        class={"px-6 py-3 text-body-md font-medium
         border-b-2 transition-colors #{if @active_tab=="active_offers" , do: "border-primary text-primary" ,
-        else: "border-transparent text-secondary hover:text-text" }"}>
+        else: "border-transparent text-secondary hover:text-text" }"}
+      >
         🟢 Active Offers
         <span class="ml-2 px-2 py-0.5 bg-secondary text-background rounded-full text-label-sm">
-          <%= length(@active_offers) %>
+          {length(@active_offers)}
         </span>
       </button>
 
       <%= if @authenticated do %>
-        <button phx-click="change_tab" phx-value-tab="my_offers" class={"px-6 py-3 text-body-md font-medium border-b-2
+        <button
+          phx-click="change_tab"
+          phx-value-tab="my_offers"
+          class={"px-6 py-3 text-body-md font-medium border-b-2
           transition-colors #{if @active_tab=="my_offers" , do: "border-primary text-primary" ,
-          else: "border-transparent text-secondary hover:text-text" }"}>
+          else: "border-transparent text-secondary hover:text-text" }"}
+        >
           📋 My Offers
           <span class="ml-2 px-2 py-0.5 bg-secondary text-background rounded-full text-label-sm">
-            <%= length(@my_offers) %>
+            {length(@my_offers)}
           </span>
         </button>
 
-        <button phx-click="change_tab" phx-value-tab="trade_history" class={"px-6 py-3 text-body-md font-medium
+        <button
+          phx-click="change_tab"
+          phx-value-tab="trade_history"
+          class={"px-6 py-3 text-body-md font-medium
           border-b-2 transition-colors #{if @active_tab=="trade_history" , do: "border-primary text-primary" ,
-          else: "border-transparent text-secondary hover:text-text" }"}>
+          else: "border-transparent text-secondary hover:text-text" }"}
+        >
           📈 Trade History
           <span class="ml-2 px-2 py-0.5 bg-secondary text-background rounded-full text-label-sm">
-            <%= length(@trade_history) %>
+            {length(@trade_history)}
           </span>
         </button>
 
-        <button phx-click="change_tab" phx-value-tab="exchanges" class={"px-6 py-3 text-body-md font-medium
+        <button
+          phx-click="change_tab"
+          phx-value-tab="exchanges"
+          class={"px-6 py-3 text-body-md font-medium
           border-b-2 transition-colors #{if @active_tab=="exchanges" , do: "border-primary text-primary" ,
-          else: "border-transparent text-secondary hover:text-text" }"}>
+          else: "border-transparent text-secondary hover:text-text" }"}
+        >
           🔄 Exchanges
           <span class="ml-2 px-2 py-0.5 bg-secondary text-background rounded-full text-label-sm">
-            <%= length(@exchange_offers) %>
+            {length(@exchange_offers)}
           </span>
         </button>
 
-        <button phx-click="change_tab" phx-value-tab="create_offer" class={"px-6 py-3 text-body-md font-medium
+        <button
+          phx-click="change_tab"
+          phx-value-tab="create_offer"
+          class={"px-6 py-3 text-body-md font-medium
           border-b-2 transition-colors #{if @active_tab=="create_offer" , do: "border-primary text-primary" ,
-          else: "border-transparent text-secondary hover:text-text" }"}>
+          else: "border-transparent text-secondary hover:text-text" }"}
+        >
           ➕ Create Offer
         </button>
       <% end %>
     </div>
-
-      <!-- Loading State -->
-      <%= if @loading do %>
-        <div class="flex items-center justify-center py-12">
-          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          <span class="ml-3 text-body-md text-secondary">Loading trading data...</span>
-        </div>
-        <% else %>
-          <!-- Tab Content -->
-          <%= case {@active_tab, @authenticated} do %>
-            <% {"active_offers", _} -> %>
-              <div>
-                <!-- Filters and Search -->
-                <div class="flex flex-col sm:flex-row gap-4 mb-6">
-                  <div class="flex gap-2">
-                    <button phx-click="filter_offers" phx-value-type="all" class={"px-4 py-2 rounded-lg text-label-md
+    
+<!-- Loading State -->
+    <%= if @loading do %>
+      <div class="flex items-center justify-center py-12">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <span class="ml-3 text-body-md text-secondary">Loading trading data...</span>
+      </div>
+    <% else %>
+      <!-- Tab Content -->
+      <%= case {@active_tab, @authenticated} do %>
+        <% {"active_offers", _} -> %>
+          <div>
+            <!-- Filters and Search -->
+            <div class="flex flex-col sm:flex-row gap-4 mb-6">
+              <div class="flex gap-2">
+                <button
+                  phx-click="filter_offers"
+                  phx-value-type="all"
+                  class={"px-4 py-2 rounded-lg text-label-md
                       transition-colors #{if @filter_type=="all" , do: "bg-primary text-primary-foreground" ,
-                      else: "bg-card text-text hover:bg-card-hover" }"}>
-                      All
-                    </button>
-                    <button phx-click="filter_offers" phx-value-type="buy" class={"px-4 py-2 rounded-lg text-label-md
+                      else: "bg-card text-text hover:bg-card-hover" }"}
+                >
+                  All
+                </button>
+                <button
+                  phx-click="filter_offers"
+                  phx-value-type="buy"
+                  class={"px-4 py-2 rounded-lg text-label-md
                       transition-colors #{if @filter_type=="buy" , do: "bg-success text-success-foreground" ,
-                      else: "bg-card text-text hover:bg-card-hover" }"}>
-                      🛒 Buy Orders
-                    </button>
-                    <button phx-click="filter_offers" phx-value-type="sell" class={"px-4 py-2 rounded-lg text-label-md
+                      else: "bg-card text-text hover:bg-card-hover" }"}
+                >
+                  🛒 Buy Orders
+                </button>
+                <button
+                  phx-click="filter_offers"
+                  phx-value-type="sell"
+                  class={"px-4 py-2 rounded-lg text-label-md
                       transition-colors #{if @filter_type=="sell" , do: "bg-destructive text-destructive-foreground" ,
-                      else: "bg-card text-text hover:bg-card-hover" }"}>
-                      💰 Sell Orders
-                    </button>
-                  </div>
-
-                  <div class="flex gap-2">
-                    <button phx-click="sort_offers" phx-value-by="newest" class={"px-4 py-2 rounded-lg text-label-md
-                      transition-colors #{if @sort_by=="newest" , do: "bg-primary text-primary-foreground" ,
-                      else: "bg-card text-text hover:bg-card-hover" }"}>
-                      Newest
-                    </button>
-                    <button phx-click="sort_offers" phx-value-by="price_low" class={"px-4 py-2 rounded-lg text-label-md
-                      transition-colors #{if @sort_by=="price_low" , do: "bg-primary text-primary-foreground" ,
-                      else: "bg-card text-text hover:bg-card-hover" }"}>
-                      Price ↑
-                    </button>
-                    <button phx-click="sort_offers" phx-value-by="price_high" class={"px-4 py-2 rounded-lg text-label-md
-                      transition-colors #{if @sort_by=="price_high" , do: "bg-primary text-primary-foreground" ,
-                      else: "bg-card text-text hover:bg-card-hover" }"}>
-                      Price ↓
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Active Offers Grid -->
-                <%= if length(filter_and_sort_offers(@active_offers, @search_query, @filter_type, @sort_by))==0 do %>
-                  <div class="text-center py-12">
-                    <div class="text-6xl mb-4">🔍</div>
-                    <h3 class="text-heading-sm text-text mb-2">No Active Offers</h3>
-                    <p class="text-body-md text-secondary">
-                      There are no active trade offers at the moment. Check back later or create your own offer!
-                    </p>
-                  </div>
-                  <% else %>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                      <%= for offer <- filter_and_sort_offers(@active_offers, @search_query, @filter_type, @sort_by) do
-                        %>
-                        <div class={"card-grid-item card-professional card-hover block overflow-hidden #{if @current_user && offer.user_pubkey == @current_user.pubkey, do: "border-2 border-primary/50 bg-primary/5", else: "cursor-pointer"}"}>
-                          <!-- Card Image -->
-                          <%= if Map.has_key?(offer, :card) do %>
-                            <div class="aspect-w-3 aspect-h-4 bg-gray-100 dark:bg-gray-700 overflow-hidden">
-                              <img src={offer.card.image_path} alt={offer.card.name}
-                                class="card-image-hover w-full h-48 object-cover object-top" loading="lazy" />
-                            </div>
-                            <% else %>
-                              <div class="w-full h-48 bg-muted flex items-center justify-center">
-                                <div class="text-6xl text-muted-foreground">?</div>
-                              </div>
-                              <% end %>
-
-                                <!-- Card Content -->
-                                <div class="p-4">
-                                  <!-- Card Name and Offer Type -->
-                                  <div class="flex items-start justify-between mb-4">
-                                    <%= if Map.has_key?(offer, :card) do %>
-                                      <h3 class="text-heading-md text-gray-900 dark:text-white truncate flex-1">
-                                        <%= offer.card.name %>
-                                      </h3>
-                                      <span class={"ml-2 px-2.5 py-1 text-label-sm rounded-full shrink-0
-                                        #{rarity_color(offer.card.rarity)}"}>
-                                        <%= offer.card.rarity %>
-                                      </span>
-                                      <% else %>
-                                        <h3 class="text-heading-md text-gray-900 dark:text-white truncate flex-1">
-                                          Unknown Card
-                                        </h3>
-                                        <% end %>
-                                  </div>
-
-                                  <!-- Trading Information -->
-                                  <div class="space-y-3">
-                                    <!-- Offer Type and Quantity -->
-                                    <div class="flex items-center justify-between">
-                                      <div class="flex items-center space-x-2">
-                                        <%= cond do %>
-                                          <% offer.offer_type == "buy" -> %>
-                                            <!-- Buy Offer Icon -->
-                                            <span class="text-xl text-green-600">🛒</span>
-                                            <span class="text-heading-lg text-green-600 dark:text-green-400">
-                                              <%= offer.quantity %>
-                                            </span>
-                                            <span class="text-label-sm text-green-500 dark:text-green-400">
-                                              <%= if offer.quantity==1, do: "card", else: "cards" %>
-                                            </span>
-                                          <% offer.offer_type == "sell" -> %>
-                                            <!-- Sell Offer Icon -->
-                                            <span class="text-xl text-red-600">💰</span>
-                                            <span class="text-heading-lg text-red-600 dark:text-red-400">
-                                              <%= offer.quantity %>
-                                            </span>
-                                            <span class="text-label-sm text-red-500 dark:text-red-400">
-                                              <%= if offer.quantity==1, do: "card", else: "cards" %>
-                                            </span>
-                                          <% true -> %>
-                                            <!-- Exchange Offer Icon -->
-                                            <span class="text-xl text-blue-600">🔄</span>
-                                            <span class="text-heading-lg text-blue-600 dark:text-blue-400">
-                                              <%= offer.quantity %>
-                                            </span>
-                                            <span class="text-label-sm text-blue-500 dark:text-blue-400">
-                                              <%= if offer.quantity==1, do: "card", else: "cards" %>
-                                            </span>
-                                          <% end %>
-                                      </div>
-                                      <!-- Price per card -->
-                                      <div class="text-right">
-                                        <div class="text-heading-sm font-semibold text-gray-900 dark:text-white">
-                                          <%= format_price(offer.price) %>
-                                        </div>
-                                        <div class="text-label-xs text-gray-500 dark:text-gray-400">
-                                          per card
-                                        </div>
-                                      </div>
-                                    </div>
-
-                                    <!-- Total Value and Trader Info -->
-                                    <div class="flex items-center justify-between">
-                                      <div>
-                                        <div class="text-label-sm text-gray-600 dark:text-gray-400">Total</div>
-                                        <div class="text-heading-xs font-bold text-gray-900 dark:text-white">
-                                          <%= format_price(offer.total_value) %>
-                                        </div>
-                                      </div>
-                                      <div class="text-right">
-                                        <div class="text-label-sm text-gray-600 dark:text-gray-400">Trader</div>
-                                        <div class="text-label-sm font-mono text-gray-900 dark:text-white">
-                                          <%= offer.user_short %>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  <!-- Action -->
-                                  <div class="mt-4">
-                                    <!-- Action Button -->
-                                    <%= if @authenticated and @current_user && offer.user_pubkey==@current_user.pubkey do %>
-                                      <!-- User's own offer - not clickable -->
-                                      <div
-                                        class="w-full py-3 px-4 bg-gray-100 dark:bg-gray-700 rounded-lg text-center text-gray-500 dark:text-gray-400 text-body-md">
-                                        🚫 Cannot trade with yourself
-                                      </div>
-                                      <% else %>
-                                        <%= if @authenticated do %>
-                                          <!-- Other user's offer - clickable -->
-                                          <button phx-click="accept_offer" phx-value-offer_id={offer.id} class={"w-full py-3 px-4 rounded-lg font-medium text-body-md transition-colors #{cond do; offer.offer_type == "buy" -> "bg-green-600 hover:bg-green-700 text-white"; offer.offer_type == "sell" -> "bg-red-600 hover:bg-red-700 text-white"; true -> "bg-blue-600 hover:bg-blue-700 text-white"; end}"}>
-                                            <%= cond do %>
-                                              <% offer.offer_type == "buy" -> %>💰 Sell to This Buyer
-                                              <% offer.offer_type == "sell" -> %>🛒 Buy from This Seller
-                                              <% true -> %>🔄 Accept Exchange
-                                            <% end %>
-                                          </button>
-                                          <% else %>
-                                            <!-- Not authenticated - grayed out button -->
-                                            <div class="w-full py-3 px-4 bg-gray-300 dark:bg-gray-600 rounded-lg text-center text-gray-500 dark:text-gray-400 text-body-md cursor-not-allowed opacity-60">
-                                              <%= cond do %>
-                                                <% offer.offer_type == "buy" -> %>💰 Sell to This Buyer
-                                                <% offer.offer_type == "sell" -> %>🛒 Buy from This Seller
-                                                <% true -> %>🔄 Accept Exchange
-                                              <% end %>
-                                            </div>
-                                            <% end %>
-                                        <% end %>
-                                  </div>
-                                </div>
-                        </div>
-                        <% end %>
-                    </div>
-                    <% end %>
+                      else: "bg-card text-text hover:bg-card-hover" }"}
+                >
+                  💰 Sell Orders
+                </button>
               </div>
 
-              <% {"my_offers", true} -> %>
-                <div>
-                  <%= if length(@my_offers)==0 do %>
-                    <div class="text-center py-12">
-                      <div class="text-6xl mb-4">📋</div>
-                      <h3 class="text-heading-sm text-text mb-2">No Active Offers</h3>
-                      <p class="text-body-md text-secondary">
-                        You don't have any active trade offers. Create one to start trading!
-                      </p>
-                      <button phx-click="change_tab" phx-value-tab="create_offer" class="btn-primary mt-4">
-                        ➕ Create First Offer
-                      </button>
-                    </div>
+              <div class="flex gap-2">
+                <button
+                  phx-click="sort_offers"
+                  phx-value-by="newest"
+                  class={"px-4 py-2 rounded-lg text-label-md
+                      transition-colors #{if @sort_by=="newest" , do: "bg-primary text-primary-foreground" ,
+                      else: "bg-card text-text hover:bg-card-hover" }"}
+                >
+                  Newest
+                </button>
+                <button
+                  phx-click="sort_offers"
+                  phx-value-by="price_low"
+                  class={"px-4 py-2 rounded-lg text-label-md
+                      transition-colors #{if @sort_by=="price_low" , do: "bg-primary text-primary-foreground" ,
+                      else: "bg-card text-text hover:bg-card-hover" }"}
+                >
+                  Price ↑
+                </button>
+                <button
+                  phx-click="sort_offers"
+                  phx-value-by="price_high"
+                  class={"px-4 py-2 rounded-lg text-label-md
+                      transition-colors #{if @sort_by=="price_high" , do: "bg-primary text-primary-foreground" ,
+                      else: "bg-card text-text hover:bg-card-hover" }"}
+                >
+                  Price ↓
+                </button>
+              </div>
+            </div>
+            
+<!-- Active Offers Grid -->
+            <%= if length(filter_and_sort_offers(@active_offers, @search_query, @filter_type, @sort_by))==0 do %>
+              <div class="text-center py-12">
+                <div class="text-6xl mb-4">🔍</div>
+                <h3 class="text-heading-sm text-text mb-2">No Active Offers</h3>
+                <p class="text-body-md text-secondary">
+                  There are no active trade offers at the moment. Check back later or create your own offer!
+                </p>
+              </div>
+            <% else %>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <%= for offer <- filter_and_sort_offers(@active_offers, @search_query, @filter_type, @sort_by) do %>
+                  <div class={"card-grid-item card-professional card-hover block overflow-hidden #{if @current_user && offer.user_pubkey == @current_user.pubkey, do: "border-2 border-primary/50 bg-primary/5", else: "cursor-pointer"}"}>
+                    <!-- Card Image -->
+                    <%= if Map.has_key?(offer, :card) do %>
+                      <div class="aspect-w-3 aspect-h-4 bg-gray-100 dark:bg-gray-700 overflow-hidden">
+                        <img
+                          src={offer.card.image_path}
+                          alt={offer.card.name}
+                          class="card-image-hover w-full h-48 object-cover object-top"
+                          loading="lazy"
+                        />
+                      </div>
                     <% else %>
-                      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        <%= for offer <- @my_offers do %>
-                          <div
-                            class="card-grid-item card-professional card-hover block overflow-hidden border-2 border-blue-200 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/20">
-                            <!-- Card Image -->
-                            <%= if Map.has_key?(offer, :card) do %>
-                              <div class="aspect-w-3 aspect-h-4 bg-gray-100 dark:bg-gray-700 overflow-hidden">
-                                <img src={offer.card.image_path} alt={offer.card.name}
-                                  class="card-image-hover w-full h-48 object-cover object-top" loading="lazy" />
-                              </div>
-                              <% else %>
-                                <div class="w-full h-48 bg-muted flex items-center justify-center">
-                                  <div class="text-6xl text-muted-foreground">?</div>
-                                </div>
-                                <% end %>
-
-                                  <!-- Card Content -->
-                                  <div class="p-4">
-                                    <!-- Card Name and Rarity -->
-                                    <div class="flex items-start justify-between mb-4">
-                                      <%= if Map.has_key?(offer, :card) do %>
-                                        <h3 class="text-heading-md text-gray-900 dark:text-white truncate flex-1">
-                                          <%= offer.card.name %>
-                                        </h3>
-                                        <span class={"ml-2 px-2.5 py-1 text-label-sm rounded-full shrink-0
+                      <div class="w-full h-48 bg-muted flex items-center justify-center">
+                        <div class="text-6xl text-muted-foreground">?</div>
+                      </div>
+                    <% end %>
+                    
+<!-- Card Content -->
+                    <div class="p-4">
+                      <!-- Card Name and Offer Type -->
+                      <div class="flex items-start justify-between mb-4">
+                        <%= if Map.has_key?(offer, :card) do %>
+                          <h3 class="text-heading-md text-gray-900 dark:text-white truncate flex-1">
+                            {offer.card.name}
+                          </h3>
+                          <span class={"ml-2 px-2.5 py-1 text-label-sm rounded-full shrink-0
+                                        #{rarity_color(offer.card.rarity)}"}>
+                            {offer.card.rarity}
+                          </span>
+                        <% else %>
+                          <h3 class="text-heading-md text-gray-900 dark:text-white truncate flex-1">
+                            Unknown Card
+                          </h3>
+                        <% end %>
+                      </div>
+                      
+<!-- Trading Information -->
+                      <div class="space-y-3">
+                        <!-- Offer Type and Quantity -->
+                        <div class="flex items-center justify-between">
+                          <div class="flex items-center space-x-2">
+                            <%= cond do %>
+                              <% offer.offer_type == "buy" -> %>
+                                <!-- Buy Offer Icon -->
+                                <span class="text-xl text-green-600">🛒</span>
+                                <span class="text-heading-lg text-green-600 dark:text-green-400">
+                                  {offer.quantity}
+                                </span>
+                                <span class="text-label-sm text-green-500 dark:text-green-400">
+                                  {if offer.quantity == 1, do: "card", else: "cards"}
+                                </span>
+                              <% offer.offer_type == "sell" -> %>
+                                <!-- Sell Offer Icon -->
+                                <span class="text-xl text-red-600">💰</span>
+                                <span class="text-heading-lg text-red-600 dark:text-red-400">
+                                  {offer.quantity}
+                                </span>
+                                <span class="text-label-sm text-red-500 dark:text-red-400">
+                                  {if offer.quantity == 1, do: "card", else: "cards"}
+                                </span>
+                              <% true -> %>
+                                <!-- Exchange Offer Icon -->
+                                <span class="text-xl text-blue-600">🔄</span>
+                                <span class="text-heading-lg text-blue-600 dark:text-blue-400">
+                                  {offer.quantity}
+                                </span>
+                                <span class="text-label-sm text-blue-500 dark:text-blue-400">
+                                  {if offer.quantity == 1, do: "card", else: "cards"}
+                                </span>
+                            <% end %>
+                          </div>
+                          <!-- Price per card -->
+                          <div class="text-right">
+                            <div class="text-heading-sm font-semibold text-gray-900 dark:text-white">
+                              {format_price(offer.price)}
+                            </div>
+                            <div class="text-label-xs text-gray-500 dark:text-gray-400">
+                              per card
+                            </div>
+                          </div>
+                        </div>
+                        
+<!-- Total Value and Trader Info -->
+                        <div class="flex items-center justify-between">
+                          <div>
+                            <div class="text-label-sm text-gray-600 dark:text-gray-400">
+                              Total
+                            </div>
+                            <div class="text-heading-xs font-bold text-gray-900 dark:text-white">
+                              {format_price(offer.total_value)}
+                            </div>
+                          </div>
+                          <div class="text-right">
+                            <div class="text-label-sm text-gray-600 dark:text-gray-400">
+                              Trader
+                            </div>
+                            <div class="text-label-sm font-mono text-gray-900 dark:text-white">
+                              {offer.user_short}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+<!-- Action -->
+                      <div class="mt-4">
+                        <!-- Action Button -->
+                        <%= if @authenticated and @current_user && offer.user_pubkey==@current_user.pubkey do %>
+                          <!-- User's own offer - not clickable -->
+                          <div class="w-full py-3 px-4 bg-gray-100 dark:bg-gray-700 rounded-lg text-center text-gray-500 dark:text-gray-400 text-body-md">
+                            🚫 Cannot trade with yourself
+                          </div>
+                        <% else %>
+                          <%= if @authenticated do %>
+                            <!-- Other user's offer - clickable -->
+                            <button
+                              phx-click="accept_offer"
+                              phx-value-offer_id={offer.id}
+                              class={"w-full py-3 px-4 rounded-lg font-medium text-body-md transition-colors #{cond do; offer.offer_type == "buy" -> "bg-green-600 hover:bg-green-700 text-white"; offer.offer_type == "sell" -> "bg-red-600 hover:bg-red-700 text-white"; true -> "bg-blue-600 hover:bg-blue-700 text-white"; end}"}
+                            >
+                              <%= cond do %>
+                                <% offer.offer_type == "buy" -> %>
+                                  💰 Sell to This Buyer
+                                <% offer.offer_type == "sell" -> %>
+                                  🛒 Buy from This Seller
+                                <% true -> %>
+                                  🔄 Accept Exchange
+                              <% end %>
+                            </button>
+                          <% else %>
+                            <!-- Not authenticated - grayed out button -->
+                            <div class="w-full py-3 px-4 bg-gray-300 dark:bg-gray-600 rounded-lg text-center text-gray-500 dark:text-gray-400 text-body-md cursor-not-allowed opacity-60">
+                              <%= cond do %>
+                                <% offer.offer_type == "buy" -> %>
+                                  💰 Sell to This Buyer
+                                <% offer.offer_type == "sell" -> %>
+                                  🛒 Buy from This Seller
+                                <% true -> %>
+                                  🔄 Accept Exchange
+                              <% end %>
+                            </div>
+                          <% end %>
+                        <% end %>
+                      </div>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        <% {"my_offers", true} -> %>
+          <div>
+            <%= if length(@my_offers)==0 do %>
+              <div class="text-center py-12">
+                <div class="text-6xl mb-4">📋</div>
+                <h3 class="text-heading-sm text-text mb-2">No Active Offers</h3>
+                <p class="text-body-md text-secondary">
+                  You don't have any active trade offers. Create one to start trading!
+                </p>
+                <button
+                  phx-click="change_tab"
+                  phx-value-tab="create_offer"
+                  class="btn-primary mt-4"
+                >
+                  ➕ Create First Offer
+                </button>
+              </div>
+            <% else %>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <%= for offer <- @my_offers do %>
+                  <div class="card-grid-item card-professional card-hover block overflow-hidden border-2 border-blue-200 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/20">
+                    <!-- Card Image -->
+                    <%= if Map.has_key?(offer, :card) do %>
+                      <div class="aspect-w-3 aspect-h-4 bg-gray-100 dark:bg-gray-700 overflow-hidden">
+                        <img
+                          src={offer.card.image_path}
+                          alt={offer.card.name}
+                          class="card-image-hover w-full h-48 object-cover object-top"
+                          loading="lazy"
+                        />
+                      </div>
+                    <% else %>
+                      <div class="w-full h-48 bg-muted flex items-center justify-center">
+                        <div class="text-6xl text-muted-foreground">?</div>
+                      </div>
+                    <% end %>
+                    
+<!-- Card Content -->
+                    <div class="p-4">
+                      <!-- Card Name and Rarity -->
+                      <div class="flex items-start justify-between mb-4">
+                        <%= if Map.has_key?(offer, :card) do %>
+                          <h3 class="text-heading-md text-gray-900 dark:text-white truncate flex-1">
+                            {offer.card.name}
+                          </h3>
+                          <span class={"ml-2 px-2.5 py-1 text-label-sm rounded-full shrink-0
                                           #{rarity_color(offer.card.rarity)}"}>
-                                          <%= offer.card.rarity %>
-                                        </span>
-                                        <% else %>
-                                          <h3 class="text-heading-md text-gray-900 dark:text-white truncate flex-1">
-                                            Unknown Card
-                                          </h3>
-                                          <% end %>
-                                    </div>
-
-                                    <!-- Trading Information -->
-                                    <div class="space-y-3">
-                                      <!-- Offer Type and Quantity -->
-                                      <div class="flex items-center justify-between">
-                                        <div class="flex items-center space-x-2">
-                                          <%= cond do %>
-                                            <% offer.offer_type == "buy" -> %>
-                                              <!-- Buy Offer Icon -->
-                                              <span class="text-xl text-green-600">🛒</span>
-                                              <span class="text-heading-lg text-green-600 dark:text-green-400">
-                                                <%= offer.quantity %>
-                                              </span>
-                                              <span class="text-label-sm text-green-500 dark:text-green-400">
-                                                <%= if offer.quantity==1, do: "card", else: "cards" %>
-                                              </span>
-                                            <% offer.offer_type == "sell" -> %>
-                                              <!-- Sell Offer Icon -->
-                                              <span class="text-xl text-red-600">💰</span>
-                                              <span class="text-heading-lg text-red-600 dark:text-red-400">
-                                                <%= offer.quantity %>
-                                              </span>
-                                              <span class="text-label-sm text-red-500 dark:text-red-400">
-                                                <%= if offer.quantity==1, do: "card", else: "cards" %>
-                                              </span>
-                                            <% true -> %>
-                                              <!-- Exchange Offer Icon -->
-                                              <span class="text-xl text-blue-600">🔄</span>
-                                              <span class="text-heading-lg text-blue-600 dark:text-blue-400">
-                                                <%= offer.quantity %>
-                                              </span>
-                                              <span class="text-label-sm text-blue-500 dark:text-blue-400">
-                                                <%= if offer.quantity==1, do: "card", else: "cards" %>
-                                              </span>
-                                            <% end %>
-                                        </div>
-                                        <!-- Price per card -->
-                                        <div class="text-right">
-                                          <div class="text-heading-sm font-semibold text-gray-900 dark:text-white">
-                                            <%= format_price(offer.price) %>
-                                          </div>
-                                          <div class="text-label-xs text-gray-500 dark:text-gray-400">
-                                            per card
-                                          </div>
-                                        </div>
-                                      </div>
-
-                                      <!-- Total Value and Status -->
-                                      <div class="flex items-center justify-between">
-                                        <div>
-                                          <div class="text-label-sm text-gray-600 dark:text-gray-400">Total Value</div>
-                                          <div class="text-heading-xs font-bold text-gray-900 dark:text-white">
-                                            <%= format_price(offer.total_value) %>
-                                          </div>
-                                        </div>
-                                        <div class="text-right">
-                                          <div class="text-label-sm text-gray-600 dark:text-gray-400">Status</div>
-                                          <div class="text-label-sm font-medium text-green-600 dark:text-green-400">
-                                            ✅ Active
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-
-                                    <!-- Action Area -->
-                                    <div class="mt-4">
-                                      <!-- Expiry Info (deactivated) -->
-                                      <%!-- <div class="mb-3 text-center">
+                            {offer.card.rarity}
+                          </span>
+                        <% else %>
+                          <h3 class="text-heading-md text-gray-900 dark:text-white truncate flex-1">
+                            Unknown Card
+                          </h3>
+                        <% end %>
+                      </div>
+                      
+<!-- Trading Information -->
+                      <div class="space-y-3">
+                        <!-- Offer Type and Quantity -->
+                        <div class="flex items-center justify-between">
+                          <div class="flex items-center space-x-2">
+                            <%= cond do %>
+                              <% offer.offer_type == "buy" -> %>
+                                <!-- Buy Offer Icon -->
+                                <span class="text-xl text-green-600">🛒</span>
+                                <span class="text-heading-lg text-green-600 dark:text-green-400">
+                                  {offer.quantity}
+                                </span>
+                                <span class="text-label-sm text-green-500 dark:text-green-400">
+                                  {if offer.quantity == 1, do: "card", else: "cards"}
+                                </span>
+                              <% offer.offer_type == "sell" -> %>
+                                <!-- Sell Offer Icon -->
+                                <span class="text-xl text-red-600">💰</span>
+                                <span class="text-heading-lg text-red-600 dark:text-red-400">
+                                  {offer.quantity}
+                                </span>
+                                <span class="text-label-sm text-red-500 dark:text-red-400">
+                                  {if offer.quantity == 1, do: "card", else: "cards"}
+                                </span>
+                              <% true -> %>
+                                <!-- Exchange Offer Icon -->
+                                <span class="text-xl text-blue-600">🔄</span>
+                                <span class="text-heading-lg text-blue-600 dark:text-blue-400">
+                                  {offer.quantity}
+                                </span>
+                                <span class="text-label-sm text-blue-500 dark:text-blue-400">
+                                  {if offer.quantity == 1, do: "card", else: "cards"}
+                                </span>
+                            <% end %>
+                          </div>
+                          <!-- Price per card -->
+                          <div class="text-right">
+                            <div class="text-heading-sm font-semibold text-gray-900 dark:text-white">
+                              {format_price(offer.price)}
+                            </div>
+                            <div class="text-label-xs text-gray-500 dark:text-gray-400">
+                              per card
+                            </div>
+                          </div>
+                        </div>
+                        
+<!-- Total Value and Status -->
+                        <div class="flex items-center justify-between">
+                          <div>
+                            <div class="text-label-sm text-gray-600 dark:text-gray-400">
+                              Total Value
+                            </div>
+                            <div class="text-heading-xs font-bold text-gray-900 dark:text-white">
+                              {format_price(offer.total_value)}
+                            </div>
+                          </div>
+                          <div class="text-right">
+                            <div class="text-label-sm text-gray-600 dark:text-gray-400">
+                              Status
+                            </div>
+                            <div class="text-label-sm font-medium text-green-600 dark:text-green-400">
+                              ✅ Active
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+<!-- Action Area -->
+                      <div class="mt-4">
+                        <!-- Expiry Info (deactivated) -->
+                        <%!-- <div class="mb-3 text-center">
                                         <div class="text-label-xs text-gray-500 dark:text-gray-400">
                                           Expires: <%= time_ago(offer.expires_at) %>
                                         </div>
                                       </div> --%>
-
-                                      <!-- Cancel Button -->
-                                      <button phx-click="cancel_offer" phx-value-offer_id={offer.id}
-                                        class="w-full py-3 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium text-body-md transition-colors"
-                                        data-confirm="Are you sure you want to cancel this offer?">
-                                        🗑️ Cancel Offer
-                                      </button>
-                                    </div>
-                                  </div>
-                          </div>
-                          <% end %>
+                        
+<!-- Cancel Button -->
+                        <button
+                          phx-click="cancel_offer"
+                          phx-value-offer_id={offer.id}
+                          class="w-full py-3 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium text-body-md transition-colors"
+                          data-confirm="Are you sure you want to cancel this offer?"
+                        >
+                          🗑️ Cancel Offer
+                        </button>
                       </div>
-                      <% end %>
-                </div>
-
-                <% {"trade_history", true} -> %>
-                  <div>
-                    <%= if length(@trade_history)==0 do %>
-                      <div class="text-center py-12">
-                        <div class="text-6xl mb-4">📈</div>
-                        <h3 class="text-heading-sm text-text mb-2">No Trade History</h3>
-                        <p class="text-body-md text-secondary">
-                          You haven't completed any trades yet. Start trading to build your history!
-                        </p>
-                      </div>
-                      <% else %>
-                        <div class="space-y-4">
-                          <%= for trade <- @trade_history do %>
-                            <div class="card-professional p-6">
-                              <div class="flex items-center justify-between mb-4">
-                                <div class="flex items-center gap-3">
-                                  <%= if Map.has_key?(trade, :card) do %>
-                                    <img src={trade.card.image_path} alt={trade.card.name}
-                                      class="w-10 h-10 object-cover rounded-lg">
-                                    <div>
-                                      <h4 class="text-body-md font-medium text-text">
-                                        <%= trade.card.name %>
-                                      </h4>
-                                      <div class="text-label-sm text-secondary">
-                                        <%= trade.quantity %> card(s) • <%= format_price(trade.price) %> each
-                                      </div>
-                                    </div>
-                                    <% end %>
-                                </div>
-                                <div class="text-right">
-                                  <div class="text-heading-xs font-semibold text-text">
-                                    <%= format_price(trade.total_value) %>
-                                  </div>
-                                  <div class="text-label-sm text-secondary">
-                                    <%= format_datetime(trade.completed_at) %>
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div class="flex items-center justify-between text-label-sm text-secondary">
-                                <div>
-                                  Seller: <span class="font-mono">
-                                    <%= trade.seller_short %>
-                                  </span>
-                                </div>
-                                <div>
-                                  ➡️
-                                </div>
-                                <div>
-                                  Buyer: <span class="font-mono">
-                                    <%= trade.buyer_short %>
-                                  </span>
-                                </div>
-                              </div>
-
-                              <%= if @current_user && trade.seller_pubkey==@current_user.pubkey do %>
-                                <div
-                                  class="mt-2 inline-flex items-center px-2 py-1 rounded-full bg-success/20 text-success text-label-xs">
-                                  💰 Sold
-                                </div>
-                                <% else %>
-                                  <div
-                                    class="mt-2 inline-flex items-center px-2 py-1 rounded-full bg-primary/20 text-primary text-label-xs">
-                                    🛒 Bought
-                                  </div>
-                                  <% end %>
-                            </div>
-                            <% end %>
-                        </div>
-                        <% end %>
+                    </div>
                   </div>
-
-                  <% {"create_offer", true} -> %>
-                    <div class="max-w-2xl mx-auto">
-                      <%= if not @show_create_form do %>
-                        <!-- Show Create Form Button -->
-                        <div class="card-professional p-8 text-center">
-                          <div class="text-4xl mb-4">➕</div>
-                          <h2 class="text-heading-md font-semibold text-text mb-4">
-                            Create New Trade Offer
-                          </h2>
-                          <p class="text-body-md text-secondary mb-6">
-                            Create a buy or sell order for other users to discover and trade with you.
-                          </p>
-                          <button type="button" phx-click="show_create_form" class="btn-primary px-6 py-3">
-                            📝 Start Creating Offer
-                          </button>
-                        </div>
-                        <% else %>
-                          <!-- Create Offer Form -->
-                          <div class="card-professional p-8">
-                            <div class="flex items-center justify-between mb-6">
-                              <h2 class="text-heading-md font-semibold text-text">
-                                ➕ Create New Trade Offer
-                              </h2>
-                              <button type="button" phx-click="hide_create_form"
-                                class="text-secondary hover:text-text text-2xl">
-                                ✕
-                              </button>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        <% {"trade_history", true} -> %>
+          <div>
+            <%= if length(@trade_history)==0 do %>
+              <div class="text-center py-12">
+                <div class="text-6xl mb-4">📈</div>
+                <h3 class="text-heading-sm text-text mb-2">No Trade History</h3>
+                <p class="text-body-md text-secondary">
+                  You haven't completed any trades yet. Start trading to build your history!
+                </p>
+              </div>
+            <% else %>
+              <div class="space-y-4">
+                <%= for trade <- @trade_history do %>
+                  <div class="card-professional p-6">
+                    <div class="flex items-center justify-between mb-4">
+                      <div class="flex items-center gap-3">
+                        <%= if Map.has_key?(trade, :card) do %>
+                          <img
+                            src={trade.card.image_path}
+                            alt={trade.card.name}
+                            class="w-10 h-10 object-cover rounded-lg"
+                          />
+                          <div>
+                            <h4 class="text-body-md font-medium text-text">
+                              {trade.card.name}
+                            </h4>
+                            <div class="text-label-sm text-secondary">
+                              {trade.quantity} card(s) • {format_price(trade.price)} each
                             </div>
-
-                            <form phx-submit="create_offer" phx-change="update_form" class="space-y-6">
-                              <!-- Card Selection -->
-                              <div>
-                                <label class="block text-label-md font-medium text-text mb-2">
-                                  Select Card <span class="text-destructive">*</span>
-                                </label>
-                                <select name="card_id" value={@offer_form["card_id"]} required
-                                  class="input-professional w-full">
-                                  <option value="">Choose a card...</option>
-                                  <%= for card <- @available_cards do %>
-                                    <option value={card.id} selected={@offer_form["card_id"]==card.id}>
-                                      <%= card.name %> (<%= String.capitalize(card.rarity) %>)
-                                    </option>
-                                    <% end %>
-                                </select>
-                              </div>
-
-                              <!-- Offer Type -->
-                              <div>
-                                <label class="block text-label-md font-medium text-text mb-2">
-                                  Offer Type <span class="text-destructive">*</span>
-                                </label>
-                                <div class="grid grid-cols-3 gap-3">
-                                  <button type="button" phx-click="select_offer_type" phx-value-type="buy"
-                                    class={"w-full rounded-lg border-2 p-4 text-center transition-all duration-200 #{if @selected_offer_type == "buy", do: "border-success bg-success/10 shadow-md", else: "border-border hover:border-success hover:bg-card-hover"}"}>
-                                    <div class="text-2xl mb-2">🛒</div>
-                                    <div class="text-body-md font-medium text-text">Buy Order</div>
-                                    <div class="text-label-sm text-secondary">I want to buy</div>
-                                    <%= if @selected_offer_type == "buy" do %>
-                                      <div class="mt-2 text-success text-label-sm font-medium">✓ Selected</div>
-                                    <% end %>
-                                  </button>
-
-                                  <button type="button" phx-click="select_offer_type" phx-value-type="sell"
-                                    class={"w-full rounded-lg border-2 p-4 text-center transition-all duration-200 #{if @selected_offer_type == "sell", do: "border-destructive bg-destructive/10 shadow-md", else: "border-border hover:border-destructive hover:bg-card-hover"}"}>
-                                    <div class="text-2xl mb-2">💰</div>
-                                    <div class="text-body-md font-medium text-text">Sell Order</div>
-                                    <div class="text-label-sm text-secondary">I want to sell</div>
-                                    <%= if @selected_offer_type == "sell" do %>
-                                      <div class="mt-2 text-destructive text-label-sm font-medium">✓ Selected</div>
-                                    <% end %>
-                                  </button>
-
-                                  <button type="button" phx-click="select_offer_type" phx-value-type="exchange"
-                                    class={"w-full rounded-lg border-2 p-4 text-center transition-all duration-200 #{if @selected_offer_type == "exchange", do: "border-primary bg-primary/10 shadow-md", else: "border-border hover:border-primary hover:bg-card-hover"}"}>
-                                    <div class="text-2xl mb-2">🔄</div>
-                                    <div class="text-body-md font-medium text-text">Exchange</div>
-                                    <div class="text-label-sm text-secondary">Card for card</div>
-                                    <%= if @selected_offer_type == "exchange" do %>
-                                      <div class="mt-2 text-primary text-label-sm font-medium">✓ Selected</div>
-                                    <% end %>
-                                  </button>
-                                </div>
-                                <%= if @selected_offer_type do %>
-                                  <div class={"mt-3 p-3 rounded-lg #{if @selected_offer_type == "exchange", do: "bg-primary/5 border border-primary/20", else: "bg-success/5 border border-success/20"}"}>
-                                    <div class={"flex items-center gap-2 text-label-sm #{if @selected_offer_type == "exchange", do: "text-primary", else: "text-success"}"}>
-                                      <div class={"w-2 h-2 rounded-full #{if @selected_offer_type == "exchange", do: "bg-primary", else: "bg-success"}"}></div>
-                                      <%= if @selected_offer_type=="buy" do %>
-                                        You're creating a <strong>Buy Order</strong> - other users can sell their cards
-                                        to you
-                                        <% elsif @selected_offer_type == "sell" %>
-                                          You're creating a <strong>Sell Order</strong> - other users can buy cards from
-                                          you
-                                        <% else %>
-                                          You're creating an <strong>Exchange Offer</strong> - other users can trade cards
-                                          directly with you (no money involved)
-                                          <% end %>
-                                    </div>
-                                  </div>
-                                  <% end %>
-                              </div>
-
-                              <!-- Price and Quantity -->
-                              <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                  <label class="block text-label-md font-medium text-text mb-2">
-                                    Price per Card (sats) <span class="text-destructive">*</span>
-                                  </label>
-                                  <input type="number" name="price" value={@offer_form["price"]} step="1" min="1"
-                                    placeholder="100" required class="input-professional w-full">
-                                </div>
-
-                                <div>
-                                  <label class="block text-label-md font-medium text-text mb-2">
-                                    Quantity <span class="text-destructive">*</span>
-                                  </label>
-                                  <input type="number" name="quantity" value={@offer_form["quantity"]} min="1"
-                                    placeholder="1" required class="input-professional w-full">
-                                </div>
-                              </div>
-
-                              <!-- Terms Notice -->
-                              <div class="bg-muted/50 rounded-lg p-4">
-                                <h4 class="text-body-md font-medium text-text mb-2">📋 Trading Terms</h4>
-                                <ul class="text-label-md text-secondary space-y-1">
-                                  <%!-- <li>• Offers expire automatically after 24 hours</li> --%>
-                                  <li>• All trades are peer-to-peer via Nostr events</li>
-                                  <li>• No fees - direct trader-to-trader exchange</li>
-                                  <li>• Trades are recorded permanently on Nostr relays</li>
-                                </ul>
-                              </div>
-
-                              <!-- Submit Button -->
-                              <button type="submit" class="w-full btn-primary py-4 text-body-md font-medium">
-                                🚀 Create Trade Offer
-                              </button>
-                            </form>
                           </div>
-                          <% end %>
+                        <% end %>
+                      </div>
+                      <div class="text-right">
+                        <div class="text-heading-xs font-semibold text-text">
+                          {format_price(trade.total_value)}
+                        </div>
+                        <div class="text-label-sm text-secondary">
+                          {format_datetime(trade.completed_at)}
+                        </div>
+                      </div>
                     </div>
 
-                    <% {"exchanges", true} -> %>
+                    <div class="flex items-center justify-between text-label-sm text-secondary">
                       <div>
-                        <!-- Create Exchange Button -->
-                        <div class="mb-6">
-                          <button phx-click="show_exchange_form" class="btn-primary">
-                            ➕ Create New Exchange
-                          </button>
-                        </div>
+                        Seller:
+                        <span class="font-mono">
+                          {trade.seller_short}
+                        </span>
+                      </div>
+                      <div>
+                        ➡️
+                      </div>
+                      <div>
+                        Buyer:
+                        <span class="font-mono">
+                          {trade.buyer_short}
+                        </span>
+                      </div>
+                    </div>
 
-                        <!-- Exchange Form -->
-                        <%= if @show_exchange_form do %>
-                          <div class="card-professional p-6 mb-6">
-                            <div class="flex items-center justify-between mb-4">
-                              <h3 class="text-heading-md font-semibold text-text">
-                                🔄 Create Card Exchange
-                              </h3>
-                              <button type="button" phx-click="hide_exchange_form"
-                                class="text-secondary hover:text-text text-2xl">
-                                ✕
-                              </button>
-                            </div>
+                    <%= if @current_user && trade.seller_pubkey==@current_user.pubkey do %>
+                      <div class="mt-2 inline-flex items-center px-2 py-1 rounded-full bg-success/20 text-success text-label-xs">
+                        💰 Sold
+                      </div>
+                    <% else %>
+                      <div class="mt-2 inline-flex items-center px-2 py-1 rounded-full bg-primary/20 text-primary text-label-xs">
+                        🛒 Bought
+                      </div>
+                    <% end %>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        <% {"create_offer", true} -> %>
+          <div class="max-w-2xl mx-auto">
+            <%= if not @show_create_form do %>
+              <!-- Show Create Form Button -->
+              <div class="card-professional p-8 text-center">
+                <div class="text-4xl mb-4">➕</div>
+                <h2 class="text-heading-md font-semibold text-text mb-4">
+                  Create New Trade Offer
+                </h2>
+                <p class="text-body-md text-secondary mb-6">
+                  Create a buy or sell order for other users to discover and trade with you.
+                </p>
+                <button type="button" phx-click="show_create_form" class="btn-primary px-6 py-3">
+                  📝 Start Creating Offer
+                </button>
+              </div>
+            <% else %>
+              <!-- Create Offer Form -->
+              <div class="card-professional p-8">
+                <div class="flex items-center justify-between mb-6">
+                  <h2 class="text-heading-md font-semibold text-text">
+                    ➕ Create New Trade Offer
+                  </h2>
+                  <button
+                    type="button"
+                    phx-click="hide_create_form"
+                    class="text-secondary hover:text-text text-2xl"
+                  >
+                    ✕
+                  </button>
+                </div>
 
-                            <form phx-submit="create_exchange" phx-change="update_exchange_form" class="space-y-4">
-                              <!-- Card I'm Offering -->
-                              <div>
-                                <label class="block text-label-md font-medium text-text mb-2">
-                                  Card I'm Offering <span class="text-destructive">*</span>
-                                </label>
-                                <select name="offering_card_id" value={@exchange_form["offering_card_id"]} required
-                                  class="input-professional w-full">
-                                  <option value="">Choose a card to offer...</option>
-                                  <%= for card <- @portfolio_cards do %>
-                                    <option value={card.id} selected={@exchange_form["offering_card_id"]==card.id}>
-                                      <%= card.name %> (<%= String.capitalize(card.rarity) %>)
-                                    </option>
-                                  <% end %>
-                                </select>
-                              </div>
-
-                              <!-- Want Type Selection -->
-                              <div>
-                                <label class="block text-label-md font-medium text-text mb-2">
-                                  What I Want <span class="text-destructive">*</span>
-                                </label>
-                                <div class="space-y-3">
-                                  <!-- Open to any card option -->
-                                  <label class="flex items-center">
-                                    <input type="radio" name="wanted_type" value="open" 
-                                           checked={@exchange_form["wanted_type"] == "open"}
-                                           class="mr-2 text-primary">
-                                    <span class="text-body-md">🌟 Open to any card (maximum flexibility)</span>
-                                  </label>
-                                  <!-- Specific cards option -->
-                                  <label class="flex items-center">
-                                    <input type="radio" name="wanted_type" value="specific" 
-                                           checked={@exchange_form["wanted_type"] == "specific"}
-                                           class="mr-2 text-primary">
-                                    <span class="text-body-md">🎯 Specific cards I want</span>
-                                  </label>
-                                </div>
-                              </div>
-                              
-                              <!-- Specific Cards Selection (shown when specific type is selected) -->
-                              <%= if @exchange_form["wanted_type"] == "specific" do %>
-                              <div>
-                                <label class="block text-label-md font-medium text-text mb-2">
-                                  Cards I Want <span class="text-destructive">*</span>
-                                </label>
-                                <div class="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto border border-border rounded-lg p-2">
-                                  <%= for card <- @available_cards do %>
-                                    <label class="flex items-center p-2 hover:bg-muted rounded">
-                                      <input type="checkbox" name="wanted_card_ids[]" value={card.id}
-                                             checked={card.id in (@exchange_form["wanted_card_ids"] || [])}
-                                             class="mr-2 text-primary">
-                                      <span class="text-body-sm"><%= card.name %> (<%= String.capitalize(card.rarity) %>)</span>
-                                    </label>
-                                  <% end %>
-                                </div>
-                              </div>
-                              <% end %>
-
-                              <!-- Quantity -->
-                              <div>
-                                <label class="block text-label-md font-medium text-text mb-2">
-                                  Quantity <span class="text-destructive">*</span>
-                                </label>
-                                <input type="number" name="quantity" value={@exchange_form["quantity"]} min="1"
-                                  placeholder="1" required class="input-professional w-full">
-                              </div>
-
-                              <!-- Submit Button -->
-                              <button type="submit" class="w-full btn-primary py-3 text-body-md font-medium">
-                                🔄 Create Exchange Offer
-                              </button>
-                            </form>
+                <form phx-submit="create_offer" phx-change="update_form" class="space-y-6">
+                  <!-- Card Selection -->
+                  <div>
+                    <label class="block text-label-md font-medium text-text mb-2">
+                      Select Card <span class="text-destructive">*</span>
+                    </label>
+                    <select
+                      name="card_id"
+                      value={@offer_form["card_id"]}
+                      required
+                      class="input-professional w-full"
+                    >
+                      <option value="">Choose a card...</option>
+                      <%= for card <- @available_cards do %>
+                        <option value={card.id} selected={@offer_form["card_id"] == card.id}>
+                          {card.name} ({String.capitalize(card.rarity)})
+                        </option>
+                      <% end %>
+                    </select>
+                  </div>
+                  
+<!-- Offer Type -->
+                  <div>
+                    <label class="block text-label-md font-medium text-text mb-2">
+                      Offer Type <span class="text-destructive">*</span>
+                    </label>
+                    <div class="grid grid-cols-3 gap-3">
+                      <button
+                        type="button"
+                        phx-click="select_offer_type"
+                        phx-value-type="buy"
+                        class={"w-full rounded-lg border-2 p-4 text-center transition-all duration-200 #{if @selected_offer_type == "buy", do: "border-success bg-success/10 shadow-md", else: "border-border hover:border-success hover:bg-card-hover"}"}
+                      >
+                        <div class="text-2xl mb-2">🛒</div>
+                        <div class="text-body-md font-medium text-text">Buy Order</div>
+                        <div class="text-label-sm text-secondary">I want to buy</div>
+                        <%= if @selected_offer_type == "buy" do %>
+                          <div class="mt-2 text-success text-label-sm font-medium">
+                            ✓ Selected
                           </div>
                         <% end %>
+                      </button>
 
-                        <!-- Exchange Offers -->
-                        <%= if length(@exchange_offers) == 0 do %>
-                          <div class="text-center py-12">
-                            <div class="text-6xl mb-4">🔄</div>
-                            <h3 class="text-heading-sm text-text mb-2">No Exchange Offers</h3>
-                            <p class="text-body-md text-secondary">
-                              No card-for-card exchange offers available yet. Create one to start exchanging cards without money!
-                            </p>
+                      <button
+                        type="button"
+                        phx-click="select_offer_type"
+                        phx-value-type="sell"
+                        class={"w-full rounded-lg border-2 p-4 text-center transition-all duration-200 #{if @selected_offer_type == "sell", do: "border-destructive bg-destructive/10 shadow-md", else: "border-border hover:border-destructive hover:bg-card-hover"}"}
+                      >
+                        <div class="text-2xl mb-2">💰</div>
+                        <div class="text-body-md font-medium text-text">Sell Order</div>
+                        <div class="text-label-sm text-secondary">I want to sell</div>
+                        <%= if @selected_offer_type == "sell" do %>
+                          <div class="mt-2 text-destructive text-label-sm font-medium">
+                            ✓ Selected
                           </div>
-                        <% else %>
-                          <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                            <%= for exchange <- @exchange_offers do %>
-                              <div class="card-professional p-6">
-                                <!-- Clickable Card Details Area -->
-                                <.link navigate={"/trading/exchanges/#{exchange.offering_card.slug}"} 
-                                       class="block hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200 cursor-pointer rounded p-2 -m-2 mb-2">
-                                  <div class="flex items-center gap-2 mb-4">
-                                    <span class="text-label-sm text-secondary">Trader:</span>
-                                    <span class="text-label-sm font-mono text-text">
-                                      <%= exchange.user_short %>
-                                    </span>
-                                  </div>
+                        <% end %>
+                      </button>
 
-                                  <!-- Exchange Details -->
-                                  <div class="flex items-center gap-4 mb-4">
-                                  <!-- Offering Card -->
-                                  <div class="flex-1 text-center">
-                                    <div class="w-16 h-20 mx-auto mb-2 bg-gray-100 dark:bg-gray-700 rounded overflow-hidden">
-                                      <img src={exchange.offering_card.image_path} alt={exchange.offering_card.name}
-                                        class="w-full h-full object-cover" loading="lazy" />
-                                    </div>
-                                    <h4 class="text-label-sm font-medium text-text truncate">
-                                      <%= exchange.offering_card.name %>
-                                    </h4>
-                                    <div class="text-label-xs text-secondary">
-                                      Offering x<%= exchange.quantity %>
-                                    </div>
-                                  </div>
-
-                                  <!-- Exchange Symbol -->
-                                  <div class="text-2xl text-primary">
-                                    🔄
-                                  </div>
-
-                                  <!-- Wanted Card(s) -->
-                                  <div class="flex-1 text-center">
-                                    <%= if exchange.wanted_type == "open" do %>
-                                      <!-- Open to any card -->
-                                      <div class="w-16 h-20 mx-auto mb-2 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 rounded overflow-hidden flex items-center justify-center">
-                                        <span class="text-2xl">🌟</span>
-                                      </div>
-                                      <h4 class="text-label-sm font-medium text-text">
-                                        Any Card
-                                      </h4>
-                                      <div class="text-label-xs text-secondary">
-                                        Open to offers
-                                      </div>
-                                    <% else %>
-                                      <!-- Specific cards -->
-                                      <%= if length(exchange.wanted_cards) == 1 do %>
-                                        <!-- Single card -->
-                                        <% card = hd(exchange.wanted_cards) %>
-                                        <div class="w-16 h-20 mx-auto mb-2 bg-gray-100 dark:bg-gray-700 rounded overflow-hidden">
-                                          <img src={card.image_path} alt={card.name}
-                                            class="w-full h-full object-cover" loading="lazy" />
-                                        </div>
-                                        <h4 class="text-label-sm font-medium text-text truncate">
-                                          <%= card.name %>
-                                        </h4>
-                                        <div class="text-label-xs text-secondary">
-                                          Wants this card
-                                        </div>
-                                      <% else %>
-                                        <!-- Multiple cards -->
-                                        <div class="w-16 h-20 mx-auto mb-2 bg-gradient-to-br from-green-100 to-blue-100 dark:from-green-900/30 dark:to-blue-900/30 rounded overflow-hidden flex items-center justify-center">
-                                          <span class="text-xl">🎯</span>
-                                        </div>
-                                        <h4 class="text-label-sm font-medium text-text">
-                                          <%= length(exchange.wanted_cards) %> Options
-                                        </h4>
-                                        <div class="text-label-xs text-secondary">
-                                          Multiple choices
-                                        </div>
-                                      <% end %>
-                                    <% end %>
-                                  </div>
-                                </div>
-                                </.link>
-
-                                <!-- Action -->
-                                <%= if @authenticated and @current_user && exchange.user_pubkey == @current_user.pubkey do %>
-                                  <button phx-click="cancel_offer" phx-value-offer_id={exchange.id}
-                                    class="w-full py-2 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg text-label-md transition-colors"
-                                    data-confirm="Are you sure you want to cancel this exchange?">
-                                    🗑️ Cancel
-                                  </button>
-                                <% else %>
-                                  <%= if @authenticated do %>
-                                    <button phx-click="accept_offer" phx-value-offer_id={exchange.id}
-                                      class="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-label-md transition-colors">
-                                      🤝 Accept Exchange
-                                    </button>
-                                  <% else %>
-                                    <div class="w-full py-2 px-4 bg-gray-300 dark:bg-gray-600 rounded-lg text-center text-gray-500 dark:text-gray-400 text-label-md cursor-not-allowed opacity-60">
-                                      🤝 Accept Exchange
-                                    </div>
-                                  <% end %>
-                                <% end %>
-                              </div>
-                            <% end %>
+                      <button
+                        type="button"
+                        phx-click="select_offer_type"
+                        phx-value-type="exchange"
+                        class={"w-full rounded-lg border-2 p-4 text-center transition-all duration-200 #{if @selected_offer_type == "exchange", do: "border-primary bg-primary/10 shadow-md", else: "border-border hover:border-primary hover:bg-card-hover"}"}
+                      >
+                        <div class="text-2xl mb-2">🔄</div>
+                        <div class="text-body-md font-medium text-text">Exchange</div>
+                        <div class="text-label-sm text-secondary">Card for card</div>
+                        <%= if @selected_offer_type == "exchange" do %>
+                          <div class="mt-2 text-primary text-label-sm font-medium">
+                            ✓ Selected
                           </div>
+                        <% end %>
+                      </button>
+                    </div>
+                    <%= if @selected_offer_type do %>
+                      <div class={"mt-3 p-3 rounded-lg #{if @selected_offer_type == "exchange", do: "bg-primary/5 border border-primary/20", else: "bg-success/5 border border-success/20"}"}>
+                        <div class={"flex items-center gap-2 text-label-sm #{if @selected_offer_type == "exchange", do: "text-primary", else: "text-success"}"}>
+                          <div class={"w-2 h-2 rounded-full #{if @selected_offer_type == "exchange", do: "bg-primary", else: "bg-success"}"}>
+                          </div>
+                          <%= if @selected_offer_type=="buy" do %>
+                            You're creating a <strong>Buy Order</strong>
+                            - other users can sell their cards
+                            to you <% elsif(@selected_offer_type == "sell") %> You're creating a
+                            <strong>Sell Order</strong>
+                            - other users can buy cards from
+                            you
+                          <% else %>
+                            You're creating an <strong>Exchange Offer</strong>
+                            - other users can trade cards
+                            directly with you (no money involved)
+                          <% end %>
+                        </div>
+                      </div>
+                    <% end %>
+                  </div>
+                  
+<!-- Price and Quantity -->
+                  <div class="grid grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-label-md font-medium text-text mb-2">
+                        Price per Card (sats) <span class="text-destructive">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        name="price"
+                        value={@offer_form["price"]}
+                        step="1"
+                        min="1"
+                        placeholder="100"
+                        required
+                        class="input-professional w-full"
+                      />
+                    </div>
+
+                    <div>
+                      <label class="block text-label-md font-medium text-text mb-2">
+                        Quantity <span class="text-destructive">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        name="quantity"
+                        value={@offer_form["quantity"]}
+                        min="1"
+                        placeholder="1"
+                        required
+                        class="input-professional w-full"
+                      />
+                    </div>
+                  </div>
+                  
+<!-- Terms Notice -->
+                  <div class="bg-muted/50 rounded-lg p-4">
+                    <h4 class="text-body-md font-medium text-text mb-2">📋 Trading Terms</h4>
+                    <ul class="text-label-md text-secondary space-y-1">
+                      <%!-- <li>• Offers expire automatically after 24 hours</li> --%>
+                      <li>• All trades are peer-to-peer via Nostr events</li>
+                      <li>• No fees - direct trader-to-trader exchange</li>
+                      <li>• Trades are recorded permanently on Nostr relays</li>
+                    </ul>
+                  </div>
+                  
+<!-- Submit Button -->
+                  <button type="submit" class="w-full btn-primary py-4 text-body-md font-medium">
+                    🚀 Create Trade Offer
+                  </button>
+                </form>
+              </div>
+            <% end %>
+          </div>
+        <% {"exchanges", true} -> %>
+          <div>
+            <!-- Create Exchange Button -->
+            <div class="mb-6">
+              <button phx-click="show_exchange_form" class="btn-primary">
+                ➕ Create New Exchange
+              </button>
+            </div>
+            
+<!-- Exchange Form -->
+            <%= if @show_exchange_form do %>
+              <div class="card-professional p-6 mb-6">
+                <div class="flex items-center justify-between mb-4">
+                  <h3 class="text-heading-md font-semibold text-text">
+                    🔄 Create Card Exchange
+                  </h3>
+                  <button
+                    type="button"
+                    phx-click="hide_exchange_form"
+                    class="text-secondary hover:text-text text-2xl"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <form
+                  phx-submit="create_exchange"
+                  phx-change="update_exchange_form"
+                  class="space-y-4"
+                >
+                  <!-- Card I'm Offering -->
+                  <div>
+                    <label class="block text-label-md font-medium text-text mb-2">
+                      Card I'm Offering <span class="text-destructive">*</span>
+                    </label>
+                    <select
+                      name="offering_card_id"
+                      value={@exchange_form["offering_card_id"]}
+                      required
+                      class="input-professional w-full"
+                    >
+                      <option value="">Choose a card to offer...</option>
+                      <%= for card <- @portfolio_cards do %>
+                        <option
+                          value={card.id}
+                          selected={@exchange_form["offering_card_id"] == card.id}
+                        >
+                          {card.name} ({String.capitalize(card.rarity)})
+                        </option>
+                      <% end %>
+                    </select>
+                  </div>
+                  
+<!-- Want Type Selection -->
+                  <div>
+                    <label class="block text-label-md font-medium text-text mb-2">
+                      What I Want <span class="text-destructive">*</span>
+                    </label>
+                    <div class="space-y-3">
+                      <!-- Open to any card option -->
+                      <label class="flex items-center">
+                        <input
+                          type="radio"
+                          name="wanted_type"
+                          value="open"
+                          checked={@exchange_form["wanted_type"] == "open"}
+                          class="mr-2 text-primary"
+                        />
+                        <span class="text-body-md">🌟 Open to any card (maximum flexibility)</span>
+                      </label>
+                      <!-- Specific cards option -->
+                      <label class="flex items-center">
+                        <input
+                          type="radio"
+                          name="wanted_type"
+                          value="specific"
+                          checked={@exchange_form["wanted_type"] == "specific"}
+                          class="mr-2 text-primary"
+                        />
+                        <span class="text-body-md">🎯 Specific cards I want</span>
+                      </label>
+                    </div>
+                  </div>
+                  
+<!-- Specific Cards Selection (shown when specific type is selected) -->
+                  <%= if @exchange_form["wanted_type"] == "specific" do %>
+                    <div>
+                      <label class="block text-label-md font-medium text-text mb-2">
+                        Cards I Want <span class="text-destructive">*</span>
+                      </label>
+                      <div class="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto border border-border rounded-lg p-2">
+                        <%= for card <- @available_cards do %>
+                          <label class="flex items-center p-2 hover:bg-muted rounded">
+                            <input
+                              type="checkbox"
+                              name="wanted_card_ids[]"
+                              value={card.id}
+                              checked={card.id in (@exchange_form["wanted_card_ids"] || [])}
+                              class="mr-2 text-primary"
+                            />
+                            <span class="text-body-sm">
+                              {card.name} ({String.capitalize(card.rarity)})
+                            </span>
+                          </label>
                         <% end %>
                       </div>
-
-                    <% end %>
+                    </div>
+                  <% end %>
+                  
+<!-- Quantity -->
+                  <div>
+                    <label class="block text-label-md font-medium text-text mb-2">
+                      Quantity <span class="text-destructive">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      name="quantity"
+                      value={@exchange_form["quantity"]}
+                      min="1"
+                      placeholder="1"
+                      required
+                      class="input-professional w-full"
+                    />
+                  </div>
+                  
+<!-- Submit Button -->
+                  <button type="submit" class="w-full btn-primary py-3 text-body-md font-medium">
+                    🔄 Create Exchange Offer
+                  </button>
+                </form>
+              </div>
+            <% end %>
+            
+<!-- Exchange Offers -->
+            <%= if length(@exchange_offers) == 0 do %>
+              <div class="text-center py-12">
+                <div class="text-6xl mb-4">🔄</div>
+                <h3 class="text-heading-sm text-text mb-2">No Exchange Offers</h3>
+                <p class="text-body-md text-secondary">
+                  No card-for-card exchange offers available yet. Create one to start exchanging cards without money!
+                </p>
+              </div>
+            <% else %>
+              <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                <%= for exchange <- @exchange_offers do %>
+                  <div class="card-professional p-6">
+                    <!-- Clickable Card Details Area -->
+                    <.link
+                      navigate={"/trading/exchanges/#{exchange.offering_card.slug}"}
+                      class="block hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200 cursor-pointer rounded p-2 -m-2 mb-2"
+                    >
+                      <div class="flex items-center gap-2 mb-4">
+                        <span class="text-label-sm text-secondary">Trader:</span>
+                        <span class="text-label-sm font-mono text-text">
+                          {exchange.user_short}
+                        </span>
+                      </div>
+                      
+<!-- Exchange Details -->
+                      <div class="flex items-center gap-4 mb-4">
+                        <!-- Offering Card -->
+                        <div class="flex-1 text-center">
+                          <div class="w-16 h-20 mx-auto mb-2 bg-gray-100 dark:bg-gray-700 rounded overflow-hidden">
+                            <img
+                              src={exchange.offering_card.image_path}
+                              alt={exchange.offering_card.name}
+                              class="w-full h-full object-cover"
+                              loading="lazy"
+                            />
+                          </div>
+                          <h4 class="text-label-sm font-medium text-text truncate">
+                            {exchange.offering_card.name}
+                          </h4>
+                          <div class="text-label-xs text-secondary">
+                            Offering x{exchange.quantity}
+                          </div>
+                        </div>
+                        
+<!-- Exchange Symbol -->
+                        <div class="text-2xl text-primary">
+                          🔄
+                        </div>
+                        
+<!-- Wanted Card(s) -->
+                        <div class="flex-1 text-center">
+                          <%= if exchange.wanted_type == "open" do %>
+                            <!-- Open to any card -->
+                            <div class="w-16 h-20 mx-auto mb-2 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 rounded overflow-hidden flex items-center justify-center">
+                              <span class="text-2xl">🌟</span>
+                            </div>
+                            <h4 class="text-label-sm font-medium text-text">
+                              Any Card
+                            </h4>
+                            <div class="text-label-xs text-secondary">
+                              Open to offers
+                            </div>
+                          <% else %>
+                            <!-- Specific cards -->
+                            <%= if length(exchange.wanted_cards) == 1 do %>
+                              <!-- Single card -->
+                              <% card = hd(exchange.wanted_cards) %>
+                              <div class="w-16 h-20 mx-auto mb-2 bg-gray-100 dark:bg-gray-700 rounded overflow-hidden">
+                                <img
+                                  src={card.image_path}
+                                  alt={card.name}
+                                  class="w-full h-full object-cover"
+                                  loading="lazy"
+                                />
+                              </div>
+                              <h4 class="text-label-sm font-medium text-text truncate">
+                                {card.name}
+                              </h4>
+                              <div class="text-label-xs text-secondary">
+                                Wants this card
+                              </div>
+                            <% else %>
+                              <!-- Multiple cards -->
+                              <div class="w-16 h-20 mx-auto mb-2 bg-gradient-to-br from-green-100 to-blue-100 dark:from-green-900/30 dark:to-blue-900/30 rounded overflow-hidden flex items-center justify-center">
+                                <span class="text-xl">🎯</span>
+                              </div>
+                              <h4 class="text-label-sm font-medium text-text">
+                                {length(exchange.wanted_cards)} Options
+                              </h4>
+                              <div class="text-label-xs text-secondary">
+                                Multiple choices
+                              </div>
+                            <% end %>
+                          <% end %>
+                        </div>
+                      </div>
+                    </.link>
+                    
+<!-- Action -->
+                    <%= if @authenticated and @current_user && exchange.user_pubkey == @current_user.pubkey do %>
+                      <button
+                        phx-click="cancel_offer"
+                        phx-value-offer_id={exchange.id}
+                        class="w-full py-2 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg text-label-md transition-colors"
+                        data-confirm="Are you sure you want to cancel this exchange?"
+                      >
+                        🗑️ Cancel
+                      </button>
+                    <% else %>
+                      <%= if @authenticated do %>
+                        <button
+                          phx-click="accept_offer"
+                          phx-value-offer_id={exchange.id}
+                          class="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-label-md transition-colors"
+                        >
+                          🤝 Accept Exchange
+                        </button>
+                      <% else %>
+                        <div class="w-full py-2 px-4 bg-gray-300 dark:bg-gray-600 rounded-lg text-center text-gray-500 dark:text-gray-400 text-label-md cursor-not-allowed opacity-60">
+                          🤝 Accept Exchange
+                        </div>
                       <% end %>
-    </div>
-
-    <!-- Authentication Notice for Non-authenticated Users -->
-    <%= if not @authenticated do %>
-      <div class="mt-8 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-6">
-        <div class="flex items-center">
-          <div class="text-blue-600 dark:text-blue-400 mr-4">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
+                    <% end %>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
           </div>
-          <div class="flex-1">
-            <h3 class="text-body-md font-medium text-blue-900 dark:text-blue-100">
-              Connect with Nostr to start trading
-            </h3>
-            <p class="text-body-sm text-blue-700 dark:text-blue-300 mt-1">
-              You can browse active offers, but need Nostr authentication to create offers and execute trades.
-            </p>
-          </div>
-          <div>
-            <.link navigate="/auth" class="btn-primary ml-4">
-              🔑 Connect with Nostr
-            </.link>
-          </div>
+      <% end %>
+    <% end %>
+  </div>
+  
+<!-- Authentication Notice for Non-authenticated Users -->
+  <%= if not @authenticated do %>
+    <div class="mt-8 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-6">
+      <div class="flex items-center">
+        <div class="text-blue-600 dark:text-blue-400 mr-4">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            >
+            </path>
+          </svg>
+        </div>
+        <div class="flex-1">
+          <h3 class="text-body-md font-medium text-blue-900 dark:text-blue-100">
+            Connect with Nostr to start trading
+          </h3>
+          <p class="text-body-sm text-blue-700 dark:text-blue-300 mt-1">
+            You can browse active offers, but need Nostr authentication to create offers and execute trades.
+          </p>
+        </div>
+        <div>
+          <.link navigate="/auth" class="btn-primary ml-4">
+            🔑 Connect with Nostr
+          </.link>
         </div>
       </div>
-    <% end %>
+    </div>
+  <% end %>
 </div>

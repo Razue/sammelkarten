@@ -1,343 +1,433 @@
 <div class="min-h-screen bg-enhanced" id="dashboard-container" phx-hook="KeyboardShortcuts">
   <!-- Exchange Ticker -->
   <%= if Map.get(@user_preferences, :show_ticker, true) do %>
-    <.live_component module={SammelkartenWeb.Components.ExchangeTicker} id="exchange-ticker" cards={@cards} />
-    <% end %>
-
-      <!-- Header Section -->
-      <div class="card-professional border-b-0 rounded-none shadow-sm animate-slide-in-top">
-        <div class="max-w-7xl mx-auto px-4 py-8">
-          <div class="sm:flex sm:items-center sm:justify-between">
+    <.live_component
+      module={SammelkartenWeb.Components.ExchangeTicker}
+      id="exchange-ticker"
+      cards={@cards}
+    />
+  <% end %>
+  
+<!-- Header Section -->
+  <div class="card-professional border-b-0 rounded-none shadow-sm animate-slide-in-top">
+    <div class="max-w-7xl mx-auto px-4 py-8">
+      <div class="sm:flex sm:items-center sm:justify-between">
+        <div>
+          <h1 class="text-display-sm text-gray-900 dark:text-white animate-fade-in-up">
+            Cards
+          </h1>
+          <p class="mt-3 text-body-lg text-gray-600 dark:text-gray-400 animate-fade-in">
+            Peer-to-peer card trading - see who's offering and searching for cards
+          </p>
+        </div>
+        <div class="mt-4 sm:mt-0">
+          <div class="flex items-center space-x-4">
+            <span class="text-label-md text-gray-500 dark:text-gray-400">
+              {length(@cards)} cards
+            </span>
+            <!-- Connection Status Indicator -->
+            <div class="flex items-center space-x-2">
+              <%= case @connection_status do %>
+                <% "connected" -> %>
+                  <div
+                    class="h-2 w-2 bg-green-400 rounded-full animate-pulse"
+                    title="Connected - Live updates active"
+                  >
+                  </div>
+                  <span class="text-xs text-green-600 font-medium">Live</span>
+                <% "connecting" -> %>
+                  <div
+                    class="h-2 w-2 bg-yellow-400 rounded-full animate-pulse"
+                    title="Connecting to live updates"
+                  >
+                  </div>
+                  <span class="text-xs text-yellow-600 font-medium">Connecting</span>
+                <% "reconnecting" -> %>
+                  <div
+                    class="h-2 w-2 bg-orange-400 rounded-full animate-pulse"
+                    title="Reconnecting to live updates"
+                  >
+                  </div>
+                  <span class="text-xs text-orange-600 font-medium">Reconnecting</span>
+                <% "failed" -> %>
+                  <div
+                    class="h-2 w-2 bg-red-400 rounded-full"
+                    title="Connection failed - Updates may be delayed"
+                  >
+                  </div>
+                  <span class="text-xs text-red-600 font-medium">Offline</span>
+                <% "disconnected" -> %>
+                  <div
+                    class="h-2 w-2 bg-gray-400 rounded-full"
+                    title="Disconnected - No live updates"
+                  >
+                  </div>
+                  <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">
+                    Offline
+                  </span>
+                <% _ -> %>
+                  <div class="h-2 w-2 bg-gray-400 rounded-full" title="Unknown connection status">
+                  </div>
+                  <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">
+                    Unknown
+                  </span>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+<!-- Search and Filter Section -->
+  <div class="max-w-7xl mx-auto px-4 py-6">
+    <div class="card-professional p-6 mb-8 animate-fade-in">
+      <form phx-change="search" phx-submit="search">
+        <div class="flex flex-col sm:flex-row gap-4">
+          <div class="flex-1">
+            <label
+              for="search_term"
+              class="block text-label-lg text-gray-700 dark:text-gray-300 mb-3"
+            >
+              Search Cards
+            </label>
+            <input
+              type="text"
+              name="search[term]"
+              id="search_term"
+              value={@search_term}
+              placeholder="Search by name or rarity..."
+              phx-hook="SearchAnimation"
+              class="input-professional search-focus"
+            />
+          </div>
+          <div class="flex flex-col sm:flex-row gap-2 sm:items-end">
             <div>
-              <h1 class="text-display-sm text-gray-900 dark:text-white animate-fade-in-up">
-                Cards
-              </h1>
-              <p class="mt-3 text-body-lg text-gray-600 dark:text-gray-400 animate-fade-in">
-                Peer-to-peer card trading - see who's offering and searching for cards
-              </p>
-            </div>
-            <div class="mt-4 sm:mt-0">
-              <div class="flex items-center space-x-4">
-                <span class="text-label-md text-gray-500 dark:text-gray-400">
-                  {length(@cards)} cards
-                </span>
-                <!-- Connection Status Indicator -->
-                <div class="flex items-center space-x-2">
-                  <%= case @connection_status do %>
-                    <% "connected" -> %>
-                      <div class="h-2 w-2 bg-green-400 rounded-full animate-pulse"
-                        title="Connected - Live updates active">
-                      </div>
-                      <span class="text-xs text-green-600 font-medium">Live</span>
-                      <% "connecting" -> %>
-                        <div class="h-2 w-2 bg-yellow-400 rounded-full animate-pulse"
-                          title="Connecting to live updates">
-                        </div>
-                        <span class="text-xs text-yellow-600 font-medium">Connecting</span>
-                        <% "reconnecting" -> %>
-                          <div class="h-2 w-2 bg-orange-400 rounded-full animate-pulse"
-                            title="Reconnecting to live updates">
-                          </div>
-                          <span class="text-xs text-orange-600 font-medium">Reconnecting</span>
-                          <% "failed" -> %>
-                            <div class="h-2 w-2 bg-red-400 rounded-full"
-                              title="Connection failed - Updates may be delayed">
-                            </div>
-                            <span class="text-xs text-red-600 font-medium">Offline</span>
-                            <% "disconnected" -> %>
-                              <div class="h-2 w-2 bg-gray-400 rounded-full" title="Disconnected - No live updates">
-                              </div>
-                              <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">
-                                Offline
-                              </span>
-                              <% _ -> %>
-                                <div class="h-2 w-2 bg-gray-400 rounded-full" title="Unknown connection status">
-                                </div>
-                                <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">
-                                  Unknown
-                                </span>
-                                <% end %>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Search and Filter Section -->
-      <div class="max-w-7xl mx-auto px-4 py-6">
-        <div class="card-professional p-6 mb-8 animate-fade-in">
-          <form phx-change="search" phx-submit="search">
-            <div class="flex flex-col sm:flex-row gap-4">
-              <div class="flex-1">
-                <label for="search_term" class="block text-label-lg text-gray-700 dark:text-gray-300 mb-3">
-                  Search Cards
-                </label>
-                <input type="text" name="search[term]" id="search_term" value={@search_term}
-                  placeholder="Search by name or rarity..." phx-hook="SearchAnimation"
-                  class="input-professional search-focus" />
-              </div>
-              <div class="flex flex-col sm:flex-row gap-2 sm:items-end">
-                <div>
-                  <label class="block text-label-lg text-gray-700 dark:text-gray-300 mb-3">
-                    Sort by
-                  </label>
-                  <div class="flex space-x-2">
-                    <button type="button" phx-click="sort" phx-value-sort_by="name" class={[ "sort-button" ,
-                      if(@sort_by=="name" , do: "btn-primary" , else: "btn-secondary" ) ]}>
-                      Name
-                      <%= if @sort_by=="name" do %>
-                        <span class="ml-1">
-                          {if @sort_direction == "asc", do: "↑", else: "↓"}
-                        </span>
-                        <% end %>
-                    </button>
-                    <button type="button" phx-click="sort" phx-value-sort_by="offer" class={[ "sort-button" ,
-                      if(@sort_by=="offer" , do: "btn-primary" , else: "btn-secondary" ) ]}>
-                      Offer
-                      <%= if @sort_by=="offer" do %>
-                        <span class="ml-1">
-                          {if @sort_direction == "asc", do: "↑", else: "↓"}
-                        </span>
-                        <% end %>
-                    </button>
-                    <button type="button" phx-click="sort" phx-value-sort_by="search" class={[ "sort-button" ,
-                      if(@sort_by=="search" , do: "btn-primary" , else: "btn-secondary" ) ]}>
-                      Search
-                      <%= if @sort_by=="search" do %>
-                        <span class="ml-1">
-                          {if @sort_direction == "asc", do: "↑", else: "↓"}
-                        </span>
-                        <% end %>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </form>
-        </div>
-
-        <!-- Error State -->
-        <%= if @error do %>
-          <div class="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-lg p-6 text-center">
-            <div class="mx-auto h-12 w-12 text-red-400 mb-4">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 48 48">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <h3 class="text-lg font-medium text-red-900 dark:text-red-100 mb-2">
-              Failed to Load Cards
-            </h3>
-            <p class="text-red-600 dark:text-red-300 mb-4">{@error}</p>
-            <button phx-click="retry"
-              class="btn-transition inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Retry
-            </button>
-          </div>
-          <% else %>
-            <!-- Loading State -->
-            <%= if @loading do %>
-              <div
-                class="loading-skeleton-container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                <%= for _ <- 1..8 do %>
-                  <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border overflow-hidden animate-pulse">
-                    <div class="h-48 loading-skeleton"></div>
-                    <div class="p-4">
-                      <div class="flex items-start justify-between mb-3">
-                        <div class="h-6 loading-skeleton rounded w-3/4"></div>
-                        <div class="h-6 loading-skeleton rounded w-16"></div>
-                      </div>
-                      <div class="space-y-2">
-                        <div class="flex items-center justify-between">
-                          <div class="h-8 loading-skeleton rounded w-20"></div>
-                          <div class="h-5 loading-skeleton rounded w-16"></div>
-                        </div>
-                        <div class="h-4 loading-skeleton rounded w-full"></div>
-                        <div class="h-4 loading-skeleton rounded w-2/3"></div>
-                      </div>
-                      <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                        <div class="h-10 loading-skeleton rounded w-full"></div>
-                      </div>
-                    </div>
-                  </div>
+              <label class="block text-label-lg text-gray-700 dark:text-gray-300 mb-3">
+                Sort by
+              </label>
+              <div class="flex space-x-2">
+                <button
+                  type="button"
+                  phx-click="sort"
+                  phx-value-sort_by="name"
+                  class={[
+                    "sort-button",
+                    if(@sort_by == "name", do: "btn-primary", else: "btn-secondary")
+                  ]}
+                >
+                  Name
+                  <%= if @sort_by=="name" do %>
+                    <span class="ml-1">
+                      {if @sort_direction == "asc", do: "↑", else: "↓"}
+                    </span>
                   <% end %>
-              </div>
-              <% else %>
-                <!-- Cards Grid -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  <%= for card <- @cards do %>
-                    <.link navigate={"/trading/exchanges/#{card.slug}"}
-                      class="card-grid-item card-professional card-hover block overflow-hidden cursor-pointer">
-                      <!-- Card Image -->
-                      <div class="aspect-w-3 aspect-h-4 bg-gray-100 dark:bg-gray-700 overflow-hidden">
-                        <img src={card.image_path} alt={card.name}
-                          class="card-image-hover w-full h-48 object-cover object-top" loading="lazy" />
-                      </div>
-
-                      <!-- Card Content -->
-                      <div class="p-4">
-                        <!-- Card Name and Rarity -->
-                        <div class="flex items-start justify-between mb-4">
-                          <h3 class="text-heading-md text-gray-900 dark:text-white truncate flex-1">
-                            {card.name}
-                          </h3>
-                          <span class={[ "ml-2 px-2.5 py-1 text-label-sm rounded-full shrink-0" ,
-                            rarity_color(card.rarity) ]}>
-                            {card.rarity}
-                          </span>
-                        </div>
-
-                        <!-- Exchange Information -->
-                        <div class="space-y-3">
-                          <!-- Offer and Search Quantities -->
-                          <div class="flex items-center justify-between">
-                            <div class="flex items-center space-x-2">
-                              <!-- Offer Icon -->
-                              <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M17 8l4 4m0 0l-4 4m4-4H3">
-                                </path>
-                              </svg>
-                              <span class="text-heading-lg text-green-600 dark:text-green-400">
-                                {format_offer_quantity(card)}
-                              </span>
-                              <span class="text-label-sm text-green-500 dark:text-green-400">
-                                offering
-                              </span>
-                            </div>
-                            <div class="flex items-center space-x-2">
-                              <!-- Search Icon -->
-                              <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z">
-                                </path>
-                              </svg>
-                              <span class="text-heading-lg text-blue-600 dark:text-blue-400">
-                                {format_search_quantity(card)}
-                              </span>
-                              <span class="text-label-sm text-blue-500 dark:text-blue-400">
-                                searching
-                              </span>
-                            </div>
-                          </div>
-
-                          <!-- Description Preview -->
-                          <p class="text-body-md text-gray-600 dark:text-gray-400 line-clamp-2">
-                            {card.description}
-                          </p>
-                        </div>
-                      </div>
-                    </.link>
-                    <% end %>
-                </div>
-
-                <!-- Empty State -->
-                <%= if length(@cards)==0 and not @loading and not @error do %>
-                  <div class="empty-state text-center py-12">
-                    <div class="mx-auto h-12 w-12 text-gray-400">
-                      <svg fill="none" stroke="currentColor" viewBox="0 0 48 48">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M34 40h10v-4a6 6 0 00-10.712-3.714M34 40H14m20 0v-4a9.971 9.971 0 00-.712-3.714M14 40H4v-4a6 6 0 0110.712-3.714M14 40v-4a9.971 9.971 0 01.712-3.714M28 16a4 4 0 11-8 0 4 4 0 018 0zM24 8a4 4 0 11-8 0 4 4 0 018 0zM16 28a4 4 0 11-8 0 4 4 0 018 0z" />
-                      </svg>
-                    </div>
-                    <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No cards found</h3>
-                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                      <%= if @search_term !="" do %>
-                        Try adjusting your search term.
-                        <% else %>
-                          Get started by adding some cards to your collection.
-                          <% end %>
-                    </p>
-                  </div>
+                </button>
+                <button
+                  type="button"
+                  phx-click="sort"
+                  phx-value-sort_by="offer"
+                  class={[
+                    "sort-button",
+                    if(@sort_by == "offer", do: "btn-primary", else: "btn-secondary")
+                  ]}
+                >
+                  Offer
+                  <%= if @sort_by=="offer" do %>
+                    <span class="ml-1">
+                      {if @sort_direction == "asc", do: "↑", else: "↓"}
+                    </span>
                   <% end %>
-                    <% end %>
-                      <% end %>
-      </div>
-
-      <!-- Help Modal -->
-      <%= if Map.get(assigns, :show_help, false) do %>
-        <div class="modal-backdrop fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
-          phx-click="show_help">
-          <div
-            class="modal-content relative top-20 mx-auto p-5 border border-gray-200 dark:border-gray-700 w-96 shadow-lg rounded-md bg-white dark:bg-gray-800"
-            phx-click-away="show_help">
-            <div class="mt-3 text-center">
-              <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900">
-                <svg class="h-6 w-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor"
-                  viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white mt-4">
-                Keyboard Shortcuts
-              </h3>
-              <div class="mt-4 text-left">
-                <div class="space-y-3">
-                  <div class="flex justify-between">
-                    <kbd
-                      class="px-2 py-1 text-xs font-semibold text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded">
-                      S
-                    </kbd>
-                    <span class="text-sm text-gray-600 dark:text-gray-400">Focus search</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <kbd
-                      class="px-2 py-1 text-xs font-semibold text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded">
-                      R
-                    </kbd>
-                    <span class="text-sm text-gray-600 dark:text-gray-400">Refresh data</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <kbd
-                      class="px-2 py-1 text-xs font-semibold text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded">
-                      1
-                    </kbd>
-                    <span class="text-sm text-gray-600 dark:text-gray-400">Sort by name</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <kbd
-                      class="px-2 py-1 text-xs font-semibold text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded">
-                      2
-                    </kbd>
-                    <span class="text-sm text-gray-600 dark:text-gray-400">Sort by offer</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <kbd
-                      class="px-2 py-1 text-xs font-semibold text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded">
-                      3
-                    </kbd>
-                    <span class="text-sm text-gray-600 dark:text-gray-400">Sort by search</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <kbd
-                      class="px-2 py-1 text-xs font-semibold text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded">
-                      Esc
-                    </kbd>
-                    <span class="text-sm text-gray-600 dark:text-gray-400">Clear search</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <kbd
-                      class="px-2 py-1 text-xs font-semibold text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded">
-                      H
-                    </kbd>
-                    <span class="text-sm text-gray-600 dark:text-gray-400">Show this help</span>
-                  </div>
-                </div>
-              </div>
-              <div class="items-center px-4 py-3 mt-4">
-                <button phx-click="show_help"
-                  class="btn-transition px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300">
-                  Close
+                </button>
+                <button
+                  type="button"
+                  phx-click="sort"
+                  phx-value-sort_by="search"
+                  class={[
+                    "sort-button",
+                    if(@sort_by == "search", do: "btn-primary", else: "btn-secondary")
+                  ]}
+                >
+                  Search
+                  <%= if @sort_by=="search" do %>
+                    <span class="ml-1">
+                      {if @sort_direction == "asc", do: "↑", else: "↓"}
+                    </span>
+                  <% end %>
                 </button>
               </div>
             </div>
           </div>
         </div>
+      </form>
+    </div>
+    
+<!-- Error State -->
+    <%= if @error do %>
+      <div class="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-lg p-6 text-center">
+        <div class="mx-auto h-12 w-12 text-red-400 mb-4">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 48 48">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+        </div>
+        <h3 class="text-lg font-medium text-red-900 dark:text-red-100 mb-2">
+          Failed to Load Cards
+        </h3>
+        <p class="text-red-600 dark:text-red-300 mb-4">{@error}</p>
+        <button
+          phx-click="retry"
+          class="btn-transition inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+        >
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+            />
+          </svg>
+          Retry
+        </button>
+      </div>
+    <% else %>
+      <!-- Loading State -->
+      <%= if @loading do %>
+        <div class="loading-skeleton-container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <%= for _ <- 1..8 do %>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border overflow-hidden animate-pulse">
+              <div class="h-48 loading-skeleton"></div>
+              <div class="p-4">
+                <div class="flex items-start justify-between mb-3">
+                  <div class="h-6 loading-skeleton rounded w-3/4"></div>
+                  <div class="h-6 loading-skeleton rounded w-16"></div>
+                </div>
+                <div class="space-y-2">
+                  <div class="flex items-center justify-between">
+                    <div class="h-8 loading-skeleton rounded w-20"></div>
+                    <div class="h-5 loading-skeleton rounded w-16"></div>
+                  </div>
+                  <div class="h-4 loading-skeleton rounded w-full"></div>
+                  <div class="h-4 loading-skeleton rounded w-2/3"></div>
+                </div>
+                <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                  <div class="h-10 loading-skeleton rounded w-full"></div>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <!-- Cards Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <%= for card <- @cards do %>
+            <.link
+              navigate={"/trading/exchanges/#{card.slug}"}
+              class="card-grid-item card-professional card-hover block overflow-hidden cursor-pointer"
+            >
+              <!-- Card Image -->
+              <div class="aspect-w-3 aspect-h-4 bg-gray-100 dark:bg-gray-700 overflow-hidden">
+                <img
+                  src={card.image_path}
+                  alt={card.name}
+                  class="card-image-hover w-full h-48 object-cover object-top"
+                  loading="lazy"
+                />
+              </div>
+              
+<!-- Card Content -->
+              <div class="p-4">
+                <!-- Card Name and Rarity -->
+                <div class="flex items-start justify-between mb-4">
+                  <h3 class="text-heading-md text-gray-900 dark:text-white truncate flex-1">
+                    {card.name}
+                  </h3>
+                  <span class={[
+                    "ml-2 px-2.5 py-1 text-label-sm rounded-full shrink-0",
+                    rarity_color(card.rarity)
+                  ]}>
+                    {card.rarity}
+                  </span>
+                </div>
+                
+<!-- Exchange Information -->
+                <div class="space-y-3">
+                  <!-- Offer and Search Quantities -->
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                      <!-- Offer Icon -->
+                      <svg
+                        class="w-4 h-4 text-green-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M17 8l4 4m0 0l-4 4m4-4H3"
+                        >
+                        </path>
+                      </svg>
+                      <span class="text-heading-lg text-green-600 dark:text-green-400">
+                        {format_offer_quantity(card)}
+                      </span>
+                      <span class="text-label-sm text-green-500 dark:text-green-400">
+                        offering
+                      </span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                      <!-- Search Icon -->
+                      <svg
+                        class="w-4 h-4 text-blue-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                        >
+                        </path>
+                      </svg>
+                      <span class="text-heading-lg text-blue-600 dark:text-blue-400">
+                        {format_search_quantity(card)}
+                      </span>
+                      <span class="text-label-sm text-blue-500 dark:text-blue-400">
+                        searching
+                      </span>
+                    </div>
+                  </div>
+                  
+<!-- Description Preview -->
+                  <p class="text-body-md text-gray-600 dark:text-gray-400 line-clamp-2">
+                    {card.description}
+                  </p>
+                </div>
+              </div>
+            </.link>
+          <% end %>
+        </div>
+        
+<!-- Empty State -->
+        <%= if length(@cards)==0 and not @loading and not @error do %>
+          <div class="empty-state text-center py-12">
+            <div class="mx-auto h-12 w-12 text-gray-400">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 48 48">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M34 40h10v-4a6 6 0 00-10.712-3.714M34 40H14m20 0v-4a9.971 9.971 0 00-.712-3.714M14 40H4v-4a6 6 0 0110.712-3.714M14 40v-4a9.971 9.971 0 01.712-3.714M28 16a4 4 0 11-8 0 4 4 0 018 0zM24 8a4 4 0 11-8 0 4 4 0 018 0zM16 28a4 4 0 11-8 0 4 4 0 018 0z"
+                />
+              </svg>
+            </div>
+            <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No cards found</h3>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <%= if @search_term !="" do %>
+                Try adjusting your search term.
+              <% else %>
+                Get started by adding some cards to your collection.
+              <% end %>
+            </p>
+          </div>
         <% end %>
+      <% end %>
+    <% end %>
+  </div>
+  
+<!-- Help Modal -->
+  <%= if Map.get(assigns, :show_help, false) do %>
+    <div
+      class="modal-backdrop fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+      phx-click="show_help"
+    >
+      <div
+        class="modal-content relative top-20 mx-auto p-5 border border-gray-200 dark:border-gray-700 w-96 shadow-lg rounded-md bg-white dark:bg-gray-800"
+        phx-click-away="show_help"
+      >
+        <div class="mt-3 text-center">
+          <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900">
+            <svg
+              class="h-6 w-6 text-blue-600 dark:text-blue-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </div>
+          <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white mt-4">
+            Keyboard Shortcuts
+          </h3>
+          <div class="mt-4 text-left">
+            <div class="space-y-3">
+              <div class="flex justify-between">
+                <kbd class="px-2 py-1 text-xs font-semibold text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded">
+                  S
+                </kbd>
+                <span class="text-sm text-gray-600 dark:text-gray-400">Focus search</span>
+              </div>
+              <div class="flex justify-between">
+                <kbd class="px-2 py-1 text-xs font-semibold text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded">
+                  R
+                </kbd>
+                <span class="text-sm text-gray-600 dark:text-gray-400">Refresh data</span>
+              </div>
+              <div class="flex justify-between">
+                <kbd class="px-2 py-1 text-xs font-semibold text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded">
+                  1
+                </kbd>
+                <span class="text-sm text-gray-600 dark:text-gray-400">Sort by name</span>
+              </div>
+              <div class="flex justify-between">
+                <kbd class="px-2 py-1 text-xs font-semibold text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded">
+                  2
+                </kbd>
+                <span class="text-sm text-gray-600 dark:text-gray-400">Sort by offer</span>
+              </div>
+              <div class="flex justify-between">
+                <kbd class="px-2 py-1 text-xs font-semibold text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded">
+                  3
+                </kbd>
+                <span class="text-sm text-gray-600 dark:text-gray-400">Sort by search</span>
+              </div>
+              <div class="flex justify-between">
+                <kbd class="px-2 py-1 text-xs font-semibold text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded">
+                  Esc
+                </kbd>
+                <span class="text-sm text-gray-600 dark:text-gray-400">Clear search</span>
+              </div>
+              <div class="flex justify-between">
+                <kbd class="px-2 py-1 text-xs font-semibold text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded">
+                  H
+                </kbd>
+                <span class="text-sm text-gray-600 dark:text-gray-400">Show this help</span>
+              </div>
+            </div>
+          </div>
+          <div class="items-center px-4 py-3 mt-4">
+            <button
+              phx-click="show_help"
+              class="btn-transition px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
 </div>

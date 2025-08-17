@@ -46,7 +46,7 @@ defmodule SammelkartenWeb.AdminLive do
     # Create sample trading offers for testing
     sample_traders = [
       "npub1seedorchris1234567890abcdef",
-      "npub1fab1234567890abcdef123456", 
+      "npub1fab1234567890abcdef123456",
       "npub1altan1234567890abcdef1234",
       "npub1sticker21m1234567890abcd",
       "npub1markus_turm1234567890abc"
@@ -55,18 +55,20 @@ defmodule SammelkartenWeb.AdminLive do
     case Cards.list_cards() do
       {:ok, cards} ->
         sample_cards = Enum.take(cards, 5)
-        
-        results = Enum.zip(sample_traders, sample_cards)
+
+        # results =
+        Enum.zip(sample_traders, sample_cards)
         |> Enum.map(fn {trader_pubkey, card} ->
           offer_type = if :rand.uniform(2) == 1, do: "buy", else: "sell"
-          price_variation = (:rand.uniform(20) - 10) / 100  # -10% to +10%
+          # -10% to +10%
+          price_variation = (:rand.uniform(20) - 10) / 100
           price = trunc(card.current_price * (1 + price_variation))
           quantity = :rand.uniform(3)
-          
+
           trade_id = :crypto.strong_rand_bytes(16) |> Base.encode16(case: :lower)
           total_value = price * quantity
           created_at = DateTime.utc_now()
-          
+
           record = {
             :user_trades,
             trade_id,
@@ -82,19 +84,19 @@ defmodule SammelkartenWeb.AdminLive do
             nil,
             nil
           }
-          
+
           :mnesia.dirty_write(record)
           {:ok, "#{offer_type} offer for #{quantity} #{card.name}"}
         end)
-        
-        success_count = Enum.count(results, fn {status, _} -> status == :ok end)
-        
-        socket = 
-          socket
-          |> put_flash(:info, "Created #{success_count} sample trading offers successfully!")
-        
+
+        # success_count = Enum.count(results, fn {status, _} -> status == :ok end)
+
+        # socket =
+        #   socket
+        #   |> put_flash(:info, "Created #{success_count} sample trading offers successfully!")
+
         {:noreply, socket}
-        
+
       {:error, _} ->
         socket = put_flash(socket, :error, "Failed to load cards for sample offers")
         {:noreply, socket}

@@ -44,7 +44,12 @@ defmodule SammelkartenWeb.TradingLive do
       # Offer form state
       |> assign(:selected_offer_type, nil)
       # Exchange form fields
-      |> assign(:exchange_form, %{"offering_card_id" => "", "wanted_type" => "specific", "wanted_card_ids" => [], "quantity" => "1"})
+      |> assign(:exchange_form, %{
+        "offering_card_id" => "",
+        "wanted_type" => "specific",
+        "wanted_card_ids" => [],
+        "quantity" => "1"
+      })
       # Form visibility
       |> assign(:show_create_form, false)
       |> assign(:show_exchange_form, false)
@@ -165,6 +170,7 @@ defmodule SammelkartenWeb.TradingLive do
       # Reload limited data for non-authenticated users
       send(self(), :load_limited_trading_data)
     end
+
     {:noreply, socket}
   end
 
@@ -222,11 +228,12 @@ defmodule SammelkartenWeb.TradingLive do
 
   @impl true
   def handle_event("hide_create_form", _params, socket) do
-    socket = 
+    socket =
       socket
       |> assign(:show_create_form, false)
       |> assign(:selected_offer_type, nil)
       |> assign(:offer_form, %{"card_id" => "", "price" => "", "quantity" => "1"})
+
     {:noreply, socket}
   end
 
@@ -238,10 +245,16 @@ defmodule SammelkartenWeb.TradingLive do
 
   @impl true
   def handle_event("hide_exchange_form", _params, socket) do
-    socket = 
+    socket =
       socket
       |> assign(:show_exchange_form, false)
-      |> assign(:exchange_form, %{"offering_card_id" => "", "wanted_type" => "specific", "wanted_card_ids" => [], "quantity" => "1"})
+      |> assign(:exchange_form, %{
+        "offering_card_id" => "",
+        "wanted_type" => "specific",
+        "wanted_card_ids" => [],
+        "quantity" => "1"
+      })
+
     {:noreply, socket}
   end
 
@@ -254,7 +267,7 @@ defmodule SammelkartenWeb.TradingLive do
       "price" => params["price"] || "",
       "quantity" => params["quantity"] || "1"
     }
-    
+
     socket = assign(socket, :offer_form, offer_form)
     {:noreply, socket}
   end
@@ -262,23 +275,24 @@ defmodule SammelkartenWeb.TradingLive do
   @impl true
   def handle_event("update_exchange_form", params, socket) do
     Logger.info("Exchange form update - params: #{inspect(params)}")
-    
+
     # Extract exchange form fields
-    wanted_card_ids = case params["wanted_card_ids"] do
-      list when is_list(list) -> list
-      string when is_binary(string) -> [string]
-      _ -> []
-    end
-    
+    wanted_card_ids =
+      case params["wanted_card_ids"] do
+        list when is_list(list) -> list
+        string when is_binary(string) -> [string]
+        _ -> []
+      end
+
     exchange_form = %{
       "offering_card_id" => params["offering_card_id"] || "",
       "wanted_type" => params["wanted_type"] || "specific",
       "wanted_card_ids" => wanted_card_ids,
       "quantity" => params["quantity"] || "1"
     }
-    
+
     Logger.info("Exchange form updated: #{inspect(exchange_form)}")
-    
+
     socket = assign(socket, :exchange_form, exchange_form)
     {:noreply, socket}
   end
@@ -289,7 +303,7 @@ defmodule SammelkartenWeb.TradingLive do
       user_pubkey = socket.assigns.current_user.pubkey
       offer_type = socket.assigns.selected_offer_type
       offer_form = socket.assigns.offer_form
-      
+
       card_id = offer_form["card_id"]
       price_str = offer_form["price"]
       quantity_str = offer_form["quantity"]
@@ -304,43 +318,43 @@ defmodule SammelkartenWeb.TradingLive do
              true <- price > 0 and quantity > 0,
              true <- card_id != "",
              {:ok, _card} <- Cards.get_card(card_id) do
-        # Convert price to cents for storage
-        price_cents = round(price * 100)
+          # Convert price to cents for storage
+          price_cents = round(price * 100)
 
-        # Create trade offer event
-        offer_data = %{
-          card_id: card_id,
-          offer_type: offer_type,
-          price: price_cents,
-          quantity: quantity,
-          # 24 hours
-          expires_at: DateTime.utc_now() |> DateTime.add(24 * 60 * 60) |> DateTime.to_unix()
-        }
+          # Create trade offer event
+          offer_data = %{
+            card_id: card_id,
+            offer_type: offer_type,
+            price: price_cents,
+            quantity: quantity,
+            # 24 hours
+            expires_at: DateTime.utc_now() |> DateTime.add(24 * 60 * 60) |> DateTime.to_unix()
+          }
 
-        event = Event.trade_offer(user_pubkey, offer_data)
+          event = Event.trade_offer(user_pubkey, offer_data)
 
-        # Store offer locally and broadcast via Nostr
-        case create_trade_offer(user_pubkey, card_id, offer_type, price_cents, quantity, event) do
-          {:ok, _offer_id} ->
-            # Broadcast event via Nostr
-            Client.publish_event(event)
+          # Store offer locally and broadcast via Nostr
+          case create_trade_offer(user_pubkey, card_id, offer_type, price_cents, quantity, event) do
+            {:ok, _offer_id} ->
+              # Broadcast event via Nostr
+              Client.publish_event(event)
 
-            # Reload trading data
-            send(self(), :load_trading_data)
+              # Reload trading data
+              send(self(), :load_trading_data)
 
-            socket =
-              socket
-              |> put_flash(:info, "Trade offer created successfully")
-              |> assign(:offer_form, %{"card_id" => "", "price" => "", "quantity" => "1"})
-              |> assign(:selected_offer_type, nil)
-              |> assign(:show_create_form, false)
+              socket =
+                socket
+                # |> put_flash(:info, "Trade offer created successfully")
+                |> assign(:offer_form, %{"card_id" => "", "price" => "", "quantity" => "1"})
+                |> assign(:selected_offer_type, nil)
+                |> assign(:show_create_form, false)
 
-            {:noreply, socket}
+              {:noreply, socket}
 
-          {:error, reason} ->
-            socket = put_flash(socket, :error, "Failed to create offer: #{reason}")
-            {:noreply, socket}
-        end
+            {:error, reason} ->
+              socket = put_flash(socket, :error, "Failed to create offer: #{reason}")
+              {:noreply, socket}
+          end
         else
           _ ->
             socket = put_flash(socket, :error, "Please enter valid price and quantity")
@@ -367,8 +381,8 @@ defmodule SammelkartenWeb.TradingLive do
           # Reload trading data
           send(self(), :load_trading_data)
 
-          socket = put_flash(socket, :info, "Trade executed successfully!")
-          {:noreply, socket}
+        # socket = put_flash(socket, :info, "Trade executed successfully!")
+        # {:noreply, socket}
 
         {:error, reason} ->
           socket = put_flash(socket, :error, "Failed to execute trade: #{reason}")
@@ -380,11 +394,10 @@ defmodule SammelkartenWeb.TradingLive do
     end
   end
 
-
   @impl true
   def handle_event("cancel_offer", %{"offer_id" => offer_id}, socket) do
     Logger.info("Cancel offer request - offer_id: #{offer_id}")
-    
+
     if socket.assigns.authenticated do
       user_pubkey = socket.assigns.current_user.pubkey
       Logger.info("User attempting to cancel: #{User.short_pubkey(%{pubkey: user_pubkey})}")
@@ -394,8 +407,8 @@ defmodule SammelkartenWeb.TradingLive do
           # Reload trading data
           send(self(), :load_trading_data)
 
-          socket = put_flash(socket, :info, "Offer cancelled successfully")
-          {:noreply, socket}
+        # socket = put_flash(socket, :info, "Offer cancelled successfully")
+        # {:noreply, socket}
 
         {:error, reason} ->
           socket = put_flash(socket, :error, "Failed to cancel offer: #{reason}")
@@ -411,31 +424,33 @@ defmodule SammelkartenWeb.TradingLive do
   def handle_event("create_exchange", params, socket) do
     Logger.info("Exchange form submission - params: #{inspect(params)}")
     Logger.info("Exchange form state: #{inspect(socket.assigns.exchange_form)}")
-    
+
     if socket.assigns.authenticated do
       user_pubkey = socket.assigns.current_user.pubkey
       exchange_form = socket.assigns.exchange_form
-      
+
       offering_card_id = exchange_form["offering_card_id"]
       wanted_type = exchange_form["wanted_type"] || "specific"
       wanted_card_ids = exchange_form["wanted_card_ids"] || []
       quantity_str = exchange_form["quantity"]
-      
-      Logger.info("Exchange creation attempt: offering=#{offering_card_id}, wanted_type=#{wanted_type}, wanted_cards=#{inspect(wanted_card_ids)}, qty=#{quantity_str}")
+
+      Logger.info(
+        "Exchange creation attempt: offering=#{offering_card_id}, wanted_type=#{wanted_type}, wanted_cards=#{inspect(wanted_card_ids)}, qty=#{quantity_str}"
+      )
 
       with {quantity, _} <- Integer.parse(quantity_str || ""),
            true <- quantity > 0,
            true <- offering_card_id != "",
            true <- valid_wanted_cards?(wanted_type, wanted_card_ids, offering_card_id),
            {:ok, _offering_card} <- Cards.get_card(offering_card_id) do
-        
         Logger.info("Exchange validation passed, creating offer...")
-        
+
         # Create exchange offer event (adapt to existing trade_offer format)
         offer_data = %{
           card_id: offering_card_id,
           offer_type: "exchange",
-          price: 0, # Exchange has no price
+          # Exchange has no price
+          price: 0,
           quantity: quantity,
           expires_at: DateTime.utc_now() |> DateTime.add(24 * 60 * 60) |> DateTime.to_unix(),
           # Add exchange-specific data as additional fields
@@ -446,7 +461,14 @@ defmodule SammelkartenWeb.TradingLive do
         event = Event.trade_offer(user_pubkey, offer_data)
 
         # Store exchange offer locally and broadcast via Nostr
-        case create_exchange_offer(user_pubkey, offering_card_id, wanted_type, wanted_card_ids, quantity, event) do
+        case create_exchange_offer(
+               user_pubkey,
+               offering_card_id,
+               wanted_type,
+               wanted_card_ids,
+               quantity,
+               event
+             ) do
           {:ok, _offer_id} ->
             # Broadcast event via Nostr
             Client.publish_event(event)
@@ -456,8 +478,13 @@ defmodule SammelkartenWeb.TradingLive do
 
             socket =
               socket
-              |> put_flash(:info, "Exchange offer created successfully")
-              |> assign(:exchange_form, %{"offering_card_id" => "", "wanted_type" => "specific", "wanted_card_ids" => [], "quantity" => "1"})
+              # |> put_flash(:info, "Exchange offer created successfully")
+              |> assign(:exchange_form, %{
+                "offering_card_id" => "",
+                "wanted_type" => "specific",
+                "wanted_card_ids" => [],
+                "quantity" => "1"
+              })
               |> assign(:show_exchange_form, false)
 
             {:noreply, socket}
@@ -469,8 +496,18 @@ defmodule SammelkartenWeb.TradingLive do
       else
         error ->
           Logger.error("Exchange validation failed: #{inspect(error)}")
-          Logger.error("Form data: offering=#{offering_card_id}, wanted_type=#{wanted_type}, wanted_cards=#{inspect(wanted_card_ids)}, qty=#{quantity_str}")
-          socket = put_flash(socket, :error, "Please select valid cards for exchange (offering card and wanted card must be different)")
+
+          Logger.error(
+            "Form data: offering=#{offering_card_id}, wanted_type=#{wanted_type}, wanted_cards=#{inspect(wanted_card_ids)}, qty=#{quantity_str}"
+          )
+
+          socket =
+            put_flash(
+              socket,
+              :error,
+              "Please select valid cards for exchange (offering card and wanted card must be different)"
+            )
+
           {:noreply, socket}
       end
     else
@@ -497,17 +534,19 @@ defmodule SammelkartenWeb.TradingLive do
     case wanted_type do
       "open" ->
         true
+
       "specific" ->
         # Must have at least one wanted card and none should match offering card
-        length(wanted_card_ids) > 0 and 
-        not Enum.member?(wanted_card_ids, offering_card_id) and
         # Validate all wanted cards exist
-        Enum.all?(wanted_card_ids, fn card_id ->
-          case Cards.get_card(card_id) do
-            {:ok, _} -> true
-            _ -> false
-          end
-        end)
+        length(wanted_card_ids) > 0 and
+          not Enum.member?(wanted_card_ids, offering_card_id) and
+          Enum.all?(wanted_card_ids, fn card_id ->
+            case Cards.get_card(card_id) do
+              {:ok, _} -> true
+              _ -> false
+            end
+          end)
+
       _ ->
         false
     end
@@ -545,14 +584,15 @@ defmodule SammelkartenWeb.TradingLive do
     try do
       transaction = fn ->
         # Get all open offers
-        :mnesia.match_object(
-          {:user_trades, :_, :_, :_, :_, :_, :_, :_, :_, "open", :_, :_, :_}
-        )
+        :mnesia.match_object({:user_trades, :_, :_, :_, :_, :_, :_, :_, :_, "open", :_, :_, :_})
       end
 
       case :mnesia.transaction(transaction) do
         {:atomic, trade_records} ->
-          Logger.info("Found #{length(trade_records)} total active offers (including user's own offers)")
+          Logger.info(
+            "Found #{length(trade_records)} total active offers (including user's own offers)"
+          )
+
           trade_records
           |> Enum.map(&format_trade_offer/1)
           |> Enum.filter(fn offer -> offer != nil end)
@@ -579,7 +619,10 @@ defmodule SammelkartenWeb.TradingLive do
 
       case :mnesia.transaction(transaction) do
         {:atomic, trade_records} ->
-          Logger.info("Found #{length(trade_records)} user trade records for #{User.short_pubkey(%{pubkey: user_pubkey})}")
+          Logger.info(
+            "Found #{length(trade_records)} user trade records for #{User.short_pubkey(%{pubkey: user_pubkey})}"
+          )
+
           trade_records
           |> Enum.map(&format_trade_offer/1)
           |> Enum.filter(fn offer -> offer != nil end)
@@ -600,12 +643,13 @@ defmodule SammelkartenWeb.TradingLive do
     try do
       transaction = fn ->
         # Load completed trades where user was involved (either as seller or buyer)
-        all_completed_trades = :mnesia.match_object(
-          {:user_trades, :_, :_, :_, :_, :_, :_, :_, :_, "completed", :_, :_, :_}
-        )
-        
+        all_completed_trades =
+          :mnesia.match_object(
+            {:user_trades, :_, :_, :_, :_, :_, :_, :_, :_, "completed", :_, :_, :_}
+          )
+
         # Filter to include only trades where the current user was involved
-        Enum.filter(all_completed_trades, fn 
+        Enum.filter(all_completed_trades, fn
           {_, _, seller_pubkey, _, _, _, _, _, buyer_pubkey, "completed", _, _, _} ->
             seller_pubkey == user_pubkey or buyer_pubkey == user_pubkey
         end)
@@ -739,10 +783,12 @@ defmodule SammelkartenWeb.TradingLive do
             completed_at = DateTime.utc_now()
 
             # Determine actual seller and buyer based on offer type
-            {actual_seller_pubkey, actual_buyer_pubkey} = 
+            {actual_seller_pubkey, actual_buyer_pubkey} =
               case trade_type do
-                "sell" -> {seller_pubkey, buyer_pubkey}  # Offer creator is selling
-                "buy" -> {buyer_pubkey, seller_pubkey}   # Offer creator is buying
+                # Offer creator is selling
+                "sell" -> {seller_pubkey, buyer_pubkey}
+                # Offer creator is buying
+                "buy" -> {buyer_pubkey, seller_pubkey}
               end
 
             # Update offer to completed
@@ -808,12 +854,14 @@ defmodule SammelkartenWeb.TradingLive do
   end
 
   defp cancel_trade_offer(offer_id, user_pubkey) do
-    Logger.info("Attempting to cancel offer #{offer_id} for user #{User.short_pubkey(%{pubkey: user_pubkey})}")
-    
+    Logger.info(
+      "Attempting to cancel offer #{offer_id} for user #{User.short_pubkey(%{pubkey: user_pubkey})}"
+    )
+
     transaction = fn ->
       records = :mnesia.read({:user_trades, offer_id})
       Logger.info("Found records for offer #{offer_id}: #{inspect(records)}")
-      
+
       case records do
         # Regular trade offer (counterparty_pubkey is nil)
         [{_, ^offer_id, ^user_pubkey, _, _, _, _, _, nil, "open", _, nil, _}] ->
@@ -822,7 +870,10 @@ defmodule SammelkartenWeb.TradingLive do
           :ok
 
         # Exchange offer (counterparty_pubkey contains JSON data)
-        [{_, ^offer_id, ^user_pubkey, _, "exchange", _, _, _, _counterparty_data, "open", _, nil, _}] ->
+        [
+          {_, ^offer_id, ^user_pubkey, _, "exchange", _, _, _, _counterparty_data, "open", _, nil,
+           _}
+        ] ->
           Logger.info("Cancelling exchange offer")
           :mnesia.delete({:user_trades, offer_id})
           :ok
@@ -855,7 +906,6 @@ defmodule SammelkartenWeb.TradingLive do
     end
   end
 
-
   defp filter_offers(offers, "all"), do: offers
   defp filter_offers(offers, "buy"), do: Enum.filter(offers, &(&1.offer_type == "buy"))
   defp filter_offers(offers, "sell"), do: Enum.filter(offers, &(&1.offer_type == "sell"))
@@ -873,16 +923,16 @@ defmodule SammelkartenWeb.TradingLive do
   defp load_user_portfolio_cards(user_pubkey) do
     try do
       transaction = fn ->
-        :mnesia.match_object(
-          {:user_collections, :_, user_pubkey, :_, :_, :_, :_, :_}
-        )
+        :mnesia.match_object({:user_collections, :_, user_pubkey, :_, :_, :_, :_, :_})
       end
 
       case :mnesia.transaction(transaction) do
         {:atomic, collection_records} ->
           Logger.info("Found #{length(collection_records)} cards in user portfolio")
+
           collection_records
-          |> Enum.map(fn {_, _id, _user_pubkey, card_id, _quantity, _acquired_at, _acquisition_price, _notes} ->
+          |> Enum.map(fn {_, _id, _user_pubkey, card_id, _quantity, _acquired_at,
+                          _acquisition_price, _notes} ->
             case Cards.get_card(card_id) do
               {:ok, card} -> card
               {:error, _} -> nil
@@ -914,6 +964,7 @@ defmodule SammelkartenWeb.TradingLive do
       case :mnesia.transaction(transaction) do
         {:atomic, trade_records} ->
           Logger.info("Found #{length(trade_records)} total exchange offers")
+
           trade_records
           |> Enum.map(&format_exchange_offer/1)
           |> Enum.filter(fn offer -> offer != nil end)
@@ -930,7 +981,14 @@ defmodule SammelkartenWeb.TradingLive do
     end
   end
 
-  defp create_exchange_offer(user_pubkey, offering_card_id, wanted_type, wanted_card_ids, quantity, _event) do
+  defp create_exchange_offer(
+         user_pubkey,
+         offering_card_id,
+         wanted_type,
+         wanted_card_ids,
+         quantity,
+         _event
+       ) do
     trade_id = generate_trade_id()
     created_at = DateTime.utc_now()
 
@@ -939,6 +997,7 @@ defmodule SammelkartenWeb.TradingLive do
       type: wanted_type,
       card_ids: wanted_card_ids
     }
+
     wanted_data_json = Jason.encode!(wanted_data)
 
     # Store hash for price field (exchanges have no monetary price)
@@ -951,13 +1010,18 @@ defmodule SammelkartenWeb.TradingLive do
       offering_card_id,
       "exchange",
       quantity,
-      wanted_hash, # Store hash in price field
-      0, # total_value = 0 for exchanges
-      wanted_data_json, # Store wanted cards data as JSON
+      # Store hash in price field
+      wanted_hash,
+      # total_value = 0 for exchanges
+      0,
+      # Store wanted cards data as JSON
+      wanted_data_json,
       "open",
       created_at,
-      nil, # completed_at
-      nil  # nostr_event_id
+      # completed_at
+      nil,
+      # nostr_event_id
+      nil
     }
 
     transaction = fn ->
@@ -966,13 +1030,16 @@ defmodule SammelkartenWeb.TradingLive do
 
     case :mnesia.transaction(transaction) do
       {:atomic, :ok} ->
-        wanted_desc = case wanted_type do
-          "open" -> "any card"
-          "specific" -> "specific cards: #{Enum.join(wanted_card_ids, ", ")}"
-        end
+        wanted_desc =
+          case wanted_type do
+            "open" -> "any card"
+            "specific" -> "specific cards: #{Enum.join(wanted_card_ids, ", ")}"
+          end
+
         Logger.info(
           "Created exchange offer: #{quantity} #{offering_card_id} for #{wanted_desc} by #{User.short_pubkey(%{pubkey: user_pubkey})}"
         )
+
         {:ok, trade_id}
 
       {:aborted, reason} ->
@@ -982,25 +1049,27 @@ defmodule SammelkartenWeb.TradingLive do
   end
 
   defp format_exchange_offer(
-         {_, trade_id, user_pubkey, offering_card_id, "exchange", quantity, _wanted_hash, _, 
+         {_, trade_id, user_pubkey, offering_card_id, "exchange", quantity, _wanted_hash, _,
           wanted_data_json, "open", created_at, _, _}
        ) do
     with {:ok, offering_card} <- Cards.get_card(offering_card_id),
          {:ok, wanted_data} <- Jason.decode(wanted_data_json) do
-      
       wanted_type = wanted_data["type"]
       wanted_card_ids = wanted_data["card_ids"]
-      
+
       # Get wanted cards info
-      wanted_cards = case wanted_type do
-        "open" -> []
-        "specific" -> 
-          wanted_card_ids
-          |> Enum.map(&Cards.get_card/1)
-          |> Enum.filter(&match?({:ok, _}, &1))
-          |> Enum.map(fn {:ok, card} -> card end)
-      end
-      
+      wanted_cards =
+        case wanted_type do
+          "open" ->
+            []
+
+          "specific" ->
+            wanted_card_ids
+            |> Enum.map(&Cards.get_card/1)
+            |> Enum.filter(&match?({:ok, _}, &1))
+            |> Enum.map(fn {:ok, card} -> card end)
+        end
+
       expires_at = created_at |> DateTime.add(24 * 60 * 60)
 
       %{
@@ -1034,20 +1103,21 @@ defmodule SammelkartenWeb.TradingLive do
     case Sammelkarten.Cards.list_cards() do
       {:ok, cards} ->
         sample_cards = Enum.take(cards, 5)
-        
+
         Enum.zip(sample_traders, sample_cards)
         |> Enum.each(fn {trader_pubkey, card} ->
           # Create a buy offer
           offer_type = if :rand.uniform(2) == 1, do: "buy", else: "sell"
-          price_variation = (:rand.uniform(20) - 10) / 100  # -10% to +10%
+          # -10% to +10%
+          price_variation = (:rand.uniform(20) - 10) / 100
           price = trunc(card.current_price * (1 + price_variation))
           quantity = :rand.uniform(3)
-          
+
           create_trade_offer(trader_pubkey, card.id, offer_type, price, quantity, nil)
         end)
-        
+
         Logger.info("Created sample trading offers for testing")
-        
+
       {:error, _} ->
         Logger.error("Failed to load cards for sample offers")
     end
@@ -1115,5 +1185,4 @@ defmodule SammelkartenWeb.TradingLive do
       _ -> "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
     end
   end
-
 end

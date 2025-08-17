@@ -16,8 +16,8 @@ defmodule Sammelkarten.PriceUpdater do
 
   require Logger
 
-  # Update every 10 seconds
-  @update_interval :timer.seconds(10)
+  # Update every 420 seconds
+  @update_interval :timer.seconds(420)
   @pubsub_topic "price_updates"
 
   ## Client API

@@ -9,8 +9,8 @@ defmodule Sammelkarten.UserPreferences do
   @enforce_keys [:user_id]
   defstruct [
     :user_id,
-    # Price update interval in milliseconds (default: 21 seconds)
-    refresh_rate: 21_000,
+    # Price update interval in milliseconds (default: 210 seconds)
+    refresh_rate: 210_000,
     # Theme preference: "light", "dark", "auto"
     theme: "light",
     # Enable price update notifications
@@ -163,6 +163,7 @@ defmodule Sammelkarten.UserPreferences do
       {"30 seconds", 30_000},
       {"1 minute", 60_000},
       {"2 minutes", 120_000},
+      {"210 seconds", 210_000},
       {"5 minutes", 300_000}
     ]
   end

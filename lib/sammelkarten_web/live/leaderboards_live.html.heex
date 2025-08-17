@@ -11,38 +11,31 @@
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-4">
           <label class="text-label-medium font-medium text-gray-700">Period:</label>
-          <select 
-            class="input-professional"
-            phx-change="change_period"
-            name="period"
-          >
-            <option value="7" selected={@period == 7}>Last 7 Days</option>
-            <option value="30" selected={@period == 30}>Last 30 Days</option>
-            <option value="90" selected={@period == 90}>Last 90 Days</option>
-            <option value="365" selected={@period == 365}>Last Year</option>
+          <select class="input-professional" phx-change="change_period" name="period">
+            <option value="7" selected={@period==7}>Last 7 Days</option>
+            <option value="30" selected={@period==30}>Last 30 Days</option>
+            <option value="90" selected={@period==90}>Last 90 Days</option>
+            <option value="365" selected={@period==365}>Last Year</option>
           </select>
         </div>
-        <button 
-          class="btn-primary"
-          phx-click="refresh_leaderboards"
-          disabled={@loading}
-        >
+        <button class="btn-primary" phx-click="refresh_leaderboards" disabled={@loading}>
           <%= if @loading do %>
             Loading...
-          <% else %>
-            Refresh
-          <% end %>
+            <% else %>
+              Refresh
+              <% end %>
         </button>
       </div>
     </div>
 
     <!-- User Rankings (if authenticated) -->
-    <%= if @user and @user_rankings do %>
+    <%= if @user !=nil and @user_rankings do %>
       <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-6 mb-6 text-white">
         <h2 class="text-heading-lg font-bold mb-4">Your Rankings</h2>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div class="text-center">
-            <div class="text-display-sm font-bold mb-1">#<%= @user_rankings.overall_rank %></div>
+            <div class="text-display-sm font-bold mb-1">#<%= @user_rankings.overall_rank %>
+            </div>
             <p class="text-body-small opacity-90">Overall Rank</p>
           </div>
           <div class="text-center">
@@ -65,319 +58,308 @@
           </div>
         </div>
       </div>
-    <% end %>
+      <% end %>
 
-    <!-- Tab Navigation -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
-      <div class="px-6 py-4 border-b border-gray-200">
-        <nav class="flex space-x-2">
-          <button
-            class={tab_class(@active_tab, "traders")}
-            phx-click="change_tab"
-            phx-value-tab="traders"
-          >
-            👥 Top Traders
-          </button>
-          <button
-            class={tab_class(@active_tab, "collections")}
-            phx-click="change_tab"
-            phx-value-tab="collections"
-          >
-            🎴 Collections
-          </button>
-          <button
-            class={tab_class(@active_tab, "performance")}
-            phx-click="change_tab"
-            phx-value-tab="performance"
-          >
-            📊 Performance
-          </button>
-          <button
-            class={tab_class(@active_tab, "achievements")}
-            phx-click="change_tab"
-            phx-value-tab="achievements"
-          >
-            🏆 Achievements
-          </button>
-        </nav>
-      </div>
-
-      <!-- Tab Content -->
-      <div class="p-6">
-        <%= if @error do %>
-          <!-- Error Message -->
-          <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-            <div class="text-red-800">
-              <h3 class="font-medium">Error Loading Leaderboards</h3>
-              <p class="mt-1 text-sm"><%= @error %></p>
-            </div>
+        <!-- Tab Navigation -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <nav class="flex space-x-2">
+              <button class={tab_class(@active_tab, "traders" )} phx-click="change_tab" phx-value-tab="traders">
+                👥 Top Traders
+              </button>
+              <button class={tab_class(@active_tab, "collections" )} phx-click="change_tab" phx-value-tab="collections">
+                🎴 Collections
+              </button>
+              <button class={tab_class(@active_tab, "performance" )} phx-click="change_tab" phx-value-tab="performance">
+                📊 Performance
+              </button>
+              <button class={tab_class(@active_tab, "achievements" )} phx-click="change_tab"
+                phx-value-tab="achievements">
+                🏆 Achievements
+              </button>
+            </nav>
           </div>
-        <% end %>
 
-        <%= if @loading do %>
-          <!-- Loading State -->
-          <div class="text-center py-12">
-            <div class="text-lg font-medium text-gray-900 mb-2">Loading Leaderboards</div>
-            <p class="text-gray-600">Calculating rankings and performance metrics...</p>
+          <!-- Tab Content -->
+          <div class="p-6">
+            <%= if @error do %>
+              <!-- Error Message -->
+              <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div class="text-red-800">
+                  <h3 class="font-medium">Error Loading Leaderboards</h3>
+                  <p class="mt-1 text-sm">
+                    <%= @error %>
+                  </p>
+                </div>
+              </div>
+              <% end %>
+
+                <%= if @loading do %>
+                  <!-- Loading State -->
+                  <div class="text-center py-12">
+                    <div class="text-lg font-medium text-gray-900 mb-2">Loading Leaderboards</div>
+                    <p class="text-gray-600">Calculating rankings and performance metrics...</p>
+                  </div>
+                  <% else %>
+                    <!-- Top Traders Tab -->
+                    <%= if @active_tab=="traders" and @leaderboards do %>
+                      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- By Portfolio Value -->
+                        <div>
+                          <h3 class="text-heading-sm font-bold text-gray-900 mb-4">🏦 Top by Portfolio Value</h3>
+                          <div class="space-y-3">
+                            <%= for entry <- Enum.take(@leaderboards.traders.by_portfolio_value, 10) do %>
+                              <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                  <span class={"text-label-medium #{rank_color(entry.rank)}"}>
+                                    <%= rank_badge(entry.rank) %> #<%= entry.rank %>
+                                  </span>
+                                  <span class="text-body-base text-gray-700 font-mono text-sm">
+                                    <%= format_pubkey(entry.user_pubkey) %>
+                                  </span>
+                                </div>
+                                <span class="text-body-base font-semibold text-gray-900">
+                                  <%= format_currency(entry.value) %>
+                                </span>
+                              </div>
+                              <% end %>
+                          </div>
+                        </div>
+
+                        <!-- By Trading Volume -->
+                        <div>
+                          <h3 class="text-heading-sm font-bold text-gray-900 mb-4">💹 Top by Trading Volume</h3>
+                          <div class="space-y-3">
+                            <%= for entry <- Enum.take(@leaderboards.traders.by_trading_volume, 10) do %>
+                              <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                  <span class={"text-label-medium #{rank_color(entry.rank)}"}>
+                                    <%= rank_badge(entry.rank) %> #<%= entry.rank %>
+                                  </span>
+                                  <span class="text-body-base text-gray-700 font-mono text-sm">
+                                    <%= format_pubkey(entry.user_pubkey) %>
+                                  </span>
+                                </div>
+                                <span class="text-body-base font-semibold text-gray-900">
+                                  <%= format_currency(entry.value) %>
+                                </span>
+                              </div>
+                              <% end %>
+                          </div>
+                        </div>
+
+                        <!-- By Win Rate -->
+                        <div>
+                          <h3 class="text-heading-sm font-bold text-gray-900 mb-4">🎯 Top by Win Rate</h3>
+                          <div class="space-y-3">
+                            <%= for entry <- Enum.take(@leaderboards.traders.by_win_rate, 10) do %>
+                              <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                  <span class={"text-label-medium #{rank_color(entry.rank)}"}>
+                                    <%= rank_badge(entry.rank) %> #<%= entry.rank %>
+                                  </span>
+                                  <span class="text-body-base text-gray-700 font-mono text-sm">
+                                    <%= format_pubkey(entry.user_pubkey) %>
+                                  </span>
+                                </div>
+                                <span class="text-body-base font-semibold text-green-600">
+                                  <%= format_percentage(entry.value) %>
+                                </span>
+                              </div>
+                              <% end %>
+                          </div>
+                        </div>
+
+                        <!-- By ROI -->
+                        <div>
+                          <h3 class="text-heading-sm font-bold text-gray-900 mb-4">📈 Top by ROI</h3>
+                          <div class="space-y-3">
+                            <%= for entry <- Enum.take(@leaderboards.traders.by_roi, 10) do %>
+                              <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                  <span class={"text-label-medium #{rank_color(entry.rank)}"}>
+                                    <%= rank_badge(entry.rank) %> #<%= entry.rank %>
+                                  </span>
+                                  <span class="text-body-base text-gray-700 font-mono text-sm">
+                                    <%= format_pubkey(entry.user_pubkey) %>
+                                  </span>
+                                </div>
+                                <span class={"text-body-base font-semibold #{metric_color(entry.value)}"}>
+                                  <%= format_percentage(entry.value) %>
+                                </span>
+                              </div>
+                              <% end %>
+                          </div>
+                        </div>
+                      </div>
+                      <% end %>
+
+                        <!-- Collections Tab -->
+                        <%= if @active_tab=="collections" and @leaderboards do %>
+                          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <!-- By Collection Value -->
+                            <div>
+                              <h3 class="text-heading-sm font-bold text-gray-900 mb-4">💎 Top by Collection Value</h3>
+                              <div class="space-y-3">
+                                <%= for entry <- Enum.take(@leaderboards.collections.by_total_value, 10) do %>
+                                  <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                    <div class="flex items-center space-x-3">
+                                      <span class={"text-label-medium #{rank_color(entry.rank)}"}>
+                                        <%= rank_badge(entry.rank) %> #<%= entry.rank %>
+                                      </span>
+                                      <span class="text-body-base text-gray-700 font-mono text-sm">
+                                        <%= format_pubkey(entry.user_pubkey) %>
+                                      </span>
+                                    </div>
+                                    <span class="text-body-base font-semibold text-gray-900">
+                                      <%= format_currency(entry.value) %>
+                                    </span>
+                                  </div>
+                                  <% end %>
+                              </div>
+                            </div>
+
+                            <!-- By Card Count -->
+                            <div>
+                              <h3 class="text-heading-sm font-bold text-gray-900 mb-4">🎴 Top by Card Count</h3>
+                              <div class="space-y-3">
+                                <%= for entry <- Enum.take(@leaderboards.collections.by_card_count, 10) do %>
+                                  <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                    <div class="flex items-center space-x-3">
+                                      <span class={"text-label-medium #{rank_color(entry.rank)}"}>
+                                        <%= rank_badge(entry.rank) %> #<%= entry.rank %>
+                                      </span>
+                                      <span class="text-body-base text-gray-700 font-mono text-sm">
+                                        <%= format_pubkey(entry.user_pubkey) %>
+                                      </span>
+                                    </div>
+                                    <span class="text-body-base font-semibold text-gray-900">
+                                      <%= format_number(entry.value) %> cards
+                                    </span>
+                                  </div>
+                                  <% end %>
+                              </div>
+                            </div>
+
+                            <!-- By Rarity Score -->
+                            <div>
+                              <h3 class="text-heading-sm font-bold text-gray-900 mb-4">✨ Top by Rarity Score</h3>
+                              <div class="space-y-3">
+                                <%= for entry <- Enum.take(@leaderboards.collections.by_rarity_score, 10) do %>
+                                  <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                    <div class="flex items-center space-x-3">
+                                      <span class={"text-label-medium #{rank_color(entry.rank)}"}>
+                                        <%= rank_badge(entry.rank) %> #<%= entry.rank %>
+                                      </span>
+                                      <span class="text-body-base text-gray-700 font-mono text-sm">
+                                        <%= format_pubkey(entry.user_pubkey) %>
+                                      </span>
+                                    </div>
+                                    <span class="text-body-base font-semibold text-purple-600">
+                                      <%= format_number(entry.value) %> pts
+                                    </span>
+                                  </div>
+                                  <% end %>
+                              </div>
+                            </div>
+
+                            <!-- By Completion -->
+                            <div>
+                              <h3 class="text-heading-sm font-bold text-gray-900 mb-4">🎯 Top by Completion</h3>
+                              <div class="space-y-3">
+                                <%= for entry <- Enum.take(@leaderboards.collections.by_completion, 10) do %>
+                                  <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                    <div class="flex items-center space-x-3">
+                                      <span class={"text-label-medium #{rank_color(entry.rank)}"}>
+                                        <%= rank_badge(entry.rank) %> #<%= entry.rank %>
+                                      </span>
+                                      <span class="text-body-base text-gray-700 font-mono text-sm">
+                                        <%= format_pubkey(entry.user_pubkey) %>
+                                      </span>
+                                    </div>
+                                    <span class="text-body-base font-semibold text-blue-600">
+                                      <%= format_percentage(entry.value) %>
+                                    </span>
+                                  </div>
+                                  <% end %>
+                              </div>
+                            </div>
+                          </div>
+                          <% end %>
+
+                            <!-- Performance Tab -->
+                            <%= if @active_tab=="performance" and @leaderboards do %>
+                              <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                <!-- By Performance Score -->
+                                <div>
+                                  <h3 class="text-heading-sm font-bold text-gray-900 mb-4">🏆 Top by Performance Score
+                                  </h3>
+                                  <div class="space-y-3">
+                                    <%= for entry <- Enum.take(@leaderboards.performance.by_performance_score, 10) do %>
+                                      <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                        <div class="flex items-center space-x-3">
+                                          <span class={"text-label-medium #{rank_color(entry.rank)}"}>
+                                            <%= rank_badge(entry.rank) %> #<%= entry.rank %>
+                                          </span>
+                                          <span class="text-body-base text-gray-700 font-mono text-sm">
+                                            <%= format_pubkey(entry.user_pubkey) %>
+                                          </span>
+                                        </div>
+                                        <span class="text-body-base font-semibold text-blue-600">
+                                          <%= format_number(entry.value) %>/100
+                                        </span>
+                                      </div>
+                                      <% end %>
+                                  </div>
+                                </div>
+
+                                <!-- By Sharpe Ratio -->
+                                <div>
+                                  <h3 class="text-heading-sm font-bold text-gray-900 mb-4">📊 Top by Sharpe Ratio</h3>
+                                  <div class="space-y-3">
+                                    <%= for entry <- Enum.take(@leaderboards.performance.by_sharpe_ratio, 10) do %>
+                                      <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                        <div class="flex items-center space-x-3">
+                                          <span class={"text-label-medium #{rank_color(entry.rank)}"}>
+                                            <%= rank_badge(entry.rank) %> #<%= entry.rank %>
+                                          </span>
+                                          <span class="text-body-base text-gray-700 font-mono text-sm">
+                                            <%= format_pubkey(entry.user_pubkey) %>
+                                          </span>
+                                        </div>
+                                        <span class="text-body-base font-semibold text-green-600">
+                                          <%= format_number(entry.value) %>
+                                        </span>
+                                      </div>
+                                      <% end %>
+                                  </div>
+                                </div>
+                              </div>
+                              <% end %>
+
+                                <!-- Achievements Tab -->
+                                <%= if @active_tab=="achievements" and @leaderboards do %>
+                                  <div class="text-center py-12">
+                                    <div class="text-6xl mb-4">🏆</div>
+                                    <h3 class="text-heading-lg font-bold text-gray-900 mb-2">Achievement System</h3>
+                                    <p class="text-body-base text-gray-600 mb-6">
+                                      Achievements and reputation tracking coming soon!
+                                    </p>
+                                    <div class="bg-gray-50 rounded-lg p-6 max-w-md mx-auto">
+                                      <h4 class="text-label-large font-semibold text-gray-700 mb-3">Planned Features
+                                      </h4>
+                                      <ul class="text-body-small text-gray-600 space-y-2">
+                                        <li>🏅 Trading milestone badges</li>
+                                        <li>⭐ Community reputation scores</li>
+                                        <li>🎖️ Special recognition titles</li>
+                                        <li>👑 Hall of fame entries</li>
+                                        <li>🎯 Monthly competitions</li>
+                                      </ul>
+                                    </div>
+                                  </div>
+                                  <% end %>
+                                    <% end %>
           </div>
-        <% else %>
-          <!-- Top Traders Tab -->
-          <%= if @active_tab == "traders" and @leaderboards do %>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <!-- By Portfolio Value -->
-              <div>
-                <h3 class="text-heading-sm font-bold text-gray-900 mb-4">🏦 Top by Portfolio Value</h3>
-                <div class="space-y-3">
-                  <%= for entry <- Enum.take(@leaderboards.traders.by_portfolio_value, 10) do %>
-                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div class="flex items-center space-x-3">
-                        <span class={"text-label-medium #{rank_color(entry.rank)}"}>
-                          <%= rank_badge(entry.rank) %> #<%= entry.rank %>
-                        </span>
-                        <span class="text-body-base text-gray-700 font-mono text-sm">
-                          <%= format_pubkey(entry.user_pubkey) %>
-                        </span>
-                      </div>
-                      <span class="text-body-base font-semibold text-gray-900">
-                        <%= format_currency(entry.value) %>
-                      </span>
-                    </div>
-                  <% end %>
-                </div>
-              </div>
-
-              <!-- By Trading Volume -->
-              <div>
-                <h3 class="text-heading-sm font-bold text-gray-900 mb-4">💹 Top by Trading Volume</h3>
-                <div class="space-y-3">
-                  <%= for entry <- Enum.take(@leaderboards.traders.by_trading_volume, 10) do %>
-                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div class="flex items-center space-x-3">
-                        <span class={"text-label-medium #{rank_color(entry.rank)}"}>
-                          <%= rank_badge(entry.rank) %> #<%= entry.rank %>
-                        </span>
-                        <span class="text-body-base text-gray-700 font-mono text-sm">
-                          <%= format_pubkey(entry.user_pubkey) %>
-                        </span>
-                      </div>
-                      <span class="text-body-base font-semibold text-gray-900">
-                        <%= format_currency(entry.value) %>
-                      </span>
-                    </div>
-                  <% end %>
-                </div>
-              </div>
-
-              <!-- By Win Rate -->
-              <div>
-                <h3 class="text-heading-sm font-bold text-gray-900 mb-4">🎯 Top by Win Rate</h3>
-                <div class="space-y-3">
-                  <%= for entry <- Enum.take(@leaderboards.traders.by_win_rate, 10) do %>
-                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div class="flex items-center space-x-3">
-                        <span class={"text-label-medium #{rank_color(entry.rank)}"}>
-                          <%= rank_badge(entry.rank) %> #<%= entry.rank %>
-                        </span>
-                        <span class="text-body-base text-gray-700 font-mono text-sm">
-                          <%= format_pubkey(entry.user_pubkey) %>
-                        </span>
-                      </div>
-                      <span class="text-body-base font-semibold text-green-600">
-                        <%= format_percentage(entry.value) %>
-                      </span>
-                    </div>
-                  <% end %>
-                </div>
-              </div>
-
-              <!-- By ROI -->
-              <div>
-                <h3 class="text-heading-sm font-bold text-gray-900 mb-4">📈 Top by ROI</h3>
-                <div class="space-y-3">
-                  <%= for entry <- Enum.take(@leaderboards.traders.by_roi, 10) do %>
-                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div class="flex items-center space-x-3">
-                        <span class={"text-label-medium #{rank_color(entry.rank)}"}>
-                          <%= rank_badge(entry.rank) %> #<%= entry.rank %>
-                        </span>
-                        <span class="text-body-base text-gray-700 font-mono text-sm">
-                          <%= format_pubkey(entry.user_pubkey) %>
-                        </span>
-                      </div>
-                      <span class={"text-body-base font-semibold #{metric_color(entry.value)}"}>
-                        <%= format_percentage(entry.value) %>
-                      </span>
-                    </div>
-                  <% end %>
-                </div>
-              </div>
-            </div>
-          <% end %>
-
-          <!-- Collections Tab -->
-          <%= if @active_tab == "collections" and @leaderboards do %>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <!-- By Collection Value -->
-              <div>
-                <h3 class="text-heading-sm font-bold text-gray-900 mb-4">💎 Top by Collection Value</h3>
-                <div class="space-y-3">
-                  <%= for entry <- Enum.take(@leaderboards.collections.by_total_value, 10) do %>
-                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div class="flex items-center space-x-3">
-                        <span class={"text-label-medium #{rank_color(entry.rank)}"}>
-                          <%= rank_badge(entry.rank) %> #<%= entry.rank %>
-                        </span>
-                        <span class="text-body-base text-gray-700 font-mono text-sm">
-                          <%= format_pubkey(entry.user_pubkey) %>
-                        </span>
-                      </div>
-                      <span class="text-body-base font-semibold text-gray-900">
-                        <%= format_currency(entry.value) %>
-                      </span>
-                    </div>
-                  <% end %>
-                </div>
-              </div>
-
-              <!-- By Card Count -->
-              <div>
-                <h3 class="text-heading-sm font-bold text-gray-900 mb-4">🎴 Top by Card Count</h3>
-                <div class="space-y-3">
-                  <%= for entry <- Enum.take(@leaderboards.collections.by_card_count, 10) do %>
-                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div class="flex items-center space-x-3">
-                        <span class={"text-label-medium #{rank_color(entry.rank)}"}>
-                          <%= rank_badge(entry.rank) %> #<%= entry.rank %>
-                        </span>
-                        <span class="text-body-base text-gray-700 font-mono text-sm">
-                          <%= format_pubkey(entry.user_pubkey) %>
-                        </span>
-                      </div>
-                      <span class="text-body-base font-semibold text-gray-900">
-                        <%= format_number(entry.value) %> cards
-                      </span>
-                    </div>
-                  <% end %>
-                </div>
-              </div>
-
-              <!-- By Rarity Score -->
-              <div>
-                <h3 class="text-heading-sm font-bold text-gray-900 mb-4">✨ Top by Rarity Score</h3>
-                <div class="space-y-3">
-                  <%= for entry <- Enum.take(@leaderboards.collections.by_rarity_score, 10) do %>
-                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div class="flex items-center space-x-3">
-                        <span class={"text-label-medium #{rank_color(entry.rank)}"}>
-                          <%= rank_badge(entry.rank) %> #<%= entry.rank %>
-                        </span>
-                        <span class="text-body-base text-gray-700 font-mono text-sm">
-                          <%= format_pubkey(entry.user_pubkey) %>
-                        </span>
-                      </div>
-                      <span class="text-body-base font-semibold text-purple-600">
-                        <%= format_number(entry.value) %> pts
-                      </span>
-                    </div>
-                  <% end %>
-                </div>
-              </div>
-
-              <!-- By Completion -->
-              <div>
-                <h3 class="text-heading-sm font-bold text-gray-900 mb-4">🎯 Top by Completion</h3>
-                <div class="space-y-3">
-                  <%= for entry <- Enum.take(@leaderboards.collections.by_completion, 10) do %>
-                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div class="flex items-center space-x-3">
-                        <span class={"text-label-medium #{rank_color(entry.rank)}"}>
-                          <%= rank_badge(entry.rank) %> #<%= entry.rank %>
-                        </span>
-                        <span class="text-body-base text-gray-700 font-mono text-sm">
-                          <%= format_pubkey(entry.user_pubkey) %>
-                        </span>
-                      </div>
-                      <span class="text-body-base font-semibold text-blue-600">
-                        <%= format_percentage(entry.value) %>
-                      </span>
-                    </div>
-                  <% end %>
-                </div>
-              </div>
-            </div>
-          <% end %>
-
-          <!-- Performance Tab -->
-          <%= if @active_tab == "performance" and @leaderboards do %>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <!-- By Performance Score -->
-              <div>
-                <h3 class="text-heading-sm font-bold text-gray-900 mb-4">🏆 Top by Performance Score</h3>
-                <div class="space-y-3">
-                  <%= for entry <- Enum.take(@leaderboards.performance.by_performance_score, 10) do %>
-                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div class="flex items-center space-x-3">
-                        <span class={"text-label-medium #{rank_color(entry.rank)}"}>
-                          <%= rank_badge(entry.rank) %> #<%= entry.rank %>
-                        </span>
-                        <span class="text-body-base text-gray-700 font-mono text-sm">
-                          <%= format_pubkey(entry.user_pubkey) %>
-                        </span>
-                      </div>
-                      <span class="text-body-base font-semibold text-blue-600">
-                        <%= format_number(entry.value) %>/100
-                      </span>
-                    </div>
-                  <% end %>
-                </div>
-              </div>
-
-              <!-- By Sharpe Ratio -->
-              <div>
-                <h3 class="text-heading-sm font-bold text-gray-900 mb-4">📊 Top by Sharpe Ratio</h3>
-                <div class="space-y-3">
-                  <%= for entry <- Enum.take(@leaderboards.performance.by_sharpe_ratio, 10) do %>
-                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div class="flex items-center space-x-3">
-                        <span class={"text-label-medium #{rank_color(entry.rank)}"}>
-                          <%= rank_badge(entry.rank) %> #<%= entry.rank %>
-                        </span>
-                        <span class="text-body-base text-gray-700 font-mono text-sm">
-                          <%= format_pubkey(entry.user_pubkey) %>
-                        </span>
-                      </div>
-                      <span class="text-body-base font-semibold text-green-600">
-                        <%= format_number(entry.value) %>
-                      </span>
-                    </div>
-                  <% end %>
-                </div>
-              </div>
-            </div>
-          <% end %>
-
-          <!-- Achievements Tab -->
-          <%= if @active_tab == "achievements" and @leaderboards do %>
-            <div class="text-center py-12">
-              <div class="text-6xl mb-4">🏆</div>
-              <h3 class="text-heading-lg font-bold text-gray-900 mb-2">Achievement System</h3>
-              <p class="text-body-base text-gray-600 mb-6">
-                Achievements and reputation tracking coming soon!
-              </p>
-              <div class="bg-gray-50 rounded-lg p-6 max-w-md mx-auto">
-                <h4 class="text-label-large font-semibold text-gray-700 mb-3">Planned Features</h4>
-                <ul class="text-body-small text-gray-600 space-y-2">
-                  <li>🏅 Trading milestone badges</li>
-                  <li>⭐ Community reputation scores</li>
-                  <li>🎖️ Special recognition titles</li>
-                  <li>👑 Hall of fame entries</li>
-                  <li>🎯 Monthly competitions</li>
-                </ul>
-              </div>
-            </div>
-          <% end %>
-        <% end %>
-      </div>
-    </div>
+        </div>
   </div>
 </div>

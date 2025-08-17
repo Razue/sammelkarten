@@ -190,15 +190,18 @@ defmodule Sammelkarten.Leaderboards do
   # Private helper functions
 
   defp get_all_active_users(period_days) do
-    cutoff_time = :os.system_time(:second) - period_days * 86400
+    cutoff_time = DateTime.utc_now() |> DateTime.add(-period_days, :day)
 
     try do
       users =
-        :mnesia.dirty_match_object({:user_trades, :_, :_, :_, :_, :_, :_, :_, :_, :_})
-        |> Enum.filter(fn {_, _, _, _, _, _, _, _, created_at, _} ->
-          created_at >= cutoff_time
+        :mnesia.dirty_match_object({:user_trades, :_, :_, :_, :_, :_, :_, :_, :_, :_, :_, :_, :_})
+        |> Enum.filter(fn {_, _, _, _, _, _, _, _, _, _, created_at, _, _} ->
+          case created_at do
+            %DateTime{} -> DateTime.compare(created_at, cutoff_time) == :gt
+            _ -> false
+          end
         end)
-        |> Enum.map(fn {_, _, user_pubkey, _, _, _, _, _, _, _} -> user_pubkey end)
+        |> Enum.map(fn {_, _, user_pubkey, _, _, _, _, _, _, _, _, _, _} -> user_pubkey end)
         |> Enum.uniq()
 
       {:ok, users}
@@ -224,8 +227,8 @@ defmodule Sammelkarten.Leaderboards do
     try do
       # Get users from various tables
       trade_users =
-        :mnesia.dirty_match_object({:user_trades, :_, :_, :_, :_, :_, :_, :_, :_, :_})
-        |> Enum.map(fn {_, _, user_pubkey, _, _, _, _, _, _, _} -> user_pubkey end)
+        :mnesia.dirty_match_object({:user_trades, :_, :_, :_, :_, :_, :_, :_, :_, :_, :_, :_, :_})
+        |> Enum.map(fn {_, _, user_pubkey, _, _, _, _, _, _, _, _, _, _} -> user_pubkey end)
 
       collection_users =
         :mnesia.dirty_match_object({:user_collections, :_, :_, :_, :_})

@@ -1,7 +1,7 @@
 defmodule Sammelkarten.Analytics do
   @moduledoc """
   Analytics system for user trading performance and portfolio growth tracking.
-  
+
   This module provides:
   - User trading performance metrics and statistics
   - Portfolio growth analysis and historical tracking
@@ -18,7 +18,6 @@ defmodule Sammelkarten.Analytics do
   def get_user_performance(user_pubkey, days_back \\ 30) do
     with {:ok, trades} <- get_user_trades(user_pubkey, days_back),
          {:ok, portfolio_history} <- get_portfolio_history(user_pubkey, days_back) do
-      
       performance = %{
         user_pubkey: user_pubkey,
         period_days: days_back,
@@ -31,7 +30,7 @@ defmodule Sammelkarten.Analytics do
         card_preferences: analyze_card_preferences(trades),
         performance_score: calculate_performance_score(trades, portfolio_history)
       }
-      
+
       {:ok, performance}
     else
       error -> error
@@ -44,7 +43,6 @@ defmodule Sammelkarten.Analytics do
   def get_portfolio_growth_analysis(user_pubkey, days_back \\ 90) do
     with {:ok, portfolio_history} <- get_portfolio_history(user_pubkey, days_back),
          {:ok, trades} <- get_user_trades(user_pubkey, days_back) do
-      
       analysis = %{
         user_pubkey: user_pubkey,
         period_days: days_back,
@@ -58,7 +56,7 @@ defmodule Sammelkarten.Analytics do
         trading_impact: analyze_trading_impact(trades, portfolio_history),
         growth_trend: analyze_growth_trend(portfolio_history)
       }
-      
+
       {:ok, analysis}
     else
       error -> error
@@ -71,15 +69,15 @@ defmodule Sammelkarten.Analytics do
   def get_comparative_performance(user_pubkey, days_back \\ 30) do
     with {:ok, user_performance} <- get_user_performance(user_pubkey, days_back),
          {:ok, market_stats} <- get_market_performance_stats(days_back) do
-      
       comparison = %{
         user_performance: user_performance,
         market_averages: market_stats,
         percentile_rankings: calculate_percentile_rankings(user_performance, market_stats),
         outperformance: calculate_outperformance_metrics(user_performance, market_stats),
-        risk_adjusted_performance: calculate_risk_adjusted_comparison(user_performance, market_stats)
+        risk_adjusted_performance:
+          calculate_risk_adjusted_comparison(user_performance, market_stats)
       }
-      
+
       {:ok, comparison}
     else
       error -> error
@@ -92,7 +90,6 @@ defmodule Sammelkarten.Analytics do
   def get_trading_insights(user_pubkey, days_back \\ 60) do
     with {:ok, performance} <- get_user_performance(user_pubkey, days_back),
          {:ok, growth} <- get_portfolio_growth_analysis(user_pubkey, days_back) do
-      
       insights = %{
         strengths: identify_trading_strengths(performance),
         weaknesses: identify_trading_weaknesses(performance),
@@ -101,7 +98,7 @@ defmodule Sammelkarten.Analytics do
         market_timing: analyze_market_timing(performance),
         diversification: analyze_diversification(performance)
       }
-      
+
       {:ok, insights}
     else
       error -> error
@@ -111,16 +108,21 @@ defmodule Sammelkarten.Analytics do
   # Private functions
 
   defp get_user_trades(user_pubkey, days_back) do
-    cutoff_time = :os.system_time(:second) - (days_back * 86400)
-    
+    cutoff_time = DateTime.utc_now() |> DateTime.add(-days_back, :day)
+
     try do
-      trades = 
-        :mnesia.dirty_match_object({:user_trades, :_, user_pubkey, :_, :_, :_, :_, :_, :_, :_})
-        |> Enum.filter(fn {_, _, _, _, _, _, _, _, created_at, _} ->
-          created_at >= cutoff_time
+      trades =
+        :mnesia.dirty_match_object(
+          {:user_trades, :_, user_pubkey, :_, :_, :_, :_, :_, :_, :_, :_, :_, :_}
+        )
+        |> Enum.filter(fn {_, _, _, _, _, _, _, _, _, _, created_at, _, _} ->
+          case created_at do
+            %DateTime{} -> DateTime.compare(created_at, cutoff_time) == :gt
+            _ -> false
+          end
         end)
         |> Enum.map(&trade_record_to_map/1)
-      
+
       {:ok, trades}
     rescue
       error -> {:error, {:database_error, error}}
@@ -128,17 +130,17 @@ defmodule Sammelkarten.Analytics do
   end
 
   defp get_portfolio_history(user_pubkey, days_back) do
-    cutoff_time = :os.system_time(:second) - (days_back * 86400)
-    
+    cutoff_time = :os.system_time(:second) - days_back * 86400
+
     try do
-      history = 
+      history =
         :mnesia.dirty_match_object({:user_portfolios, user_pubkey, :_, :_})
         |> Enum.filter(fn {_, _, _, last_calculated} ->
           last_calculated >= cutoff_time
         end)
         |> Enum.map(&portfolio_record_to_map/1)
         |> Enum.sort_by(& &1.last_calculated)
-      
+
       {:ok, history}
     rescue
       error -> {:error, {:database_error, error}}
@@ -146,13 +148,14 @@ defmodule Sammelkarten.Analytics do
   end
 
   defp calculate_trading_metrics(trades) do
-    total_volume = Enum.reduce(trades, 0, fn trade, acc ->
-      acc + (trade.price * trade.quantity)
-    end)
-    
-    buy_trades = Enum.filter(trades, & &1.type == "buy")
-    sell_trades = Enum.filter(trades, & &1.type == "sell")
-    
+    total_volume =
+      Enum.reduce(trades, 0, fn trade, acc ->
+        acc + trade.price * trade.quantity
+      end)
+
+    buy_trades = Enum.filter(trades, &(&1.trade_type == "buy"))
+    sell_trades = Enum.filter(trades, &(&1.trade_type == "sell"))
+
     %{
       total_volume: total_volume,
       buy_trades: length(buy_trades),
@@ -166,34 +169,69 @@ defmodule Sammelkarten.Analytics do
 
   defp calculate_portfolio_growth(portfolio_history) do
     if length(portfolio_history) < 2 do
-      %{growth_rate: 0, total_return: 0, annualized_return: 0}
+      %{
+        growth_rate: 0,
+        total_return: 0,
+        annualized_return: 0,
+        initial_value: 0,
+        final_value: 0,
+        current_value: 0,
+        sharpe_ratio: 0
+      }
     else
-      initial_value = List.first(portfolio_history).total_value
-      final_value = List.last(portfolio_history).total_value
-      
-      total_return = if initial_value > 0 do
-        (final_value - initial_value) / initial_value
-      else
-        0
-      end
-      
+      first_entry = List.first(portfolio_history)
+      last_entry = List.last(portfolio_history)
+
+      # Defensive programming - ensure we have valid portfolio entries
+      initial_value =
+        case first_entry do
+          %{total_value: val} when is_number(val) -> val
+          _ -> 0
+        end
+
+      final_value =
+        case last_entry do
+          %{total_value: val} when is_number(val) -> val
+          _ -> initial_value
+        end
+
+      total_return =
+        if initial_value > 0 do
+          (final_value - initial_value) / initial_value
+        else
+          0
+        end
+
       # Calculate time period in years
-      initial_time = List.first(portfolio_history).last_calculated
-      final_time = List.last(portfolio_history).last_calculated
+      initial_time =
+        case first_entry do
+          %{last_calculated: time} when is_number(time) -> time
+          _ -> :os.system_time(:second)
+        end
+
+      final_time =
+        case last_entry do
+          %{last_calculated: time} when is_number(time) -> time
+          _ -> :os.system_time(:second)
+        end
+
       years = (final_time - initial_time) / (365.25 * 86400)
-      
-      annualized_return = if years > 0 and initial_value > 0 do
-        :math.pow(final_value / initial_value, 1 / years) - 1
-      else
-        0
-      end
-      
+
+      annualized_return =
+        if is_number(years) and years > 0 and is_number(initial_value) and initial_value > 0 do
+          :math.pow(final_value / initial_value, 1 / years) - 1
+        else
+          0
+        end
+
       %{
         growth_rate: total_return,
         total_return: total_return,
         annualized_return: annualized_return,
         initial_value: initial_value,
-        final_value: final_value
+        final_value: final_value,
+        current_value: final_value,
+        sharpe_ratio: calculate_sharpe_ratio(portfolio_history)
       }
     end
   end
@@ -203,11 +241,11 @@ defmodule Sammelkarten.Analytics do
       %{volatility: 0, max_drawdown: 0, var_95: 0}
     else
       returns = calculate_daily_returns(portfolio_history)
-      
+
       volatility = calculate_volatility(returns)
       max_drawdown = calculate_max_drawdown_from_history(portfolio_history)
       var_95 = calculate_var(returns, 0.05)
-      
+
       %{
         volatility: volatility,
         max_drawdown: max_drawdown,
@@ -222,7 +260,7 @@ defmodule Sammelkarten.Analytics do
     win_rate = calculate_win_rate(trades)
     avg_win = calculate_average_win(trades)
     avg_loss = calculate_average_loss(trades)
-    
+
     %{
       realized_pnl: realized_pnl,
       win_rate: win_rate,
@@ -242,7 +280,7 @@ defmodule Sammelkarten.Analytics do
       hourly_distribution = calculate_hourly_distribution(trades)
       daily_distribution = calculate_daily_distribution(trades)
       streaks = calculate_trading_streaks(trades)
-      
+
       %{
         peak_hours: get_peak_trading_hours(hourly_distribution),
         peak_days: get_peak_trading_days(daily_distribution),
@@ -256,14 +294,14 @@ defmodule Sammelkarten.Analytics do
     if length(trades) == 0 do
       %{favorite_cards: [], trading_distribution: %{}}
     else
-      card_frequency = 
+      card_frequency =
         trades
         |> Enum.group_by(& &1.card_id)
         |> Enum.map(fn {card_id, card_trades} ->
           {card_id, length(card_trades)}
         end)
         |> Enum.sort_by(fn {_card_id, count} -> count end, :desc)
-      
+
       %{
         favorite_cards: Enum.take(card_frequency, 5),
         trading_distribution: Map.new(card_frequency),
@@ -278,30 +316,37 @@ defmodule Sammelkarten.Analytics do
     growth_score = calculate_growth_score(portfolio_history)
     risk_score = calculate_risk_score(portfolio_history)
     consistency_score = calculate_consistency_score(trades)
-    
+
     # Weighted average of scores
-    total_score = 
+    total_score =
       profitability_score * 0.3 +
-      growth_score * 0.3 +
-      risk_score * 0.2 +
-      consistency_score * 0.2
-    
-    min(max(total_score, 0), 100)  # Clamp between 0-100
+        growth_score * 0.3 +
+        risk_score * 0.2 +
+        consistency_score * 0.2
+
+    # Clamp between 0-100
+    min(max(total_score, 0), 100)
   end
 
   # Helper functions for calculations
 
-  defp trade_record_to_map({:user_trades, id, user_pubkey, card_id, type, quantity, price, status, created_at, expires_at}) do
+  defp trade_record_to_map(
+         {:user_trades, id, user_pubkey, card_id, trade_type, quantity, price, total_value,
+          counterparty_pubkey, status, created_at, completed_at, nostr_event_id}
+       ) do
     %{
       id: id,
       user_pubkey: user_pubkey,
       card_id: card_id,
-      type: type,
+      trade_type: trade_type,
       quantity: quantity,
       price: price,
+      total_value: total_value,
+      counterparty_pubkey: counterparty_pubkey,
       status: status,
       created_at: created_at,
-      expires_at: expires_at
+      completed_at: completed_at,
+      nostr_event_id: nostr_event_id
     }
   end
 
@@ -330,12 +375,13 @@ defmodule Sammelkarten.Analytics do
       0
     else
       mean_return = Enum.sum(returns) / length(returns)
-      variance = 
+
+      variance =
         returns
         |> Enum.map(fn r -> :math.pow(r - mean_return, 2) end)
         |> Enum.sum()
         |> Kernel./(length(returns) - 1)
-      
+
       :math.sqrt(variance)
     end
   end
@@ -343,12 +389,13 @@ defmodule Sammelkarten.Analytics do
   # Placeholder implementations for complex calculations
   defp get_market_performance_stats(_days_back) do
     # This would aggregate performance across all users
-    {:ok, %{
-      avg_return: 0.05,
-      avg_trades_per_user: 15,
-      avg_portfolio_growth: 0.03,
-      market_volatility: 0.15
-    }}
+    {:ok,
+     %{
+       avg_return: 0.05,
+       avg_trades_per_user: 15,
+       avg_portfolio_growth: 0.03,
+       market_volatility: 0.15
+     }}
   end
 
   defp calculate_percentile_rankings(_user_performance, _market_stats) do
@@ -378,16 +425,30 @@ defmodule Sammelkarten.Analytics do
 
   # Simplified implementations for demonstration
   defp calculate_trade_frequency(_trades), do: 2.5
-  defp get_largest_trade(trades), do: if(length(trades) > 0, do: Enum.max_by(trades, & &1.price * &1.quantity), else: nil)
-  defp get_smallest_trade(trades), do: if(length(trades) > 0, do: Enum.min_by(trades, & &1.price * &1.quantity), else: nil)
-  defp get_initial_portfolio_value(history), do: if(length(history) > 0, do: List.first(history).total_value, else: 0)
-  defp get_current_portfolio_value(history), do: if(length(history) > 0, do: List.last(history).total_value, else: 0)
-  defp get_peak_portfolio_value(history), do: if(length(history) > 0, do: Enum.max_by(history, & &1.total_value).total_value, else: 0)
+
+  defp get_largest_trade(trades),
+    do: if(length(trades) > 0, do: Enum.max_by(trades, &(&1.price * &1.quantity)), else: nil)
+
+  defp get_smallest_trade(trades),
+    do: if(length(trades) > 0, do: Enum.min_by(trades, &(&1.price * &1.quantity)), else: nil)
+
+  defp get_initial_portfolio_value(history),
+    do: if(length(history) > 0, do: List.first(history).total_value, else: 0)
+
+  defp get_current_portfolio_value(history),
+    do: if(length(history) > 0, do: List.last(history).total_value, else: 0)
+
+  defp get_peak_portfolio_value(history),
+    do: if(length(history) > 0, do: Enum.max_by(history, & &1.total_value).total_value, else: 0)
+
   defp calculate_growth_rate(history), do: calculate_portfolio_growth(history).growth_rate
   defp calculate_portfolio_volatility(history), do: calculate_risk_metrics(history).volatility
   defp calculate_max_drawdown(history), do: calculate_risk_metrics(history).max_drawdown
   defp calculate_sharpe_ratio(_history), do: 1.2
-  defp analyze_trading_impact(_trades, _history), do: %{positive_impact: 0.75, negative_impact: 0.25}
+
+  defp analyze_trading_impact(_trades, _history),
+    do: %{positive_impact: 0.75, negative_impact: 0.25}
+
   defp analyze_growth_trend(_history), do: :upward
   defp calculate_realized_pnl(_trades), do: 5000
   defp calculate_win_rate(_trades), do: 0.65
@@ -410,8 +471,13 @@ defmodule Sammelkarten.Analytics do
   defp analyze_return_distribution(_returns), do: %{skewness: 0.1, kurtosis: 3.2}
   defp identify_trading_strengths(_performance), do: ["consistent_returns", "risk_management"]
   defp identify_trading_weaknesses(_performance), do: ["overtrading", "market_timing"]
-  defp generate_recommendations(_performance, _growth), do: ["diversify_holdings", "reduce_trade_frequency"]
+
+  defp generate_recommendations(_performance, _growth),
+    do: ["diversify_holdings", "reduce_trade_frequency"]
+
   defp assess_risk_profile(_performance, _growth), do: %{risk_level: :moderate, risk_score: 60}
   defp analyze_market_timing(_performance), do: %{timing_skill: 0.6, market_correlation: 0.8}
-  defp analyze_diversification(_performance), do: %{diversification_ratio: 0.75, concentration_risk: :low}
+
+  defp analyze_diversification(_performance),
+    do: %{diversification_ratio: 0.75, concentration_risk: :low}
 end

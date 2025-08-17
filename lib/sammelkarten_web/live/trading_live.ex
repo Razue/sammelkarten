@@ -1,4 +1,10 @@
 defmodule SammelkartenWeb.TradingLive do
+  import SammelkartenWeb.TradingLive.ActiveOffersTab, only: [active_offers_tab: 1]
+  import SammelkartenWeb.TradingLive.MyOffersTab, only: [my_offers_tab: 1]
+  import SammelkartenWeb.TradingLive.TradeHistoryTab, only: [trade_history_tab: 1]
+  import SammelkartenWeb.TradingLive.CreateOfferTab, only: [create_offer_tab: 1]
+  import SammelkartenWeb.TradingLive.ExchangesTab, only: [exchanges_tab: 1]
+
   @moduledoc """
   LiveView for peer-to-peer card trading via Nostr events.
 

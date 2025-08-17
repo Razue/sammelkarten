@@ -346,6 +346,164 @@
             </div>
           </div>
           
+<!-- Nostr & Authentication Section -->
+          <div class="border-b border-gray-200 dark:border-gray-600 pb-8">
+            <div class="flex items-center mb-6">
+              <div class="flex items-center justify-center h-10 w-10 rounded-full bg-orange-100">
+                <svg
+                  class="h-6 w-6 text-orange-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15 7a2 2 0 012 2m4 0a6 6 0 01-6 6c-1 5-6 9-11 9l-3-6 4-4 4-4 3 3a6 6 0 016-6z"
+                  />
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white ml-4">
+                Nostr & Authentication
+              </h3>
+            </div>
+            <div class="space-y-6">
+              <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                <div class="flex items-start">
+                  <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                  </div>
+                  <div class="ml-3">
+                    <h4 class="text-sm font-medium text-blue-800 dark:text-blue-200">Nostr Protocol Integration</h4>
+                    <div class="mt-2 text-sm text-blue-700 dark:text-blue-300">
+                      <p>Connect your Nostr identity to enable decentralized trading and social features. Your private key is stored securely in your browser and never sent to our servers.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="space-y-4">
+                <div class="flex items-start">
+                  <div class="flex items-center h-5">
+                    <input type="hidden" name="preferences[nostr_enabled]" value="false" />
+                    <input
+                      type="checkbox"
+                      name="preferences[nostr_enabled]"
+                      id="nostr_enabled"
+                      value="true"
+                      checked={
+                        if Map.has_key?(@form_data, :nostr_enabled),
+                          do: @form_data[:nostr_enabled],
+                          else: @user_preferences.nostr_enabled || false
+                      }
+                      class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                    />
+                  </div>
+                  <div class="ml-3 text-sm">
+                    <label for="nostr_enabled" class="font-medium text-gray-700 dark:text-gray-300">
+                      Enable Nostr Integration
+                    </label>
+                    <p class="text-gray-500 dark:text-gray-400">
+                      Connect with the Nostr protocol for decentralized identity and trading
+                    </p>
+                  </div>
+                </div>
+                
+                <div class="pl-7">
+                  <div class="space-y-3">
+                    <div>
+                      <label for="nostr_pubkey" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Public Key (npub or hex)
+                      </label>
+                      <input
+                        type="text"
+                        name="preferences[nostr_pubkey]"
+                        id="nostr_pubkey"
+                        placeholder="npub1... or hex format"
+                        value={@form_data[:nostr_pubkey] || @user_preferences.nostr_pubkey || ""}
+                        class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono text-xs"
+                      />
+                      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        Your Nostr public key for identity verification
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <label for="nostr_relays" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Preferred Relays
+                      </label>
+                      <textarea
+                        name="preferences[nostr_relays]"
+                        id="nostr_relays"
+                        rows="3"
+                        placeholder="wss://relay.damus.io&#10;wss://nos.lol&#10;wss://relay.snort.social"
+                        class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono text-xs"
+                      >{@form_data[:nostr_relays] || @user_preferences.nostr_relays || "wss://relay.damus.io\nwss://nos.lol\nwss://relay.snort.social"}</textarea>
+                      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        One relay URL per line (wss:// format)
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="flex items-start">
+                  <div class="flex items-center h-5">
+                    <input type="hidden" name="preferences[nostr_auto_connect]" value="false" />
+                    <input
+                      type="checkbox"
+                      name="preferences[nostr_auto_connect]"
+                      id="nostr_auto_connect"
+                      value="true"
+                      checked={
+                        if Map.has_key?(@form_data, :nostr_auto_connect),
+                          do: @form_data[:nostr_auto_connect],
+                          else: @user_preferences.nostr_auto_connect || false
+                      }
+                      class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                    />
+                  </div>
+                  <div class="ml-3 text-sm">
+                    <label for="nostr_auto_connect" class="font-medium text-gray-700 dark:text-gray-300">
+                      Auto-connect to relays
+                    </label>
+                    <p class="text-gray-500 dark:text-gray-400">
+                      Automatically connect to your preferred relays when loading the application
+                    </p>
+                  </div>
+                </div>
+                
+                <div class="flex items-start">
+                  <div class="flex items-center h-5">
+                    <input type="hidden" name="preferences[nostr_show_profile]" value="false" />
+                    <input
+                      type="checkbox"
+                      name="preferences[nostr_show_profile]"
+                      id="nostr_show_profile"
+                      value="true"
+                      checked={
+                        if Map.has_key?(@form_data, :nostr_show_profile),
+                          do: @form_data[:nostr_show_profile],
+                          else: @user_preferences.nostr_show_profile || true
+                      }
+                      class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                    />
+                  </div>
+                  <div class="ml-3 text-sm">
+                    <label for="nostr_show_profile" class="font-medium text-gray-700 dark:text-gray-300">
+                      Display Nostr profile in trades
+                    </label>
+                    <p class="text-gray-500 dark:text-gray-400">
+                      Show your Nostr profile information when making trades or offers
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
 <!-- Default Sorting Section -->
           <div class="border-b border-gray-200 dark:border-gray-600 pb-8">
             <div class="flex items-center mb-6">

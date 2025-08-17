@@ -33,6 +33,16 @@ defmodule Sammelkarten.UserPreferences do
     chart_style: "line",
     # List of price alert configurations
     price_alerts: [],
+    # Nostr protocol integration settings
+    nostr_enabled: false,
+    # Nostr public key (npub or hex format)
+    nostr_pubkey: nil,
+    # Nostr relay URLs (newline separated)
+    nostr_relays: "wss://relay.damus.io\nwss://nos.lol\nwss://relay.snort.social",
+    # Auto-connect to relays on app load
+    nostr_auto_connect: false,
+    # Show Nostr profile in trades
+    nostr_show_profile: true,
     created_at: nil,
     updated_at: nil
   ]
@@ -51,6 +61,11 @@ defmodule Sammelkarten.UserPreferences do
           ticker_speed: integer(),
           chart_style: String.t(),
           price_alerts: list(),
+          nostr_enabled: boolean(),
+          nostr_pubkey: String.t() | nil,
+          nostr_relays: String.t(),
+          nostr_auto_connect: boolean(),
+          nostr_show_profile: boolean(),
           created_at: DateTime.t() | nil,
           updated_at: DateTime.t() | nil
         }
@@ -90,7 +105,9 @@ defmodule Sammelkarten.UserPreferences do
          :ok <- validate_sort_direction(preferences.default_sort_direction),
          :ok <- validate_cards_per_page(preferences.cards_per_page),
          :ok <- validate_ticker_speed(preferences.ticker_speed),
-         :ok <- validate_chart_style(preferences.chart_style) do
+         :ok <- validate_chart_style(preferences.chart_style),
+         :ok <- validate_nostr_pubkey(preferences.nostr_pubkey),
+         :ok <- validate_nostr_relays(preferences.nostr_relays) do
       {:ok, preferences}
     else
       {:error, reason} -> {:error, reason}
@@ -129,6 +146,39 @@ defmodule Sammelkarten.UserPreferences do
 
   defp validate_chart_style(_),
     do: {:error, "Chart style must be 'line', 'candlestick', or 'area'"}
+
+  defp validate_nostr_pubkey(nil), do: :ok
+  defp validate_nostr_pubkey(""), do: :ok
+
+  defp validate_nostr_pubkey(pubkey) when is_binary(pubkey) do
+    cond do
+      String.starts_with?(pubkey, "npub1") and String.length(pubkey) == 63 ->
+        :ok
+
+      String.match?(pubkey, ~r/^[0-9a-fA-F]{64}$/) ->
+        :ok
+
+      true ->
+        {:error, "Nostr public key must be 64-character hex or npub1 format"}
+    end
+  end
+
+  defp validate_nostr_pubkey(_), do: {:error, "Nostr public key must be a string"}
+
+  defp validate_nostr_relays(relays) when is_binary(relays) do
+    relay_urls = String.split(relays, "\n", trim: true)
+
+    case Enum.all?(relay_urls, &valid_relay_url?/1) do
+      true -> :ok
+      false -> {:error, "All relay URLs must be valid wss:// format"}
+    end
+  end
+
+  defp validate_nostr_relays(_), do: {:error, "Nostr relays must be a string"}
+
+  defp valid_relay_url?(url) do
+    String.starts_with?(url, "wss://") and String.length(url) > 6
+  end
 
   @doc """
   Convert preferences to a map for JSON serialization.

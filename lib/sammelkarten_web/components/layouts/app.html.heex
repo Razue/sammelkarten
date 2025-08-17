@@ -1,4 +1,5 @@
-<nav class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 transition-colors duration-200">
+<nav
+  class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 transition-colors duration-200">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex justify-between items-center h-16">
       <!-- Logo and Brand -->
@@ -10,160 +11,82 @@
           <span class="text-heading-lg text-gray-900 dark:text-white">Sammelkarten</span>
         </.link>
       </div>
-      
-<!-- Navigation Links -->
-      <div class="hidden md:flex items-center space-x-8">
-        <.link
-          navigate={~p"/"}
-          class="nav-link text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 px-3 py-2 text-label-lg border border-blue-200 rounded-lg hover:bg-blue-50 dark:border-blue-700 dark:hover:bg-blue-900 transition-colors"
-        >
-          🃏 All Cards
-        </.link>
-        <.link
-          navigate={~p"/portfolio"}
-          class="nav-link text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 px-3 py-2 text-label-lg border border-blue-200 rounded-lg hover:bg-blue-50 dark:border-blue-700 dark:hover:bg-blue-900 transition-colors"
-        >
+
+      <!-- Navigation Links -->
+      <div class="hidden md:flex items-center space-x-4">
+        <.link navigate={~p"/portfolio"}
+          class="nav-link text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 px-3 py-2 text-label-md border border-blue-200 rounded-lg hover:bg-blue-50 dark:border-blue-700 dark:hover:bg-blue-900 transition-colors">
           📊 My Portfolio
         </.link>
-        <.link
-          navigate={~p"/analytics"}
-          class="nav-link text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 px-3 py-2 text-label-lg border border-purple-200 rounded-lg hover:bg-purple-50 dark:border-purple-700 dark:hover:bg-purple-900 transition-colors"
-        >
-          📈 Analytics
-        </.link>
-        <.link
-          navigate={~p"/trading"}
-          class="nav-link text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 px-3 py-2 text-label-lg border border-green-200 rounded-lg hover:bg-green-50 dark:border-green-700 dark:hover:bg-green-900 transition-colors"
-        >
+        <.link navigate={~p"/trading"}
+          class="nav-link text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 px-3 py-2 text-label-md border border-green-200 rounded-lg hover:bg-green-50 dark:border-green-700 dark:hover:bg-green-900 transition-colors">
           🔄 Exchange
         </.link>
-        <.link
-          navigate={~p"/market"}
-          class="nav-link text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 px-3 py-2 text-label-lg border border-green-200 rounded-lg hover:bg-green-50 dark:border-green-700 dark:hover:bg-green-900 transition-colors"
-        >
+        <.link navigate={~p"/market"}
+          class="nav-link text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 px-3 py-2 text-label-md border border-purple-200 rounded-lg hover:bg-purple-50 dark:border-purple-700 dark:hover:bg-purple-900 transition-colors">
           📈 Market
         </.link>
-        <.link
-          navigate={~p"/insights"}
-          class="nav-link text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300 px-3 py-2 text-label-lg border border-teal-200 rounded-lg hover:bg-teal-50 dark:border-teal-700 dark:hover:bg-teal-900 transition-colors"
-        >
-          🔍 Insights
+        <.link navigate={~p"/preferences"}
+          class="nav-link text-gray-600 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 px-3 py-2 text-label-md border border-gray-200 rounded-lg hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-900 transition-colors">
+          ⚙️ Settings
         </.link>
-        <.link
-          navigate={~p"/leaderboards"}
-          class="nav-link text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 px-3 py-2 text-label-lg border border-amber-200 rounded-lg hover:bg-amber-50 dark:border-amber-700 dark:hover:bg-amber-900 transition-colors"
-        >
-          🏆 Rankings
-        </.link>
-        <.link
-          navigate={~p"/auth"}
-          class="nav-link text-gray-600 hover:text-grey-700 dark:text-grey-400 dark:hover:text-grey-300 px-3 py-2 text-label-lg border border-grey-200 rounded-lg hover:bg-grey-50 dark:border-grey-700 dark:hover:bg-grey-900 transition-colors"
-        >
-          🔑 Nostr
-        </.link>
-        <.link
-          navigate={~p"/preferences"}
-          class="nav-link text-gray-600 hover:text-grey-700 dark:text-grey-400 dark:hover:text-grey-300 px-3 py-2 text-label-lg border border-grey-200 rounded-lg hover:bg-grey-50 dark:border-grey-700 dark:hover:bg-grey-900 transition-colors"
-        >
-          ⚙️ Preferences
-        </.link>
-        <.link
-          navigate={~p"/donation"}
-          class="nav-link text-orange-600 hover:text-orange-700 px-3 py-2 text-label-lg border border-orange-200 rounded-lg hover:bg-orange-50 transition-colors"
-        >
-          💝 Donation
+        <.link navigate={~p"/donation"}
+          class="nav-link text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 px-3 py-2 text-label-md border border-orange-200 rounded-lg hover:bg-orange-50 dark:border-orange-700 dark:hover:bg-orange-900 transition-colors">
+          💝 Donate
         </.link>
       </div>
-      
-<!-- Mobile menu button -->
+
+      <!-- Simple Mobile Navigation (CSS-only) -->
       <div class="md:hidden">
-        <button
-          type="button"
-          id="mobile-menu-button"
-          class="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
-          aria-label="Open menu"
-        >
-          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M4 6h16M4 12h16M4 18h16"
-            />
-          </svg>
-        </button>
-      </div>
-    </div>
-    
-<!-- Mobile menu -->
-    <div id="mobile-menu" class="md:hidden hidden">
-      <div class="px-2 pt-2 pb-3 space-y-1 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
-        <.link
-          navigate={~p"/"}
-          class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-700 rounded-md transition-colors"
-        >
-          Exchange
-        </.link>
-        <.link
-          navigate={~p"/cards"}
-          class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-700 rounded-md transition-colors"
-        >
-          Prices
-        </.link>
-        <.link
-          navigate={~p"/market"}
-          class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-700 rounded-md transition-colors"
-        >
-          Market
-        </.link>
-        <.link
-          navigate={~p"/insights"}
-          class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-700 rounded-md transition-colors"
-        >
-          Insights
-        </.link>
-        <.link
-          navigate={~p"/leaderboards"}
-          class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-700 rounded-md transition-colors"
-        >
-          Rankings
-        </.link>
-        <.link
-          navigate={~p"/portfolio"}
-          class="block px-3 py-2 text-base font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-900 rounded-md border border-blue-200 dark:border-blue-700 mx-3 transition-colors"
-        >
-          📊 My Portfolio
-        </.link>
-        <.link
-          navigate={~p"/analytics"}
-          class="block px-3 py-2 text-base font-medium text-purple-600 hover:text-purple-700 hover:bg-purple-50 dark:text-purple-400 dark:hover:text-purple-300 dark:hover:bg-purple-900 rounded-md border border-purple-200 dark:border-purple-700 mx-3 transition-colors"
-        >
-          📈 Analytics
-        </.link>
-        <.link
-          navigate={~p"/trading"}
-          class="block px-3 py-2 text-base font-medium text-green-600 hover:text-green-700 hover:bg-green-50 dark:text-green-400 dark:hover:text-green-300 dark:hover:bg-green-900 rounded-md border border-green-200 dark:border-green-700 mx-3 transition-colors"
-        >
-          🔄 Trading
-        </.link>
-        <.link
-          navigate={~p"/auth"}
-          class="block px-3 py-2 text-base font-medium text-grey-600 hover:text-grey-700 hover:bg-grey-50 dark:text-grey-400 dark:hover:text-grey-300 dark:hover:bg-grey-900 rounded-md border border-grey-200 dark:border-grey-700 mx-3 transition-colors"
-        >
-          🔑 Nostr Auth
-        </.link>
-        <.link
-          navigate={~p"/preferences"}
-          class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-700 rounded-md transition-colors"
-        >
-          Preferences
-        </.link>
-        <.link
-          navigate={~p"/donation"}
-          class="block px-3 py-2 text-base font-medium text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded-md border border-orange-200 mx-3 text-left"
-        >
-          💝 Donation
-        </.link>
+        <input type="checkbox" id="mobile-nav-toggle" class="mobile-nav-checkbox">
+        <label for="mobile-nav-toggle" class="mobile-nav-toggle text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">
+          <div class="mobile-nav-line"></div>
+          <div class="mobile-nav-line"></div>
+          <div class="mobile-nav-line"></div>
+        </label>
+        
+        <!-- Overlay -->
+        <label for="mobile-nav-toggle" class="mobile-nav-overlay"></label>
+        
+        <!-- Mobile Menu -->
+        <div class="mobile-nav-menu bg-white dark:bg-gray-800">
+          <div class="flex items-center justify-between mb-6 p-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex items-center space-x-3">
+              <div class="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                <span class="text-white font-bold text-sm">S</span>
+              </div>
+              <span class="text-heading-lg text-gray-900 dark:text-white">Menu</span>
+            </div>
+            <label for="mobile-nav-toggle" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 cursor-pointer">
+              <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </label>
+          </div>
+          
+          <div class="space-y-2 px-4">
+            <.link navigate={~p"/portfolio"} class="flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg">
+              <span class="text-lg">📊</span>
+              <span class="font-medium">Portfolio</span>
+            </.link>
+            <.link navigate={~p"/trading"} class="flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-900 hover:text-green-600 dark:hover:text-green-400 rounded-lg">
+              <span class="text-lg">🔄</span>
+              <span class="font-medium">Exchange</span>
+            </.link>
+            <.link navigate={~p"/market"} class="flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900 hover:text-purple-600 dark:hover:text-purple-400 rounded-lg">
+              <span class="text-lg">📈</span>
+              <span class="font-medium">Market</span>
+            </.link>
+            <.link navigate={~p"/preferences"} class="flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg">
+              <span class="text-lg">⚙️</span>
+              <span class="font-medium">Settings</span>
+            </.link>
+            <.link navigate={~p"/donation"} class="flex items-center space-x-3 px-4 py-3 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900 rounded-lg">
+              <span class="text-lg">💝</span>
+              <span class="font-medium">Donate</span>
+            </.link>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -189,10 +112,8 @@
           reserved.
         </span>
       </div>
-      <a
-        href="/donation"
-        class="flex items-center space-x-6 text-sm text-gray-500 dark:text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer"
-      >
+      <a href="/donation"
+        class="flex items-center space-x-6 text-sm text-gray-500 dark:text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
         <span class="text-[6px]">●</span>
         <span>Donate here</span>
         <span class="text-[6px]">●</span>

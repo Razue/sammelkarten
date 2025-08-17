@@ -87,7 +87,7 @@ defmodule Sammelkarten.Preferences do
     case :mnesia.transaction(fn ->
            :mnesia.select(:user_preferences, [
              {{:user_preferences, :"$1", :"$2", :"$3", :"$4", :"$5", :"$6", :"$7", :"$8", :"$9",
-               :"$10", :"$11", :"$12", :"$13", :"$14", :"$15"}, [], [:"$$"]}
+               :"$10", :"$11", :"$12", :"$13", :"$14", :"$15", :"$16", :"$17", :"$18", :"$19", :"$20"}, [], [:"$$"]}
            ])
          end) do
       {:atomic, records} ->
@@ -183,6 +183,11 @@ defmodule Sammelkarten.Preferences do
       prefs.ticker_speed,
       prefs.chart_style,
       prefs.price_alerts,
+      prefs.nostr_enabled,
+      prefs.nostr_pubkey,
+      prefs.nostr_relays,
+      prefs.nostr_auto_connect,
+      prefs.nostr_show_profile,
       prefs.created_at,
       prefs.updated_at
     }
@@ -209,7 +214,8 @@ defmodule Sammelkarten.Preferences do
   defp mnesia_record_to_struct(
          {:user_preferences, user_id, refresh_rate, theme, notifications_enabled, sound_enabled,
           auto_refresh, cards_per_page, default_sort, default_sort_direction, show_ticker,
-          ticker_speed, chart_style, price_alerts, created_at, updated_at}
+          ticker_speed, chart_style, price_alerts, nostr_enabled, nostr_pubkey, nostr_relays,
+          nostr_auto_connect, nostr_show_profile, created_at, updated_at}
        ) do
     %UserPreferences{
       user_id: user_id,
@@ -225,6 +231,11 @@ defmodule Sammelkarten.Preferences do
       ticker_speed: ticker_speed,
       chart_style: chart_style,
       price_alerts: price_alerts,
+      nostr_enabled: nostr_enabled,
+      nostr_pubkey: nostr_pubkey,
+      nostr_relays: nostr_relays,
+      nostr_auto_connect: nostr_auto_connect,
+      nostr_show_profile: nostr_show_profile,
       created_at: created_at,
       updated_at: updated_at
     }
@@ -245,6 +256,11 @@ defmodule Sammelkarten.Preferences do
          ticker_speed,
          chart_style,
          price_alerts,
+         nostr_enabled,
+         nostr_pubkey,
+         nostr_relays,
+         nostr_auto_connect,
+         nostr_show_profile,
          created_at,
          updated_at
        ]) do
@@ -262,6 +278,11 @@ defmodule Sammelkarten.Preferences do
       ticker_speed: ticker_speed,
       chart_style: chart_style,
       price_alerts: price_alerts,
+      nostr_enabled: nostr_enabled,
+      nostr_pubkey: nostr_pubkey,
+      nostr_relays: nostr_relays,
+      nostr_auto_connect: nostr_auto_connect,
+      nostr_show_profile: nostr_show_profile,
       created_at: created_at,
       updated_at: updated_at
     }

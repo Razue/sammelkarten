@@ -68,6 +68,10 @@ defmodule Sammelkarten.Database do
     
     # Create batch trading table
     create_batch_trades_table()
+    
+    # Create dynamic offer tables
+    create_dynamic_bitcoin_offers_table()
+    create_dynamic_card_exchanges_table()
 
     # Wait for tables to be available
     :mnesia.wait_for_tables(
@@ -80,7 +84,9 @@ defmodule Sammelkarten.Database do
         :user_trades,
         :user_portfolios,
         :lightning_escrows,
-        :batch_trades
+        :batch_trades,
+        :dynamic_bitcoin_offers,
+        :dynamic_card_exchanges
       ],
       5000
     )
@@ -430,6 +436,66 @@ defmodule Sammelkarten.Database do
 
       {:aborted, reason} ->
         Logger.error("Failed to create batch trades table: #{inspect(reason)}")
+    end
+  end
+
+  defp create_dynamic_bitcoin_offers_table do
+    table_def = [
+      attributes: [
+        :trade_id,
+        :trader_pubkey,
+        :card_id,
+        :offer_type,        # "buy_for_sats" or "sell_for_sats"
+        :quantity,
+        :sats_price,
+        :status,           # "open", "completed", "expired"
+        :created_at,
+        :expires_at
+      ],
+      ram_copies: [node()],
+      type: :set,
+      index: [:card_id, :offer_type, :status]
+    ]
+
+    case :mnesia.create_table(:dynamic_bitcoin_offers, table_def) do
+      {:atomic, :ok} ->
+        Logger.info("Dynamic Bitcoin offers table created successfully")
+
+      {:aborted, {:already_exists, :dynamic_bitcoin_offers}} ->
+        Logger.info("Dynamic Bitcoin offers table already exists")
+
+      {:aborted, reason} ->
+        Logger.error("Failed to create dynamic Bitcoin offers table: #{inspect(reason)}")
+    end
+  end
+
+  defp create_dynamic_card_exchanges_table do
+    table_def = [
+      attributes: [
+        :trade_id,
+        :trader_pubkey,
+        :wanted_card_id,
+        :offered_card_id,   # nil for "any card" offers
+        :offer_type,        # "offer", "want"
+        :quantity,
+        :status,           # "open", "completed", "expired"
+        :created_at,
+        :expires_at
+      ],
+      ram_copies: [node()],
+      type: :set,
+      index: [:wanted_card_id, :offered_card_id, :offer_type, :status]
+    ]
+
+    case :mnesia.create_table(:dynamic_card_exchanges, table_def) do
+      {:atomic, :ok} ->
+        Logger.info("Dynamic card exchanges table created successfully")
+
+      {:aborted, {:already_exists, :dynamic_card_exchanges}} ->
+        Logger.info("Dynamic card exchanges table already exists")
+
+      {:aborted, reason} ->
+        Logger.error("Failed to create dynamic card exchanges table: #{inspect(reason)}")
     end
   end
 

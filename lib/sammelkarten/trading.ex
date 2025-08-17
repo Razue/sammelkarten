@@ -95,6 +95,7 @@ defmodule Sammelkarten.Trading do
 
     case :mnesia.dirty_write(trade_record) do
       :ok -> :ok
+      {:error, reason} -> {:error, reason}
       error -> {:error, error}
     end
   rescue
@@ -117,7 +118,8 @@ defmodule Sammelkarten.Trading do
       status: status,
       created_at: created_at,
       completed_at: completed_at,
-      nostr_event_id: nostr_event_id
+      nostr_event_id: nostr_event_id,
+      expires_at: nil
     }
   end
 end

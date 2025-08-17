@@ -47,6 +47,7 @@ defmodule SammelkartenWeb.Router do
     pipe_through [:browser, :admin_auth]
 
     live "/", AdminLive, :index
+    live "/relays", RelayAdminLive, :index
   end
 
   scope "/", SammelkartenWeb do

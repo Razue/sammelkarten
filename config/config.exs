@@ -61,6 +61,8 @@ config :sammelkarten, :nostr,
     "wss://nostr.wine",
     "wss://relay.snort.social"
   ],
+  # Optional dedicated Sammelkarten relay (set to nil to disable)
+  dedicated_relay: nil,
   # Custom Sammelkarten event kinds
   custom_kinds: %{
     card_collection: 32121,
@@ -72,7 +74,13 @@ config :sammelkarten, :nostr,
   # Connection settings
   connection_timeout: 10_000,
   reconnect_interval: 5_000,
-  max_reconnect_attempts: 10
+  max_reconnect_attempts: 10,
+  # Relay discovery settings
+  discovery_enabled: true,
+  discovery_cache_ttl: 3600,  # 1 hour in seconds
+  # Relay performance settings
+  health_check_interval: 30_000,  # 30 seconds
+  min_relay_count: 2  # Minimum number of connected relays
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

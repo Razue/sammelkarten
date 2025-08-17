@@ -23,7 +23,9 @@ defmodule Sammelkarten.Nostr.Client do
     :connections,
     :subscriptions,
     :event_handlers,
-    :config
+    :config,
+    :relay_health,
+    :discovery_cache
   ]
 
   # Client API
@@ -64,6 +66,34 @@ defmodule Sammelkarten.Nostr.Client do
   end
 
   @doc """
+  Get relay health metrics and performance data.
+  """
+  def relay_health do
+    GenServer.call(__MODULE__, :relay_health)
+  end
+
+  @doc """
+  Discover additional Sammelkarten-focused relays.
+  """
+  def discover_relays do
+    GenServer.call(__MODULE__, :discover_relays)
+  end
+
+  @doc """
+  Add a new relay to the connection pool.
+  """
+  def add_relay(url) when is_binary(url) do
+    GenServer.call(__MODULE__, {:add_relay, url})
+  end
+
+  @doc """
+  Remove a relay from the connection pool.
+  """
+  def remove_relay(url) when is_binary(url) do
+    GenServer.call(__MODULE__, {:remove_relay, url})
+  end
+
+  @doc """
   Manually reconnect to all relays.
   """
   def reconnect_all do
@@ -81,7 +111,9 @@ defmodule Sammelkarten.Nostr.Client do
       connections: %{},
       subscriptions: %{},
       event_handlers: %{},
-      config: config
+      config: config,
+      relay_health: %{},
+      discovery_cache: %{last_discovery: nil, relays: []}
     }
 
     # Start connecting to relays asynchronously
@@ -92,18 +124,40 @@ defmodule Sammelkarten.Nostr.Client do
 
   @impl true
   def handle_call({:publish_event, event}, _from, state) do
-    # Publish event to all connected relays
-    results =
+    # Publish event to all connected relays with improved redundancy
+    connected_relays = 
       state.connections
       |> Enum.filter(fn {_url, conn} -> conn.status == :connected end)
-      |> Enum.map(fn {url, conn} ->
-        case send_to_relay(conn.pid, ["EVENT", event]) do
-          :ok -> {url, :ok}
-          error -> {url, error}
-        end
-      end)
+    
+    if Enum.empty?(connected_relays) do
+      {:reply, {:error, :no_connected_relays}, state}
+    else
+      {results, updated_state} =
+        connected_relays
+        |> Enum.map_reduce(state, fn {url, conn}, acc_state ->
+          case send_to_relay(conn.pid, ["EVENT", event]) do
+            :ok -> 
+              # Update health metrics for successful send
+              new_state = update_relay_health(acc_state, url, :event_sent)
+              {{url, :ok}, new_state}
+            _error -> 
+              # Update health metrics for error
+              new_state = update_relay_health(acc_state, url, :error)
+              {{url, :error}, new_state}
+          end
+        end)
 
-    {:reply, results, state}
+      # Consider event published if at least one relay succeeded
+      success_count = Enum.count(results, fn {_url, result} -> result == :ok end)
+      
+      response = if success_count > 0 do
+        {:ok, %{total: length(results), successful: success_count, results: results}}
+      else
+        {:error, %{total: length(results), successful: 0, results: results}}
+      end
+      
+      {:reply, response, updated_state}
+    end
   end
 
   @impl true
@@ -168,6 +222,106 @@ defmodule Sammelkarten.Nostr.Client do
   end
 
   @impl true
+  def handle_call(:relay_health, _from, state) do
+    health_data = 
+      state.relay_health
+      |> Enum.map(fn {url, health} ->
+        connection_status = case Map.get(state.connections, url) do
+          %{status: status} -> status
+          _ -> :unknown
+        end
+        {url, Map.put(health, :connection_status, connection_status)}
+      end)
+      |> Map.new()
+
+    {:reply, health_data, state}
+  end
+
+  @impl true
+  def handle_call(:discover_relays, _from, state) do
+    # Check if we need to perform discovery (cache for 1 hour)
+    now = :os.system_time(:second)
+    last_discovery = state.discovery_cache.last_discovery
+    
+    should_discover = is_nil(last_discovery) or (now - last_discovery) > 3600
+
+    if should_discover do
+      discovered_relays = perform_relay_discovery()
+      
+      new_cache = %{
+        last_discovery: now,
+        relays: discovered_relays
+      }
+      
+      new_state = %{state | discovery_cache: new_cache}
+      {:reply, {:ok, discovered_relays}, new_state}
+    else
+      {:reply, {:cached, state.discovery_cache.relays}, state}
+    end
+  end
+
+  @impl true
+  def handle_call({:add_relay, url}, _from, state) do
+    # Validate URL format
+    case validate_relay_url(url) do
+      :ok ->
+        # Add to relay list if not already present
+        if url in state.relays do
+          {:reply, {:error, :already_exists}, state}
+        else
+          new_relays = [url | state.relays]
+          new_state = %{state | relays: new_relays}
+          
+          # Attempt to connect to the new relay
+          case connect_to_relay(url) do
+            {^url, %{status: :connected} = conn} ->
+              new_connections = Map.put(state.connections, url, conn)
+              final_state = %{new_state | connections: new_connections}
+              
+              # Resubscribe to existing subscriptions
+              resubscribe_to_relay(conn.pid, state.subscriptions)
+              
+              {:reply, :ok, final_state}
+              
+            {^url, %{status: :error}} ->
+              {:reply, {:error, :connection_failed}, new_state}
+          end
+        end
+        
+      {:error, reason} ->
+        {:reply, {:error, reason}, state}
+    end
+  end
+
+  @impl true
+  def handle_call({:remove_relay, url}, _from, state) do
+    if url in state.relays do
+      # Disconnect from relay if connected
+      case Map.get(state.connections, url) do
+        %{pid: pid} when not is_nil(pid) ->
+          if Process.alive?(pid), do: GenServer.stop(pid)
+        _ -> :ok
+      end
+      
+      # Remove from state
+      new_relays = List.delete(state.relays, url)
+      new_connections = Map.delete(state.connections, url)
+      new_health = Map.delete(state.relay_health, url)
+      
+      new_state = %{
+        state | 
+        relays: new_relays,
+        connections: new_connections,
+        relay_health: new_health
+      }
+      
+      {:reply, :ok, new_state}
+    else
+      {:reply, {:error, :not_found}, state}
+    end
+  end
+
+  @impl true
   def handle_cast(:reconnect_all, state) do
     # Disconnect all and reconnect
     disconnect_all_relays(state)
@@ -197,9 +351,12 @@ defmodule Sammelkarten.Nostr.Client do
 
   @impl true
   def handle_info({:relay_message, url, message}, state) do
+    # Update health metrics
+    new_state = update_relay_health(state, url, :message_received)
+    
     case decode_message(message) do
       ["EVENT", sub_id, event] ->
-        handle_event(state, sub_id, event)
+        handle_event(new_state, sub_id, event)
 
       ["EOSE", sub_id] ->
         Logger.debug("End of stored events for subscription: #{sub_id}")
@@ -214,7 +371,7 @@ defmodule Sammelkarten.Nostr.Client do
         Logger.debug("Unknown message from relay #{url}: #{inspect(message)}")
     end
 
-    {:noreply, state}
+    {:noreply, new_state}
   end
 
   @impl true
@@ -269,24 +426,52 @@ defmodule Sammelkarten.Nostr.Client do
 
   defp get_config do
     config = Application.get_env(:sammelkarten, :nostr)
+    
+    base_relays = Keyword.get(config, :relays, [])
+    dedicated_relay = Keyword.get(config, :dedicated_relay, nil)
+    
+    # Add dedicated relay if configured
+    relays = if dedicated_relay && dedicated_relay != "" do
+      [dedicated_relay | base_relays] |> Enum.uniq()
+    else
+      base_relays
+    end
 
     %{
-      relays: Keyword.get(config, :relays, []),
+      relays: relays,
       connection_timeout: Keyword.get(config, :connection_timeout, 10_000),
       reconnect_interval: Keyword.get(config, :reconnect_interval, 5_000),
-      max_reconnect_attempts: Keyword.get(config, :max_reconnect_attempts, 10)
+      max_reconnect_attempts: Keyword.get(config, :max_reconnect_attempts, 10),
+      discovery_enabled: Keyword.get(config, :discovery_enabled, true),
+      discovery_cache_ttl: Keyword.get(config, :discovery_cache_ttl, 3600),
+      health_check_interval: Keyword.get(config, :health_check_interval, 30_000),
+      min_relay_count: Keyword.get(config, :min_relay_count, 2)
     }
   end
 
   defp connect_to_relay(url) do
+    start_time = :os.system_time(:millisecond)
+    
     case :websocket_client.start_link(url, __MODULE__.RelayHandler, parent: self(), url: url) do
       {:ok, pid} ->
-        Logger.info("Connected to Nostr relay: #{url}")
-        {url, %{pid: pid, status: :connected, attempt: 0}}
+        connection_time = :os.system_time(:millisecond) - start_time
+        Logger.info("Connected to Nostr relay: #{url} (#{connection_time}ms)")
+        
+        # Initialize health metrics
+        health_metrics = %{
+          connected_at: :os.system_time(:second),
+          connection_time_ms: connection_time,
+          message_count: 0,
+          error_count: 0,
+          last_message: nil,
+          avg_response_time: nil
+        }
+        
+        {url, %{pid: pid, status: :connected, attempt: 0, health: health_metrics}}
 
       {:error, reason} ->
         Logger.error("Failed to connect to relay #{url}: #{inspect(reason)}")
-        {url, %{pid: nil, status: :error, attempt: 1}}
+        {url, %{pid: nil, status: :error, attempt: 1, health: nil}}
     end
   end
 
@@ -347,8 +532,101 @@ defmodule Sammelkarten.Nostr.Client do
       send_to_relay(relay_pid, subscription_msg)
     end)
   end
+
+  defp update_relay_health(state, url, event_type) do
+    case Map.get(state.connections, url) do
+      %{health: health} = conn when not is_nil(health) ->
+        updated_health = case event_type do
+          :message_received ->
+            %{health | 
+              message_count: health.message_count + 1,
+              last_message: :os.system_time(:second)
+            }
+          :event_sent ->
+            %{health | 
+              message_count: health.message_count + 1,
+              last_message: :os.system_time(:second)
+            }
+          :error ->
+            %{health | error_count: health.error_count + 1}
+        end
+        
+        updated_conn = %{conn | health: updated_health}
+        new_connections = Map.put(state.connections, url, updated_conn)
+        new_relay_health = Map.put(state.relay_health, url, updated_health)
+        
+        %{state | connections: new_connections, relay_health: new_relay_health}
+        
+      _ ->
+        state
+    end
+  end
+
+  defp perform_relay_discovery do
+    # Known Nostr relay discovery endpoints and methods
+    discovery_methods = [
+      &discover_from_well_known_relays/0,
+      &discover_from_nip11_endpoints/0,
+      &discover_sammelkarten_specific_relays/0
+    ]
+    
+    discovered_relays = 
+      discovery_methods
+      |> Enum.flat_map(fn method ->
+        try do
+          method.()
+        rescue
+          error ->
+            Logger.warning("Relay discovery method failed: #{inspect(error)}")
+            []
+        end
+      end)
+      |> Enum.uniq()
+      |> Enum.filter(&validate_relay_url/1)
+    
+    Logger.info("Discovered #{length(discovered_relays)} potential relays")
+    discovered_relays
+  end
+
+  defp discover_from_well_known_relays do
+    # Well-known high-quality Nostr relays
+    [
+      "wss://nostr.oxtr.dev",
+      "wss://relay.primal.net",
+      "wss://nostr.fmt.wiz.biz",
+      "wss://relay.mostr.pub",
+      "wss://relay.current.fyi",
+      "wss://eden.nostr.land",
+      "wss://nostr.milou.lol",
+      "wss://relay.nostr.bg"
+    ]
+  end
+
+  defp discover_from_nip11_endpoints do
+    # Could implement NIP-11 relay information discovery
+    # For now, return empty list as this requires HTTP requests
+    []
+  end
+
+  defp discover_sammelkarten_specific_relays do
+    # Future: Could include dedicated Sammelkarten relays
+    # For now, return empty list
+    []
+  end
+
+  defp validate_relay_url(url) when is_binary(url) do
+    case URI.parse(url) do
+      %URI{scheme: scheme, host: host} when scheme in ["ws", "wss"] and not is_nil(host) ->
+        :ok
+      _ ->
+        {:error, :invalid_url}
+    end
+  end
+
+  defp validate_relay_url(_), do: {:error, :invalid_format}
 end
 
+if not Code.ensure_loaded?(Sammelkarten.Nostr.Client.RelayHandler) do
 defmodule Sammelkarten.Nostr.Client.RelayHandler do
   @moduledoc """
   WebSocket handler for Nostr relay connections.
@@ -386,4 +664,5 @@ defmodule Sammelkarten.Nostr.Client.RelayHandler do
     send(state.parent, {:relay_disconnected, state.url})
     :ok
   end
+end
 end

@@ -214,6 +214,206 @@ defmodule Sammelkarten.Cards do
   end
 
   @doc """
+  Get multiple cards by their IDs.
+  """
+  def get_cards_by_ids(card_ids) when is_list(card_ids) do
+    case :mnesia.transaction(fn ->
+           Enum.map(card_ids, fn id ->
+             case :mnesia.read({:cards, id}) do
+               [record] -> card_from_record(record)
+               [] -> nil
+             end
+           end)
+         end) do
+      {:atomic, results} ->
+        Enum.reject(results, &is_nil/1)
+
+      {:aborted, reason} ->
+        Logger.error("Failed to get cards by IDs: #{inspect(reason)}")
+        []
+    end
+  end
+
+  @doc """
+  Get all cards owned by a user.
+  """
+  def get_user_cards(user_pubkey) do
+    match_spec = [{{:user_collections, :_, user_pubkey, :"$3", :"$4", :"$5", :_}, [], [:"$_"]}]
+
+    case :mnesia.transaction(fn -> :mnesia.select(:user_collections, match_spec) end) do
+      {:atomic, records} ->
+        Enum.map(records, &user_card_from_record/1)
+
+      {:aborted, reason} ->
+        Logger.error("Failed to get user cards: #{inspect(reason)}")
+        []
+    end
+  end
+
+  @doc """
+  Add cards to a user's collection.
+  """
+  def add_to_user_collection(user_pubkey, card_id, quantity, purchase_price) do
+    collection_id = :crypto.strong_rand_bytes(8) |> Base.encode16(case: :lower)
+
+    # Check if user already owns this card
+    existing_record = find_user_card_record(user_pubkey, card_id)
+
+    transaction_result =
+      :mnesia.transaction(fn ->
+        case existing_record do
+          nil ->
+            # Create new collection entry
+            record = {
+              :user_collections,
+              collection_id,
+              user_pubkey,
+              card_id,
+              quantity,
+              purchase_price,
+              DateTime.utc_now()
+            }
+
+            :mnesia.write(record)
+
+          {_, existing_id, _, _, existing_quantity, existing_price, _} ->
+            # Update existing entry with averaged price
+            new_quantity = existing_quantity + quantity
+            avg_price = (existing_price * existing_quantity + purchase_price * quantity) / new_quantity
+
+            updated_record = {
+              :user_collections,
+              existing_id,
+              user_pubkey,
+              card_id,
+              new_quantity,
+              avg_price,
+              DateTime.utc_now()
+            }
+
+            :mnesia.write(updated_record)
+        end
+      end)
+
+    case transaction_result do
+      {:atomic, :ok} ->
+        Logger.info("Added #{quantity} of #{card_id} to #{user_pubkey}'s collection")
+        :ok
+
+      {:aborted, reason} ->
+        Logger.error("Failed to add to user collection: #{inspect(reason)}")
+        {:error, reason}
+    end
+  end
+
+  @doc """
+  Remove cards from a user's collection.
+  """
+  def remove_from_user_collection(user_pubkey, card_id, quantity) do
+    existing_record = find_user_card_record(user_pubkey, card_id)
+
+    case existing_record do
+      nil ->
+        {:error, :card_not_owned}
+
+      {_, _record_id, _, _, existing_quantity, _price, _} when existing_quantity < quantity ->
+        {:error, :insufficient_quantity}
+
+      {_, record_id, _, _, existing_quantity, price, _} ->
+        transaction_result =
+          :mnesia.transaction(fn ->
+            if existing_quantity == quantity do
+              # Remove the entire record
+              :mnesia.delete({:user_collections, record_id})
+            else
+              # Update with reduced quantity
+              new_quantity = existing_quantity - quantity
+
+              updated_record = {
+                :user_collections,
+                record_id,
+                user_pubkey,
+                card_id,
+                new_quantity,
+                price,
+                DateTime.utc_now()
+              }
+
+              :mnesia.write(updated_record)
+            end
+          end)
+
+        case transaction_result do
+          {:atomic, :ok} ->
+            Logger.info("Removed #{quantity} of #{card_id} from #{user_pubkey}'s collection")
+            :ok
+
+          {:aborted, reason} ->
+            Logger.error("Failed to remove from user collection: #{inspect(reason)}")
+            {:error, reason}
+        end
+    end
+  end
+
+  defp find_user_card_record(user_pubkey, card_id) do
+    match_spec = [{{:user_collections, :_, user_pubkey, card_id, :_, :_, :_}, [], [:"$_"]}]
+
+    case :mnesia.transaction(fn -> :mnesia.select(:user_collections, match_spec) end) do
+      {:atomic, [record]} -> record
+      {:atomic, []} -> nil
+      {:aborted, _} -> nil
+    end
+  end
+
+  defp user_card_from_record({:user_collections, _id, user_pubkey, card_id, quantity, purchase_price, updated_at}) do
+    %{
+      user_pubkey: user_pubkey,
+      card_id: card_id,
+      quantity: quantity,
+      purchase_price: purchase_price,
+      updated_at: updated_at
+    }
+  end
+
+  @doc """
+  Transfer cards from one user to another.
+  """
+  def transfer_card(from_pubkey, to_pubkey, card_id, quantity) do
+    transaction_result =
+      :mnesia.transaction(fn ->
+        # Remove from sender
+        case remove_from_user_collection(from_pubkey, card_id, quantity) do
+          :ok ->
+            # Get current market price for transfer
+            case get_card(card_id) do
+              {:ok, card} ->
+                # Add to receiver at current market price
+                add_to_user_collection(to_pubkey, card_id, quantity, card.current_price)
+
+              {:error, reason} ->
+                {:error, reason}
+            end
+
+          {:error, reason} ->
+            {:error, reason}
+        end
+      end)
+
+    case transaction_result do
+      {:atomic, :ok} ->
+        Logger.info("Transferred #{quantity} of #{card_id} from #{from_pubkey} to #{to_pubkey}")
+        :ok
+
+      {:atomic, {:error, reason}} ->
+        {:error, reason}
+
+      {:aborted, reason} ->
+        Logger.error("Failed to transfer card: #{inspect(reason)}")
+        {:error, reason}
+    end
+  end
+
+  @doc """
   Delete a card and all its price history.
   """
   def delete_card(card_id) do

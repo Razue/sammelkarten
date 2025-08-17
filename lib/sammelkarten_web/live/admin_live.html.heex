@@ -27,6 +27,12 @@
           >
             Reset Database
           </button>
+          <a
+            href="/admin/relays"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors inline-block"
+          >
+            Manage Relays
+          </a>
           <form action="/admin/session" method="post" class="inline">
             <input type="hidden" name="_csrf_token" value={Plug.CSRFProtection.get_csrf_token()} />
             <input type="hidden" name="_method" value="delete" />

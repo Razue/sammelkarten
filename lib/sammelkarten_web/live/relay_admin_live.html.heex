@@ -1,0 +1,158 @@
+<div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-display-lg font-bold text-gray-900 mb-2">Relay Administration</h1>
+      <p class="text-body-base text-gray-600">Monitor and manage Nostr relay connections for optimal performance</p>
+    </div>
+
+    <!-- Actions Bar -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+      <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div class="flex flex-wrap gap-3">
+          <button 
+            phx-click="discover_relays"
+            class="btn-primary">
+            🔍 Discover Relays
+          </button>
+          <button 
+            phx-click="reconnect_all"
+            class="btn-secondary">
+            🔄 Reconnect All
+          </button>
+        </div>
+        
+        <div class="flex items-center gap-4 text-sm text-gray-600">
+          <div class="flex items-center gap-2">
+            <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+            <span>Connected</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+            <span>Connecting</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+            <span>Disconnected</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Current Relays Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <%= for {url, status} <- @connection_status do %>
+        <% health = Map.get(@relay_health, url, %{}) %>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div class="flex items-start justify-between mb-4">
+            <div class="flex-1 min-w-0">
+              <h3 class="text-heading-sm font-semibold text-gray-900 truncate">
+                <%= url |> String.replace("wss://", "") %>
+              </h3>
+              <div class="flex items-center gap-2 mt-1">
+                <span class={"inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium #{status_badge(status)}"}>
+                  <%= status |> Atom.to_string() |> String.capitalize() %>
+                </span>
+                <%= if Map.get(health, :connected_at) do %>
+                  <span class="text-xs text-gray-500">
+                    Uptime: <%= format_uptime(health.connected_at) %>
+                  </span>
+                <% end %>
+              </div>
+            </div>
+            
+            <button 
+              phx-click="remove_relay" 
+              phx-value-url={url}
+              class="text-red-600 hover:text-red-800 transition-colors"
+              title="Remove relay">
+              ✕
+            </button>
+          </div>
+
+          <!-- Health Metrics -->
+          <%= if not Enum.empty?(health) do %>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span class="text-gray-500">Messages:</span>
+                <span class="font-medium text-gray-900 ml-1">
+                  <%= Map.get(health, :message_count, 0) %>
+                </span>
+              </div>
+              <div>
+                <span class="text-gray-500">Errors:</span>
+                <span class="font-medium text-gray-900 ml-1">
+                  <%= Map.get(health, :error_count, 0) %>
+                </span>
+              </div>
+              <%= if Map.get(health, :connection_time_ms) do %>
+                <div>
+                  <span class="text-gray-500">Connect Time:</span>
+                  <span class="font-medium text-gray-900 ml-1">
+                    <%= health.connection_time_ms %>ms
+                  </span>
+                </div>
+              <% end %>
+              <%= if Map.get(health, :last_message) do %>
+                <div>
+                  <span class="text-gray-500">Last Activity:</span>
+                  <span class="font-medium text-gray-900 ml-1">
+                    <%= format_uptime(health.last_message) %> ago
+                  </span>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="text-sm text-gray-500">
+              No health data available
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Add New Relay -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+      <h2 class="text-heading-base font-semibold text-gray-900 mb-4">Add New Relay</h2>
+      <form phx-submit="add_relay" class="flex gap-3">
+        <input 
+          type="url" 
+          name="url" 
+          placeholder="wss://relay.example.com" 
+          required
+          class="input-professional flex-1">
+        <button type="submit" class="btn-primary">
+          Add Relay
+        </button>
+      </form>
+    </div>
+
+    <!-- Discovered Relays -->
+    <%= if assigns[:discovered_relays] && not Enum.empty?(@discovered_relays) do %>
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h2 class="text-heading-base font-semibold text-gray-900 mb-4">
+          Discovered Relays (<%= length(@discovered_relays) %>)
+        </h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <%= for relay_url <- @discovered_relays do %>
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <span class="text-sm text-gray-900 truncate flex-1 mr-2">
+                <%= relay_url |> String.replace("wss://", "") %>
+              </span>
+              <%= if relay_url in Map.keys(@connection_status) do %>
+                <span class="text-xs text-gray-500">Added</span>
+              <% else %>
+                <button 
+                  phx-click="add_relay" 
+                  phx-value-url={relay_url}
+                  class="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 transition-colors">
+                  Add
+                </button>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

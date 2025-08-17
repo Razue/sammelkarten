@@ -62,6 +62,12 @@ defmodule Sammelkarten.Database do
     create_user_collections_table()
     create_user_trades_table()
     create_user_portfolios_table()
+    
+    # Create Lightning escrow table
+    create_lightning_escrows_table()
+    
+    # Create batch trading table
+    create_batch_trades_table()
 
     # Wait for tables to be available
     :mnesia.wait_for_tables(
@@ -72,7 +78,9 @@ defmodule Sammelkarten.Database do
         :nostr_users,
         :user_collections,
         :user_trades,
-        :user_portfolios
+        :user_portfolios,
+        :lightning_escrows,
+        :batch_trades
       ],
       5000
     )
@@ -343,12 +351,100 @@ defmodule Sammelkarten.Database do
     end
   end
 
+  defp create_lightning_escrows_table do
+    table_def = [
+      attributes: [
+        # Unique escrow identifier
+        :escrow_id,
+        # Amount in satoshis
+        :amount_sats,
+        # Buyer's Nostr pubkey
+        :buyer_pubkey,
+        # Seller's Nostr pubkey
+        :seller_pubkey,
+        # Card being traded
+        :card_id,
+        # Quantity of cards
+        :quantity,
+        # Lightning payment hash
+        :payment_hash,
+        # Lightning payment request (BOLT11)
+        :payment_request,
+        # Escrow status
+        :status,
+        # When escrow was created
+        :created_at,
+        # When escrow expires
+        :expires_at
+      ],
+      ram_copies: [node()],
+      type: :set,
+      index: [:status, :expires_at, :buyer_pubkey, :seller_pubkey]
+    ]
+
+    case :mnesia.create_table(:lightning_escrows, table_def) do
+      {:atomic, :ok} ->
+        Logger.info("Lightning escrows table created successfully")
+
+      {:aborted, {:already_exists, :lightning_escrows}} ->
+        Logger.info("Lightning escrows table already exists")
+
+      {:aborted, reason} ->
+        Logger.error("Failed to create lightning escrows table: #{inspect(reason)}")
+    end
+  end
+
+  defp create_batch_trades_table do
+    table_def = [
+      attributes: [
+        # Unique batch identifier
+        :batch_id,
+        # User who created the batch
+        :user_pubkey,
+        # List of trade items
+        :items,
+        # Total value of batch
+        :total_value,
+        # Batch status
+        :status,
+        # When batch was created
+        :created_at,
+        # When batch was executed
+        :executed_at,
+        # List of counterparty pubkeys
+        :counterparties,
+        # Execution method (:atomic or :sequential)
+        :execution_method
+      ],
+      ram_copies: [node()],
+      type: :set,
+      index: [:user_pubkey, :status, :created_at]
+    ]
+
+    case :mnesia.create_table(:batch_trades, table_def) do
+      {:atomic, :ok} ->
+        Logger.info("Batch trades table created successfully")
+
+      {:aborted, {:already_exists, :batch_trades}} ->
+        Logger.info("Batch trades table already exists")
+
+      {:aborted, reason} ->
+        Logger.error("Failed to create batch trades table: #{inspect(reason)}")
+    end
+  end
+
   @doc """
   Reset all tables (WARNING: This will delete all data!)
   """
   def reset_tables do
     Logger.warning("Resetting all Mnesia tables - ALL DATA WILL BE LOST!")
 
+    # Delete batch trading tables
+    :mnesia.delete_table(:batch_trades)
+    
+    # Delete Lightning tables
+    :mnesia.delete_table(:lightning_escrows)
+    
     # Delete Nostr tables
     :mnesia.delete_table(:user_portfolios)
     :mnesia.delete_table(:user_trades)

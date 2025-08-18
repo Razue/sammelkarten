@@ -153,10 +153,10 @@ defmodule SammelkartenWeb.PreferencesLive do
 
   defp convert_field_value(key, value) do
     case key do
-      key when key in ["refresh_rate", "cards_per_page", "ticker_speed"] ->
+      key when key in ["refresh_rate"] ->
         {String.to_atom(key), String.to_integer(value)}
 
-      key when key in ["theme", "default_sort", "default_sort_direction", "chart_style", "nostr_pubkey", "nostr_relays"] ->
+      key when key in ["theme", "default_sort", "default_sort_direction", "nostr_pubkey", "nostr_relays"] ->
         {String.to_atom(key), value}
 
       key when key in ["auto_refresh", "notifications_enabled", "sound_enabled", "show_ticker", "nostr_enabled", "nostr_auto_connect", "nostr_show_profile"] ->

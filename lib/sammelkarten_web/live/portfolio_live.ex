@@ -15,6 +15,28 @@ defmodule SammelkartenWeb.PortfolioLive do
   alias Sammelkarten.Nostr.User
   require Logger
 
+  # Helper functions for template to keep HEEx simple and formatter-safe
+  defp pl_class(value, base) do
+    color = if value >= 0, do: "text-green-600", else: "text-red-600"
+    Enum.join([base, color], " ") |> String.trim()
+  end
+
+  defp pl_bg(value, base) do
+    color = if value >= 0, do: "bg-green-100", else: "bg-red-100"
+    Enum.join([base, color], " ") |> String.trim()
+  end
+
+  defp rarity_class(rarity) do
+    case String.downcase(to_string(rarity || "")) do
+      "common" -> "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
+      "uncommon" -> "bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-200"
+      "rare" -> "bg-blue-100 text-blue-800 dark:bg-blue-700 dark:text-blue-200"
+      "epic" -> "bg-purple-100 text-purple-800 dark:bg-purple-700 dark:text-purple-200"
+      "legendary" -> "bg-yellow-100 text-yellow-800 dark:bg-yellow-700 dark:text-yellow-200"
+      _ -> "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
+    end
+  end
+
   @impl true
   def mount(_params, session, socket) do
     socket =

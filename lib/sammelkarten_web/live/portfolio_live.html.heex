@@ -17,17 +17,17 @@
             <div class="flex items-center gap-2 text-success">
               <div class="w-2 h-2 bg-success rounded-full"></div>
               Authenticated as {(@current_user &&
-                                   (@current_user.display_name || @current_user.name)) ||
-                "Unknown"}
+              (@current_user.display_name || @current_user.name)) ||
+              "Unknown"}
             </div>
           </div>
-        <% else %>
-          <div class="mt-4 sm:mt-0">
-            <.link navigate="/auth" class="btn-primary">
-              🔑 Authenticate with Nostr
-            </.link>
-          </div>
-        <% end %>
+          <% else %>
+            <div class="mt-4 sm:mt-0">
+              <.link navigate="/auth" class="btn-primary">
+                🔑 Authenticate with Nostr
+              </.link>
+            </div>
+            <% end %>
       </div>
     </div>
   </div>
@@ -44,79 +44,59 @@
                 {Sammelkarten.Nostr.User.display_name(@current_user)}
               </span>
             </p>
-          <% end %>
+            <% end %>
         </div>
-        
-<!-- Card Search and Actions -->
+
+        <!-- Card Search and Actions -->
         <div class="flex flex-col sm:flex-row gap-3 mt-4 sm:mt-0">
           <div class="relative">
-            <input
-              type="text"
-              placeholder="Search cards to add..."
-              value={@search_term}
-              phx-keyup="add_new_card"
-              phx-debounce="300"
-              class="input-professional w-64"
-            />
+            <input type="text" placeholder="Search cards to add..." value={@search_term} phx-keyup="add_new_card"
+              phx-debounce="300" class="input-professional w-64" />
 
             <%= if @show_search_dropdown and length(@search_results)> 0 do %>
-              <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
+              <div
+                class="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
                 <%= for card <- @search_results do %>
-                  <button
-                    phx-click="select_card"
-                    phx-value-card_id={card.id}
-                    class="w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 flex items-center gap-3"
-                  >
-                    <img
-                      src={card.image_path}
-                      alt={card.name}
-                      class="w-8 h-8 rounded object-cover"
-                    />
+                  <button phx-click="select_card" phx-value-card_id={card.id}
+                    class="w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 flex items-center gap-3">
+                    <img src={card.image_path} alt={card.name} class="w-8 h-8 rounded object-cover" />
                     <div class="flex-1">
                       <p class="text-body-sm font-medium text-gray-900">
                         {card.name}
                       </p>
                       <p class="text-label-xs text-gray-500">
                         {String.capitalize(card.rarity)} • {Formatter.format_german_price(
-                          card.current_price
+                        card.current_price
                         )}
                       </p>
                     </div>
                   </button>
-                <% end %>
+                  <% end %>
               </div>
-            <% end %>
+              <% end %>
           </div>
 
-          <.link navigate="/cards" class="btn-secondary">
+          <.link navigate="/" class="btn-secondary">
             Browse Cards
           </.link>
         </div>
       </div>
-      
-<!-- Selected Card Addition Interface -->
+
+      <!-- Selected Card Addition Interface -->
       <%= if @selected_card do %>
         <div class="mb-8 p-6 bg-blue-50 border border-blue-200 rounded-xl">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-heading-md font-semibold text-blue-900">Add Card to Collection</h3>
             <button phx-click="clear_selection" class="text-blue-600 hover:text-blue-700">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
 
           <div class="flex items-start gap-4">
-            <img
-              src={@selected_card.image_path}
-              alt={@selected_card.name}
-              class="w-16 h-16 rounded-lg object-cover border border-gray-200"
-            />
+            <img src={@selected_card.image_path} alt={@selected_card.name}
+              class="w-16 h-16 rounded-lg object-cover border border-gray-200" />
 
             <div class="flex-1">
               <div class="flex items-center gap-3 mb-2">
@@ -143,14 +123,7 @@
                 <form phx-submit="add_selected_card" class="flex items-end gap-3">
                   <div>
                     <label class="text-label-xs text-gray-500 mb-1 block">Quantity</label>
-                    <input
-                      type="number"
-                      name="quantity"
-                      min="1"
-                      value="1"
-                      class="input-professional w-20"
-                      required
-                    />
+                    <input type="number" name="quantity" min="1" value="1" class="input-professional w-20" required />
                   </div>
 
                   <button type="submit" class="btn-primary">
@@ -161,456 +134,334 @@
             </div>
           </div>
         </div>
-      <% end %>
-
-      <%= if @loading do %>
-        <!-- Loading State -->
-        <div class="flex items-center justify-center py-12">
-          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span class="ml-3 text-body-md text-gray-600">Loading your portfolio...</span>
-        </div>
-      <% else %>
-        <!-- Portfolio Statistics -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <!-- Total Portfolio Value -->
-          <div class="card-professional p-4">
-            <div class="flex items-start justify-between">
-              <div class="flex-1">
-                <p class="text-label-sm font-medium text-gray-500 uppercase tracking-wide mb-1">
-                  Total Value
-                </p>
-                <p class="text-heading-lg font-bold text-gray-900">
-                  {Formatter.format_german_price(@portfolio_stats.total_value)}
-                </p>
-              </div>
-              <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <svg
-                  class="w-5 h-5 text-blue-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
-                  />
-                </svg>
-              </div>
-            </div>
-          </div>
-          
-<!-- Total Cards -->
-          <div class="card-professional p-4">
-            <div class="flex items-start justify-between">
-              <div class="flex-1">
-                <p class="text-label-sm font-medium text-gray-500 uppercase tracking-wide mb-1">
-                  Total Cards
-                </p>
-                <p class="text-heading-lg font-bold text-gray-900">
-                  {@portfolio_stats.total_cards}
-                </p>
-                <p class="text-label-sm text-gray-500">
-                  {@portfolio_stats.unique_cards} unique
-                </p>
-              </div>
-              <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <svg
-                  class="w-5 h-5 text-green-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                  />
-                </svg>
-              </div>
-            </div>
-          </div>
-          
-<!-- Total Invested -->
-          <div class="card-professional p-4">
-            <div class="flex items-start justify-between">
-              <div class="flex-1">
-                <p class="text-label-sm font-medium text-gray-500 uppercase tracking-wide mb-1">
-                  Total Invested
-                </p>
-                <p class="text-heading-lg font-bold text-gray-900">
-                  {Formatter.format_german_price(@portfolio_stats.total_invested)}
-                </p>
-              </div>
-              <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <svg
-                  class="w-5 h-5 text-purple-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                  />
-                </svg>
-              </div>
-            </div>
-          </div>
-          
-<!-- Profit/Loss -->
-          <div class="card-professional p-4">
-            <div class="flex items-start justify-between">
-              <div class="flex-1">
-                <p class="text-label-sm font-medium text-gray-500 uppercase tracking-wide mb-1">
-                  Profit/Loss
-                </p>
-                <p class={"text-heading-lg font-bold #{if @portfolio_stats.total_profit_loss >= 0, do: "text-green-600", else: "text-red-600"}"}>
-                  {Formatter.format_german_price(@portfolio_stats.total_profit_loss)}
-                </p>
-                <p class={"text-label-sm #{if @portfolio_stats.profit_loss_percentage >= 0, do: "text-green-600", else: "text-red-600"}"}>
-                  {Formatter.format_german_percentage(@portfolio_stats.profit_loss_percentage)}
-                </p>
-              </div>
-              <div class={"w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 #{if @portfolio_stats.total_profit_loss >= 0, do: "bg-green-100", else: "bg-red-100"}"}>
-                <%= if @portfolio_stats.total_profit_loss >= 0 do %>
-                  <svg
-                    class="w-5 h-5 text-green-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M7 11l5-5m0 0l5 5m-5-5v12"
-                    />
-                  </svg>
-                <% else %>
-                  <svg
-                    class="w-5 h-5 text-red-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M17 13l-5 5m0 0l-5-5m5 5V6"
-                    />
-                  </svg>
-                <% end %>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <%= if Enum.empty?(@collection) do %>
-          <!-- Empty State -->
-          <div class="text-center py-12">
-            <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg
-                class="w-12 h-12 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                />
-              </svg>
-            </div>
-            <h3 class="text-heading-md font-semibold text-gray-900 mb-2">
-              No cards in your collection yet
-            </h3>
-            <p class="text-body-md text-gray-600 mb-6 max-w-md mx-auto">
-              Start building your portfolio by adding collectible cards. Browse our collection to find cards you want
-              to track and trade.
-            </p>
-            <.link navigate="/cards" class="btn-primary">
-              Browse Cards
-            </.link>
-          </div>
-        <% else %>
-          <!-- Collection Grid -->
-          <div class="space-y-6">
-            <div class="flex justify-between items-center">
-              <h2 class="text-heading-lg font-semibold text-gray-900">
-                Your Collection
-              </h2>
-              <div class="text-body-sm text-gray-500">
-                {length(@collection)} cards
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              <%= for item <- @collection do %>
-                <.link navigate={"/#{item.card.slug}"} class="card-grid-item card-professional card-hover block overflow-hidden cursor-pointer">
-                  <!-- Card Image -->
-                  <div class="aspect-w-3 aspect-h-4 bg-gray-100 dark:bg-gray-700 overflow-hidden">
-                    <img
-                      src={item.card.image_path}
-                      alt={item.card.name}
-                      class="card-image-hover w-full h-48 object-cover object-top"
-                      loading="lazy"
-                    />
-                  </div>
-                  
-<!-- Card Content -->
-                  <div class="p-4">
-                    <!-- Card Name and Rarity Badge -->
-                    <div class="flex items-start justify-between mb-4">
-                      <h3 class="text-heading-md text-gray-900 dark:text-white truncate flex-1">
-                        {item.card.name}
-                      </h3>
-                      <span class={"ml-2 px-2.5 py-1 text-label-sm rounded-full shrink-0 #{
-                            case String.downcase(item.card.rarity) do 
-                              "common" -> "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
-                              "uncommon" -> "bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-200"
-                              "rare" -> "bg-blue-100 text-blue-800 dark:bg-blue-700 dark:text-blue-200"
-                              "epic" -> "bg-purple-100 text-purple-800 dark:bg-purple-700 dark:text-purple-200"
-                              "legendary" -> "bg-yellow-100 text-yellow-800 dark:bg-yellow-700 dark:text-yellow-200"
-                              _ -> "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
-                            end
-                            }"}>
-                        {item.card.rarity}
-                      </span>
-                    </div>
-                    
-<!-- Portfolio Information -->
-                    <div class="space-y-3">
-                      <!-- Quantity and Current Price -->
-                      <div class="flex items-center justify-between">
-                        <%= if @editing_item && @editing_item.id == item.id do %>
-                          <!-- Edit Quantity Inline -->
-                          <form phx-submit="save_quantity" class="flex items-center space-x-2">
-                            <svg
-                              class="w-4 h-4 text-blue-600"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                              >
-                              </path>
-                            </svg>
-                            <input
-                              type="number"
-                              name="new_quantity"
-                              min="0"
-                              value={@editing_item.quantity}
-                              class="w-16 px-2 py-1 text-sm border border-blue-300 dark:border-blue-600 rounded focus:ring-1 focus:ring-blue-500 dark:bg-gray-700 text-center"
-                              autofocus
-                              required
-                            />
-                            <button
-                              type="submit"
-                              class="text-green-600 hover:text-green-700 p-1"
-                              title="Save"
-                            >
-                              <svg
-                                class="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  stroke-width="2"
-                                  d="M5 13l4 4L19 7"
-                                >
-                                </path>
-                              </svg>
-                            </button>
-                            <button
-                              type="button"
-                              phx-click="cancel_edit"
-                              class="text-gray-500 hover:text-gray-700 p-1"
-                              title="Cancel"
-                            >
-                              <svg
-                                class="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  stroke-width="2"
-                                  d="M6 18L18 6M6 6l12 12"
-                                >
-                                </path>
-                              </svg>
-                            </button>
-                          </form>
-                        <% else %>
-                          <!-- Clickable Quantity -->
-                          <div class="flex items-center justify-between w-full">
-                            <button
-                              phx-click="edit_quantity"
-                              phx-value-collection_id={item.id}
-                              class="flex items-center space-x-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 py-1 pl-0 pr-2 rounded-lg transition-colors group"
-                              title="Click to edit quantity"
-                            >
-                              <span class="text-heading-lg text-blue-600 dark:text-blue-400 group-hover:text-blue-700">
-                                {item.quantity}
-                              </span>
-                              <span class="text-label-sm text-blue-500 dark:text-blue-400 group-hover:text-blue-600">
-                                {if item.quantity == 1, do: "card", else: "cards"}
-                              </span>
-                            </button>
-                            <button
-                              phx-click="edit_quantity"
-                              phx-value-collection_id={item.id}
-                              class="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-blue-100 rounded"
-                              title="Edit quantity"
-                            >
-                              <svg
-                                class="w-4 h-4 text-blue-500 hover:text-blue-700"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  stroke-width="2"
-                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                >
-                                </path>
-                              </svg>
-                            </button>
-                          </div>
-                        <% end %>
-                        <!-- Current price per card -->
-                        <div class="text-right">
-                          <div class="text-heading-sm font-semibold text-gray-900 dark:text-white">
-                            {Formatter.format_german_price(item.card.current_price)}
-                          </div>
-                          <div class="text-label-xs text-gray-500 dark:text-gray-400">
-                            per card
-                          </div>
-                        </div>
-                      </div>
-                      
-<!-- Total Value and Profit/Loss -->
-                      <div class="flex items-center justify-between">
-                        <div>
-                          <div class="text-label-sm text-gray-600 dark:text-gray-400">
-                            Total Value
-                          </div>
-                          <div class="text-heading-xs font-bold text-gray-900 dark:text-white">
-                            {Formatter.format_german_price(item.current_value)}
-                          </div>
-                        </div>
-                        <div class="text-right">
-                          <div class="text-label-sm text-gray-600 dark:text-gray-400">
-                            Profit/Loss
-                          </div>
-                          <div class={"text-heading-xs font-bold #{if item.profit_loss >= 0, do: "text-green-600 dark:text-green-400", else: "text-red-600 dark:text-red-400"}"}>
-                            {Formatter.format_german_price(item.profit_loss)}
-                          </div>
-                          <div class={"text-label-xs #{if item.profit_loss >= 0, do: "text-green-600 dark:text-green-400", else: "text-red-600 dark:text-red-400"}"}>
-                            {Formatter.format_german_percentage(item.profit_loss_percentage)}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-<!-- Acquisition Info Footer -->
-                    <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
-                      <div class="flex justify-between items-center text-label-xs text-gray-500 dark:text-gray-400">
-                        <span>Acquired: {Calendar.strftime(item.acquired_at, "%d.%m.%Y")}</span>
-                        <div class="flex items-center gap-3">
-                          <span>At: {Formatter.format_german_price(item.acquisition_price)}</span>
-                          <button
-                            phx-click="remove_from_collection"
-                            phx-value-collection_id={item.id}
-                            data-confirm="Are you sure you want to remove this card from your collection?"
-                            class="text-gray-400 hover:text-red-500 p-1 rounded transition-colors"
-                            title="Remove from collection"
-                          >
-                            <svg
-                              class="w-3 h-3"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                              >
-                              </path>
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </.link>
-              <% end %>
-            </div>
-          </div>
         <% end %>
-      <% end %>
+
+          <%= if @loading do %>
+            <!-- Loading State -->
+            <div class="flex items-center justify-center py-12">
+              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <span class="ml-3 text-body-md text-gray-600">Loading your portfolio...</span>
+            </div>
+            <% else %>
+              <!-- Portfolio Statistics -->
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <!-- Total Portfolio Value -->
+                <div class="card-professional p-4">
+                  <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                      <p class="text-label-sm font-medium text-gray-500 uppercase tracking-wide mb-1">
+                        Total Value
+                      </p>
+                      <p class="text-heading-lg font-bold text-gray-900">
+                        {Formatter.format_german_price(@portfolio_stats.total_value)}
+                      </p>
+                    </div>
+                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Total Cards -->
+                <div class="card-professional p-4">
+                  <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                      <p class="text-label-sm font-medium text-gray-500 uppercase tracking-wide mb-1">
+                        Total Cards
+                      </p>
+                      <p class="text-heading-lg font-bold text-gray-900">
+                        {@portfolio_stats.total_cards}
+                      </p>
+                      <p class="text-label-sm text-gray-500">
+                        {@portfolio_stats.unique_cards} unique
+                      </p>
+                    </div>
+                    <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Total Invested -->
+                <div class="card-professional p-4">
+                  <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                      <p class="text-label-sm font-medium text-gray-500 uppercase tracking-wide mb-1">
+                        Total Invested
+                      </p>
+                      <p class="text-heading-lg font-bold text-gray-900">
+                        {Formatter.format_german_price(@portfolio_stats.total_invested)}
+                      </p>
+                    </div>
+                    <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Profit/Loss -->
+                <div class="card-professional p-4">
+                  <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                      <p class="text-label-sm font-medium text-gray-500 uppercase tracking-wide mb-1">
+                        Profit/Loss
+                      </p>
+                      <p class={pl_class(@portfolio_stats.total_profit_loss, "text-heading-lg font-bold" ) }>
+                        {Formatter.format_german_price(@portfolio_stats.total_profit_loss)}
+                      </p>
+                      <p class={pl_class(@portfolio_stats.profit_loss_percentage, "text-label-sm" ) }>
+                        {Formatter.format_german_percentage(@portfolio_stats.profit_loss_percentage)}
+                      </p>
+                    </div>
+                    <div
+                      class={pl_bg(@portfolio_stats.total_profit_loss, "w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                      ) }>
+                      <%= if @portfolio_stats.total_profit_loss>= 0 do %>
+                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M7 11l5-5m0 0l5 5m-5-5v12" />
+                        </svg>
+                        <% else %>
+                          <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M17 13l-5 5m0 0l-5-5m5 5V6" />
+                          </svg>
+                          <% end %>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <%= if Enum.empty?(@collection) do %>
+                <!-- Empty State -->
+                <div class="text-center py-12">
+                  <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                  </div>
+                  <h3 class="text-heading-md font-semibold text-gray-900 mb-2">
+                    No cards in your collection yet
+                  </h3>
+                  <p class="text-body-md text-gray-600 mb-6 max-w-md mx-auto">
+                    Start building your portfolio by adding collectible cards. Browse our collection to find cards you
+                    want
+                    to track and trade.
+                  </p>
+                  <.link navigate="/" class="btn-primary">
+                    Browse Cards
+                  </.link>
+                </div>
+                <% else %>
+                  <!-- Collection Grid -->
+                  <div class="space-y-6">
+                    <div class="flex justify-between items-center">
+                      <h2 class="text-heading-lg font-semibold text-gray-900">
+                        Your Collection
+                      </h2>
+                      <div class="text-body-sm text-gray-500">
+                        {length(@collection)} cards
+                      </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                      <%= for item <- @collection do %>
+                        <.link navigate={"/#{item.card.slug}"}
+                          class="card-grid-item card-professional card-hover block overflow-hidden cursor-pointer">
+                          <!-- Card Image -->
+                          <div class="aspect-w-3 aspect-h-4 bg-gray-100 dark:bg-gray-700 overflow-hidden">
+                            <img src={item.card.image_path} alt={item.card.name}
+                              class="card-image-hover w-full h-48 object-cover object-top" loading="lazy" />
+                          </div>
+
+                          <!-- Card Content -->
+                          <div class="p-4">
+                            <!-- Card Name and Rarity Badge -->
+                            <div class="flex items-start justify-between mb-4">
+                              <h3 class="text-heading-md text-gray-900 dark:text-white truncate flex-1">
+                                {item.card.name}
+                              </h3>
+                              <span class={"ml-2 px-2.5 py-1 text-label-sm rounded-full shrink-0
+                                #{rarity_class(item.card.rarity)}"}>
+                                {item.card.rarity}
+                              </span>
+                            </div>
+
+                            <!-- Portfolio Information -->
+                            <div class="space-y-3">
+                              <!-- Quantity and Current Price -->
+                              <div class="flex items-center justify-between">
+                                <%= if @editing_item && @editing_item.id==item.id do %>
+                                  <!-- Edit Quantity Inline -->
+                                  <form phx-submit="save_quantity" class="flex items-center space-x-2">
+                                    <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor"
+                                      viewBox="0 0 24 24">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
+                                      </path>
+                                    </svg>
+                                    <input type="number" name="new_quantity" min="0" value={@editing_item.quantity}
+                                      class="w-16 px-2 py-1 text-sm border border-blue-300 dark:border-blue-600 rounded focus:ring-1 focus:ring-blue-500 dark:bg-gray-700 text-center"
+                                      autofocus required />
+                                    <button type="submit" class="text-green-600 hover:text-green-700 p-1" title="Save">
+                                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M5 13l4 4L19 7">
+                                        </path>
+                                      </svg>
+                                    </button>
+                                    <button type="button" phx-click="cancel_edit"
+                                      class="text-gray-500 hover:text-gray-700 p-1" title="Cancel">
+                                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M6 18L18 6M6 6l12 12">
+                                        </path>
+                                      </svg>
+                                    </button>
+                                  </form>
+                                  <% else %>
+                                    <!-- Clickable Quantity -->
+                                    <div class="flex items-center justify-between w-full">
+                                      <button phx-click="edit_quantity" phx-value-collection_id={item.id}
+                                        class="flex items-center space-x-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 py-1 pl-0 pr-2 rounded-lg transition-colors group"
+                                        title="Click to edit quantity">
+                                        <span
+                                          class="text-heading-lg text-blue-600 dark:text-blue-400 group-hover:text-blue-700">
+                                          {item.quantity}
+                                        </span>
+                                        <span
+                                          class="text-label-sm text-blue-500 dark:text-blue-400 group-hover:text-blue-600">
+                                          {if item.quantity == 1, do: "card", else: "cards"}
+                                        </span>
+                                      </button>
+                                      <button phx-click="edit_quantity" phx-value-collection_id={item.id}
+                                        class="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-blue-100 rounded"
+                                        title="Edit quantity">
+                                        <svg class="w-4 h-4 text-blue-500 hover:text-blue-700" fill="none"
+                                          stroke="currentColor" viewBox="0 0 24 24">
+                                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                                          </path>
+                                        </svg>
+                                      </button>
+                                    </div>
+                                    <% end %>
+                                      <!-- Current price per card -->
+                                      <div class="text-right">
+                                        <div class="text-heading-sm font-semibold text-gray-900 dark:text-white">
+                                          {Formatter.format_german_price(item.card.current_price)}
+                                        </div>
+                                        <div class="text-label-xs text-gray-500 dark:text-gray-400">
+                                          per card
+                                        </div>
+                                      </div>
+                              </div>
+
+                              <!-- Total Value and Profit/Loss -->
+                              <div class="flex items-center justify-between">
+                                <div>
+                                  <div class="text-label-sm text-gray-600 dark:text-gray-400">
+                                    Total Value
+                                  </div>
+                                  <div class="text-heading-xs font-bold text-gray-900 dark:text-white">
+                                    {Formatter.format_german_price(item.current_value)}
+                                  </div>
+                                </div>
+                                <div class="text-right">
+                                  <div class="text-label-sm text-gray-600 dark:text-gray-400">
+                                    Profit/Loss
+                                  </div>
+                                  <div class={"text-heading-xs font-bold #{if item.profit_loss>= 0, do: "text-green-600
+                                    dark:text-green-400", else: "text-red-600 dark:text-red-400"}"}>
+                                    {Formatter.format_german_price(item.profit_loss)}
+                                  </div>
+                                  <div class={"text-label-xs #{if item.profit_loss>= 0, do: "text-green-600
+                                    dark:text-green-400", else: "text-red-600 dark:text-red-400"}"}>
+                                    {Formatter.format_german_percentage(item.profit_loss_percentage)}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <!-- Acquisition Info Footer -->
+                            <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                              <div
+                                class="flex justify-between items-center text-label-xs text-gray-500 dark:text-gray-400">
+                                <span>Acquired: {Calendar.strftime(item.acquired_at, "%d.%m.%Y")}</span>
+                                <div class="flex items-center gap-3">
+                                  <span>At: {Formatter.format_german_price(item.acquisition_price)}</span>
+                                  <button phx-click="remove_from_collection" phx-value-collection_id={item.id}
+                                    data-confirm="Are you sure you want to remove this card from your collection?"
+                                    class="text-gray-400 hover:text-red-500 p-1 rounded transition-colors"
+                                    title="Remove from collection">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                      </path>
+                                    </svg>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </.link>
+                        <% end %>
+                    </div>
+                  </div>
+                  <% end %>
+                    <% end %>
     </div>
-  <% else %>
-    <!-- Unauthenticated State -->
-    <div class="max-w-4xl mx-auto px-4 py-16 text-center">
-      <div class="text-8xl mb-8">🔐</div>
-      <h2 class="text-heading-lg font-semibold text-text mb-4">
-        Nostr Authentication Required
-      </h2>
-      <p class="text-body-lg text-secondary mb-8 max-w-2xl mx-auto">
-        Your personal portfolio tracks your card collection, performance metrics, and investment returns.
-        Connect your Nostr identity to start building and managing your collection.
-      </p>
-      <.link navigate="/auth" class="btn-primary text-body-md px-8 py-4">
-        🔑 Connect with Nostr
-      </.link>
+    <% else %>
+      <!-- Unauthenticated State -->
+      <div class="max-w-4xl mx-auto px-4 py-16 text-center">
+        <div class="text-8xl mb-8">🔐</div>
+        <h2 class="text-heading-lg font-semibold text-text mb-4">
+          Nostr Authentication Required
+        </h2>
+        <p class="text-body-lg text-secondary mb-8 max-w-2xl mx-auto">
+          Your personal portfolio tracks your card collection, performance metrics, and investment returns.
+          Connect your Nostr identity to start building and managing your collection.
+        </p>
+        <.link navigate="/auth" class="btn-primary text-body-md px-8 py-4">
+          🔑 Connect with Nostr
+        </.link>
 
-      <div class="mt-16 grid gap-8 md:grid-cols-3 text-left">
-        <div class="card-professional p-6">
-          <div class="text-3xl mb-4">📊</div>
-          <h3 class="text-heading-xs font-semibold text-text mb-2">Portfolio Tracking</h3>
-          <p class="text-body-sm text-secondary">
-            Track your collection value, profit/loss, and performance metrics in real-time with comprehensive analytics.
-          </p>
-        </div>
+        <div class="mt-16 grid gap-8 md:grid-cols-3 text-left">
+          <div class="card-professional p-6">
+            <div class="text-3xl mb-4">📊</div>
+            <h3 class="text-heading-xs font-semibold text-text mb-2">Portfolio Tracking</h3>
+            <p class="text-body-sm text-secondary">
+              Track your collection value, profit/loss, and performance metrics in real-time with comprehensive
+              analytics.
+            </p>
+          </div>
 
-        <div class="card-professional p-6">
-          <div class="text-3xl mb-4">🃏</div>
-          <h3 class="text-heading-xs font-semibold text-text mb-2">Collection Management</h3>
-          <p class="text-body-sm text-secondary">
-            Organize your cards, track acquisition prices, and monitor individual card performance over time.
-          </p>
-        </div>
+          <div class="card-professional p-6">
+            <div class="text-3xl mb-4">🃏</div>
+            <h3 class="text-heading-xs font-semibold text-text mb-2">Collection Management</h3>
+            <p class="text-body-sm text-secondary">
+              Organize your cards, track acquisition prices, and monitor individual card performance over time.
+            </p>
+          </div>
 
-        <div class="card-professional p-6">
-          <div class="text-3xl mb-4">📈</div>
-          <h3 class="text-heading-xs font-semibold text-text mb-2">Investment Insights</h3>
-          <p class="text-body-sm text-secondary">
-            Get detailed insights into your best and worst performing cards with profit/loss calculations.
-          </p>
+          <div class="card-professional p-6">
+            <div class="text-3xl mb-4">📈</div>
+            <h3 class="text-heading-xs font-semibold text-text mb-2">Investment Insights</h3>
+            <p class="text-body-sm text-secondary">
+              Get detailed insights into your best and worst performing cards with profit/loss calculations.
+            </p>
+          </div>
         </div>
       </div>
-    </div>
-  <% end %>
+      <% end %>
 </div>

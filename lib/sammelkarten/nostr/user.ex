@@ -37,7 +37,7 @@ defmodule Sammelkarten.Nostr.User do
     :last_seen
   ]
 
-  alias Sammelkarten.Nostr.Event
+  alias Sammelkarten.Nostr.{Event, NIP05}
 
   @doc """
   Create a new user from a public key.
@@ -100,10 +100,10 @@ defmodule Sammelkarten.Nostr.User do
   end
 
   @doc """
-  Get the display name for a user (prefers display_name, falls back to name, then npub).
+  Get the display name for a user (prefers display_name, falls back to name, then nip05, then npub).
   """
   def display_name(user) do
-    user.display_name || user.name || format_npub(user.npub)
+    user.display_name || user.name || format_nip05(user.nip05) || format_npub(user.npub)
   end
 
   @doc """
@@ -242,10 +242,90 @@ defmodule Sammelkarten.Nostr.User do
 
   def valid_npub?(_), do: false
 
+  @doc """
+  Verify the user's NIP-05 identifier against their public key.
+  Returns {:ok, true} if verified, {:error, reason} otherwise.
+  """
+  def verify_nip05(user) do
+    case user.nip05 do
+      nil -> {:error, :no_nip05}
+      nip05 -> NIP05.verify(nip05, user.pubkey)
+    end
+  end
+
+  @doc """
+  Resolve a NIP-05 identifier to find the associated public key.
+  Returns {:ok, pubkey} if successful.
+  """
+  def resolve_nip05(nip05_identifier) do
+    NIP05.resolve(nip05_identifier)
+  end
+
+  @doc """
+  Check if the user has a verified NIP-05 identifier.
+  This performs an actual verification check, not just presence.
+  """
+  def has_verified_nip05?(user) do
+    case verify_nip05(user) do
+      {:ok, true} -> true
+      _ -> false
+    end
+  end
+
+  @doc """
+  Get a display-friendly version of the NIP-05 identifier.
+  Returns just the local part for known verified domains, or full identifier for others.
+  """
+  def format_nip05_display(user) do
+    case user.nip05 do
+      nil -> nil
+      nip05 -> 
+        case NIP05.parse_identifier(nip05) do
+          {:ok, local_part, domain} ->
+            # For well-known Nostr domains, show just the local part
+            if trusted_nip05_domain?(domain) do
+              "@#{local_part}"
+            else
+              "@#{local_part}@#{domain}"
+            end
+          _ -> 
+            nip05
+        end
+    end
+  end
+
   # Private helper functions
+
+  # Check if a domain is trusted/well-known in the Nostr ecosystem
+  defp trusted_nip05_domain?(domain) do
+    trusted_domains = [
+      "getalby.com",
+      "coinos.io", 
+      "nostrid.io",
+      "zbd.gg",
+      "current.fyi",
+      "iris.to",
+      "primal.net"
+    ]
+    String.downcase(domain) in trusted_domains
+  end
 
   defp format_npub(nil), do: "unknown"
   defp format_npub(npub), do: short_npub(%{npub: npub})
+
+  defp format_nip05(nil), do: nil
+  defp format_nip05(nip05) do
+    case NIP05.parse_identifier(nip05) do
+      {:ok, local_part, domain} ->
+        if trusted_nip05_domain?(domain) do
+          "@#{local_part}"
+        else
+          "@#{local_part}@#{domain}"
+        end
+      _ -> 
+        nip05
+    end
+  end
 
   defp parse_datetime(nil), do: nil
   defp parse_datetime(%DateTime{} = dt), do: dt

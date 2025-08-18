@@ -12,7 +12,7 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
   use SammelkartenWeb, :live_view
 
   alias Sammelkarten.{Cards, Formatter}
-  alias Sammelkarten.Nostr.User
+  alias Sammelkarten.Nostr.TestUsers
   require Logger
 
   @impl true
@@ -241,8 +241,9 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
 
         %{
           id: trade_id,
-          trader: User.short_pubkey(%{pubkey: user_pubkey}),
+          trader: get_trader_display_name(user_pubkey),
           trader_pubkey: user_pubkey,
+          trader_nip05: TestUsers.nip05_display_for_pubkey(user_pubkey),
           offer_type: trade_type,
           card: card,
           quantity: quantity,
@@ -287,8 +288,9 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
 
       %{
         id: trade_id,
-        trader: User.short_pubkey(%{pubkey: user_pubkey}),
+        trader: get_trader_display_name(user_pubkey),
         trader_pubkey: user_pubkey,
+        trader_nip05: TestUsers.nip05_display_for_pubkey(user_pubkey),
         offer_type: "exchange",
         offering_card: offering_card,
         offering_bundle: [{offering_card.name, quantity, offering_card.rarity}],
@@ -377,8 +379,9 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
 
         %{
           id: trade_id,
-          trader: User.short_pubkey(%{pubkey: user_pubkey}),
+          trader: get_trader_display_name(user_pubkey),
           trader_pubkey: user_pubkey,
+          trader_nip05: TestUsers.nip05_display_for_pubkey(user_pubkey),
           offer_type: offer_type,
           card: card,
           quantity: quantity,
@@ -415,8 +418,9 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
 
       %{
         id: trade_id,
-        trader: User.short_pubkey(%{pubkey: user_pubkey}),
+        trader: get_trader_display_name(user_pubkey),
         trader_pubkey: user_pubkey,
+        trader_nip05: TestUsers.nip05_display_for_pubkey(user_pubkey),
         offer_type: "card_exchange",
         exchange_type: offer_type,
         wanted_card: wanted_card,
@@ -528,6 +532,7 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
     %{
       trader: offer.trader,
       trader_pubkey: offer.trader_pubkey,
+      trader_nip05: offer.trader_nip05,
       offer_bundle: [{offer.card.name, offer.quantity, offer.card.rarity}],
       # What they want in return
       search_bundle: [{"Bitcoin Sats", offer.total_value, "currency"}],
@@ -542,6 +547,7 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
     %{
       trader: offer.trader,
       trader_pubkey: offer.trader_pubkey,
+      trader_nip05: offer.trader_nip05,
       # What they're offering
       offer_bundle: [{"Bitcoin Sats", offer.total_value, "currency"}],
       # What they want
@@ -557,6 +563,7 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
     %{
       trader: exchange.trader,
       trader_pubkey: exchange.trader_pubkey,
+      trader_nip05: exchange.trader_nip05,
       offer_bundle: exchange.offering_bundle,
       search_bundle: exchange.wanted_cards,
       minutes_ago: exchange.minutes_ago,
@@ -569,6 +576,7 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
     %{
       trader: exchange.trader,
       trader_pubkey: exchange.trader_pubkey,
+      trader_nip05: exchange.trader_nip05,
       # What they're offering
       offer_bundle: exchange.offering_bundle,
       # What they want (includes current card)
@@ -583,6 +591,7 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
     %{
       trader: bitcoin_offer.trader,
       trader_pubkey: bitcoin_offer.trader_pubkey,
+      trader_nip05: bitcoin_offer.trader_nip05,
       offer_bundle: [{bitcoin_offer.card.name, bitcoin_offer.quantity, bitcoin_offer.card.rarity}],
       # What they want in return (Bitcoin sats)
       search_bundle: [{"Bitcoin Sats", bitcoin_offer.sats_price, "currency"}],
@@ -596,6 +605,7 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
     %{
       trader: bitcoin_offer.trader,
       trader_pubkey: bitcoin_offer.trader_pubkey,
+      trader_nip05: bitcoin_offer.trader_nip05,
       # What they're offering (Bitcoin sats)
       offer_bundle: [{"Bitcoin Sats", bitcoin_offer.sats_price, "currency"}],
       # What they want
@@ -612,6 +622,7 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
     %{
       trader: card_exchange.trader,
       trader_pubkey: card_exchange.trader_pubkey,
+      trader_nip05: card_exchange.trader_nip05,
       offer_bundle: card_exchange.offering_bundle,
       search_bundle: card_exchange.wanted_bundle,
       minutes_ago: card_exchange.minutes_ago,
@@ -624,6 +635,7 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
     %{
       trader: card_exchange.trader,
       trader_pubkey: card_exchange.trader_pubkey,
+      trader_nip05: card_exchange.trader_nip05,
       # What they're offering
       offer_bundle: card_exchange.offering_bundle,
       # What they want
@@ -781,6 +793,11 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
                                 <p class="font-medium text-gray-900 dark:text-white">
                                   {offer.trader}
                                 </p>
+                                <%= if offer.trader_nip05 do %>
+                                  <p class="text-xs text-green-600 dark:text-green-400 font-mono">
+                                    {offer.trader_nip05}
+                                  </p>
+                                <% end %>
                                 <p class="text-xs text-gray-500 dark:text-gray-400">
                                   {format_time_ago(offer.minutes_ago)} ago
                                 </p>
@@ -913,6 +930,11 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
                                 <p class="font-medium text-gray-900 dark:text-white">
                                   {search.trader}
                                 </p>
+                                <%= if search.trader_nip05 do %>
+                                  <p class="text-xs text-blue-600 dark:text-blue-400 font-mono">
+                                    {search.trader_nip05}
+                                  </p>
+                                <% end %>
                                 <p class="text-xs text-gray-500 dark:text-gray-400">
                                   {format_time_ago(search.minutes_ago)} ago
                                 </p>
@@ -1023,6 +1045,10 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
   end
 
   # Helper functions
+
+  defp get_trader_display_name(pubkey) do
+    TestUsers.display_name_for_pubkey(pubkey)
+  end
 
   defp format_price(price_in_sats) when is_integer(price_in_sats) do
     Formatter.format_german_price(price_in_sats)

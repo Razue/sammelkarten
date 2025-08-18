@@ -91,9 +91,15 @@ defmodule SammelkartenWeb.DashboardExchangeLive do
   def handle_info(:load_cards, socket) do
     case Cards.list_cards() do
       {:ok, cards} ->
+        # Apply current filtering and sorting
+        filtered_cards = filter_cards(cards, socket.assigns.search_term)
+        
+        sorted_cards =
+          sort_cards(filtered_cards, socket.assigns.sort_by, socket.assigns.sort_direction)
+
         socket =
           socket
-          |> assign(:cards, cards)
+          |> assign(:cards, sorted_cards)
           |> assign(:loading, false)
           |> assign(:error, nil)
 

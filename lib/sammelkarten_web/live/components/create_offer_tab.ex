@@ -123,7 +123,7 @@ defmodule SammelkartenWeb.TradingLive.CreateOfferTab do
                   value={@offer_form["price"]}
                   step="1"
                   min="1"
-                  placeholder="100"
+                  placeholder="1000"
                   required
                   class="input-professional w-full"
                 />

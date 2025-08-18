@@ -324,14 +324,14 @@ defmodule SammelkartenWeb.TradingLive do
              true <- price > 0 and quantity > 0,
              true <- card_id != "",
              {:ok, _card} <- Cards.get_card(card_id) do
-          # Convert price to cents for storage
-          price_cents = round(price * 100)
+          # Price is already in sats, no conversion needed
+          price_sats = round(price)
 
           # Create trade offer event
           offer_data = %{
             card_id: card_id,
             offer_type: offer_type,
-            price: price_cents,
+            price: price_sats,
             quantity: quantity,
             # 24 hours
             expires_at: DateTime.utc_now() |> DateTime.add(24 * 60 * 60) |> DateTime.to_unix()
@@ -340,7 +340,7 @@ defmodule SammelkartenWeb.TradingLive do
           event = Event.trade_offer(user_pubkey, offer_data)
 
           # Store offer locally and broadcast via Nostr
-          case create_trade_offer(user_pubkey, card_id, offer_type, price_cents, quantity, event) do
+          case create_trade_offer(user_pubkey, card_id, offer_type, price_sats, quantity, event) do
             {:ok, _offer_id} ->
               # Broadcast event via Nostr
               Client.publish_event(event)
@@ -594,34 +594,38 @@ defmodule SammelkartenWeb.TradingLive do
         :mnesia.match_object({:user_trades, :_, :_, :_, :_, :_, :_, :_, :_, "open", :_, :_, :_})
       end
 
-      money_offers = case :mnesia.transaction(money_transaction) do
-        {:atomic, trade_records} ->
-          Logger.info("Found #{length(trade_records)} money-based active offers")
+      money_offers =
+        case :mnesia.transaction(money_transaction) do
+          {:atomic, trade_records} ->
+            Logger.info("Found #{length(trade_records)} money-based active offers")
 
-          trade_records
-          |> Enum.map(&format_trade_offer/1)
-          |> Enum.filter(fn offer -> offer != nil end)
+            trade_records
+            |> Enum.map(&format_trade_offer/1)
+            |> Enum.filter(fn offer -> offer != nil end)
 
-        {:aborted, reason} ->
-          Logger.error("Failed to load money offers: #{inspect(reason)}")
-          []
-      end
+          {:aborted, reason} ->
+            Logger.error("Failed to load money offers: #{inspect(reason)}")
+            []
+        end
 
       # Load card exchange offers from market_maker
       exchange_offers = load_market_maker_exchange_offers()
-      
+
       # Convert exchange offers to the same format as money offers for Active Offers tab
-      exchange_offers_for_active = exchange_offers
-      |> Enum.map(&convert_exchange_to_active_offer/1)
-      |> Enum.filter(fn offer -> offer != nil end)
+      exchange_offers_for_active =
+        exchange_offers
+        |> Enum.map(&convert_exchange_to_active_offer/1)
+        |> Enum.filter(fn offer -> offer != nil end)
 
       # Combine both types
       all_offers = money_offers ++ exchange_offers_for_active
-      Logger.info("Total active offers: #{length(all_offers)} (#{length(money_offers)} money + #{length(exchange_offers_for_active)} exchanges)")
+
+      Logger.info(
+        "Total active offers: #{length(all_offers)} (#{length(money_offers)} money + #{length(exchange_offers_for_active)} exchanges)"
+      )
 
       all_offers
       |> sort_offers("newest")
-
     rescue
       e ->
         Logger.error("Error loading active offers: #{inspect(e)}")
@@ -982,29 +986,32 @@ defmodule SammelkartenWeb.TradingLive do
         )
       end
 
-      user_exchange_offers = case :mnesia.transaction(user_transaction) do
-        {:atomic, trade_records} ->
-          Logger.info("Found #{length(trade_records)} user exchange offers")
+      user_exchange_offers =
+        case :mnesia.transaction(user_transaction) do
+          {:atomic, trade_records} ->
+            Logger.info("Found #{length(trade_records)} user exchange offers")
 
-          trade_records
-          |> Enum.map(&format_exchange_offer/1)
-          |> Enum.filter(fn offer -> offer != nil end)
+            trade_records
+            |> Enum.map(&format_exchange_offer/1)
+            |> Enum.filter(fn offer -> offer != nil end)
 
-        {:aborted, reason} ->
-          Logger.error("Failed to load user exchange offers: #{inspect(reason)}")
-          []
-      end
+          {:aborted, reason} ->
+            Logger.error("Failed to load user exchange offers: #{inspect(reason)}")
+            []
+        end
 
       # Load market_maker exchange offers
       market_maker_offers = load_market_maker_exchange_offers()
 
       # Combine both sources
       all_offers = user_exchange_offers ++ market_maker_offers
-      Logger.info("Total exchange offers: #{length(all_offers)} (#{length(user_exchange_offers)} user + #{length(market_maker_offers)} market_maker)")
+
+      Logger.info(
+        "Total exchange offers: #{length(all_offers)} (#{length(user_exchange_offers)} user + #{length(market_maker_offers)} market_maker)"
+      )
 
       all_offers
       |> Enum.sort_by(fn offer -> offer.created_at end, :desc)
-
     rescue
       e ->
         Logger.error("Error loading exchange offers: #{inspect(e)}")
@@ -1015,9 +1022,10 @@ defmodule SammelkartenWeb.TradingLive do
   defp load_market_maker_exchange_offers do
     # Load exchange offers from market_maker's dynamic_card_exchanges table
     try do
-      dynamic_exchanges = :mnesia.dirty_match_object(
-        {:dynamic_card_exchanges, :_, :_, :_, :_, :_, :_, "open", :_, :_}
-      )
+      dynamic_exchanges =
+        :mnesia.dirty_match_object(
+          {:dynamic_card_exchanges, :_, :_, :_, :_, :_, :_, "open", :_, :_}
+        )
 
       dynamic_exchanges
       |> Enum.map(&format_market_maker_exchange/1)
@@ -1030,7 +1038,8 @@ defmodule SammelkartenWeb.TradingLive do
   end
 
   defp format_market_maker_exchange(
-         {:dynamic_card_exchanges, trade_id, trader_pubkey, wanted_card_id, offered_card_id, offer_type, quantity, "open", created_at, expires_at}
+         {:dynamic_card_exchanges, trade_id, trader_pubkey, wanted_card_id, offered_card_id,
+          offer_type, quantity, "open", created_at, expires_at}
        ) do
     # Convert market_maker exchange format to TradingLive exchange format
     case offer_type do
@@ -1050,7 +1059,9 @@ defmodule SammelkartenWeb.TradingLive do
               created_at: created_at,
               expires_at: expires_at
             }
-          {:error, _} -> nil
+
+          {:error, _} ->
+            nil
         end
 
       "want" ->
@@ -1070,7 +1081,9 @@ defmodule SammelkartenWeb.TradingLive do
                 created_at: created_at,
                 expires_at: expires_at
               }
-            {:error, _} -> nil
+
+            {:error, _} ->
+              nil
           end
         else
           # This is a "want any card for wanted_card_id" - we need the offering card
@@ -1080,7 +1093,8 @@ defmodule SammelkartenWeb.TradingLive do
                 id: trade_id,
                 user_pubkey: trader_pubkey,
                 user_short: String.slice(trader_pubkey, 0, 12) <> "...",
-                offering_card: wanted_card,  # This is a bit confusing in the data model
+                # This is a bit confusing in the data model
+                offering_card: wanted_card,
                 wanted_type: "open",
                 wanted_cards: [],
                 offer_type: "exchange",
@@ -1088,11 +1102,14 @@ defmodule SammelkartenWeb.TradingLive do
                 created_at: created_at,
                 expires_at: expires_at
               }
-            {:error, _} -> nil
+
+            {:error, _} ->
+              nil
           end
         end
 
-      _ -> nil
+      _ ->
+        nil
     end
   end
 
@@ -1112,11 +1129,13 @@ defmodule SammelkartenWeb.TradingLive do
       user_short: exchange_offer.user_short,
       card: exchange_offer.offering_card,
       offer_type: "exchange",
-      price: 0,  # No monetary price for exchanges
+      # No monetary price for exchanges
+      price: 0,
       quantity: exchange_offer.quantity,
       created_at: exchange_offer.created_at,
       expires_at: exchange_offer.expires_at,
-      total_value: 0,  # No monetary value for exchanges
+      # No monetary value for exchanges
+      total_value: 0,
       # Add exchange-specific fields for display
       wanted_type: exchange_offer.wanted_type,
       wanted_cards: exchange_offer.wanted_cards

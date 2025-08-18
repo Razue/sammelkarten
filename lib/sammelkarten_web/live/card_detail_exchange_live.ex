@@ -113,9 +113,15 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
       # Load exchange offers involving this card
       exchange_offers = load_exchange_offers_for_card(card.id)
 
+      # Load dynamic Bitcoin offers from MarketMaker
+      bitcoin_offers = load_dynamic_bitcoin_offers_for_card(card.id)
+
+      # Load dynamic card exchanges from MarketMaker
+      card_exchanges = load_dynamic_card_exchanges_for_card(card.id)
+
       # Separate into offers and searches based on the trade type and involvement
-      offer_traders = format_offers_for_display(regular_offers, exchange_offers, card, :offer)
-      search_traders = format_offers_for_display(regular_offers, exchange_offers, card, :search)
+      offer_traders = format_offers_for_display(regular_offers, exchange_offers, bitcoin_offers, card_exchanges, card, :offer)
+      search_traders = format_offers_for_display(regular_offers, exchange_offers, bitcoin_offers, card_exchanges, card, :search)
 
       {offer_traders, search_traders}
     rescue
@@ -280,8 +286,139 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
     end
   end
 
+  # Load dynamic Bitcoin offers from MarketMaker
+  defp load_dynamic_bitcoin_offers_for_card(card_id) do
+    try do
+      transaction = fn ->
+        :mnesia.match_object(
+          {:dynamic_bitcoin_offers, :_, :_, card_id, :_, :_, :_, "open", :_, :_}
+        )
+      end
+
+      case :mnesia.transaction(transaction) do
+        {:atomic, offer_records} ->
+          Logger.info("Found #{length(offer_records)} dynamic Bitcoin offers for card #{card_id}")
+
+          offer_records
+          |> Enum.map(&format_dynamic_bitcoin_offer/1)
+          |> Enum.filter(fn offer -> offer != nil end)
+
+        {:aborted, reason} ->
+          Logger.error("Failed to load dynamic Bitcoin offers: #{inspect(reason)}")
+          []
+      end
+    rescue
+      e ->
+        Logger.error("Error loading dynamic Bitcoin offers: #{inspect(e)}")
+        []
+    end
+  end
+
+  # Load dynamic card exchanges from MarketMaker
+  defp load_dynamic_card_exchanges_for_card(card_id) do
+    try do
+      transaction = fn ->
+        # Get all dynamic exchanges
+        all_exchanges =
+          :mnesia.match_object(
+            {:dynamic_card_exchanges, :_, :_, :_, :_, :_, :_, "open", :_, :_}
+          )
+
+        # Filter to include exchanges involving this card
+        Enum.filter(all_exchanges, fn {_, _, _, wanted_card_id, offered_card_id, _, _, _, _, _} ->
+          wanted_card_id == card_id or offered_card_id == card_id or offered_card_id == nil
+        end)
+      end
+
+      case :mnesia.transaction(transaction) do
+        {:atomic, exchange_records} ->
+          Logger.info(
+            "Found #{length(exchange_records)} dynamic exchange offers involving card #{card_id}"
+          )
+
+          exchange_records
+          |> Enum.map(&format_dynamic_card_exchange/1)
+          |> Enum.filter(fn offer -> offer != nil end)
+
+        {:aborted, reason} ->
+          Logger.error("Failed to load dynamic card exchanges: #{inspect(reason)}")
+          []
+      end
+    rescue
+      e ->
+        Logger.error("Error loading dynamic card exchanges: #{inspect(e)}")
+        []
+    end
+  end
+
+  # Format dynamic Bitcoin offer from database record
+  defp format_dynamic_bitcoin_offer(
+         {_, trade_id, user_pubkey, card_id, offer_type, quantity, sats_price, "open", created_at,
+          _expires_at}
+       ) do
+    case Cards.get_card(card_id) do
+      {:ok, card} ->
+        minutes_ago = DateTime.diff(DateTime.utc_now(), created_at, :second) |> div(60)
+
+        %{
+          id: trade_id,
+          trader: User.short_pubkey(%{pubkey: user_pubkey}),
+          trader_pubkey: user_pubkey,
+          offer_type: offer_type,
+          card: card,
+          quantity: quantity,
+          sats_price: sats_price,
+          minutes_ago: minutes_ago,
+          created_at: created_at
+        }
+
+      {:error, _} ->
+        nil
+    end
+  end
+
+  # Format dynamic card exchange from database record
+  defp format_dynamic_card_exchange(
+         {_, trade_id, user_pubkey, wanted_card_id, offered_card_id, offer_type, quantity, "open",
+          created_at, _expires_at}
+       ) do
+    with {:ok, wanted_card} <- Cards.get_card(wanted_card_id) do
+      minutes_ago = DateTime.diff(DateTime.utc_now(), created_at, :second) |> div(60)
+
+      # Handle offered card (nil means "any card")
+      {offering_bundle, offered_card} =
+        case offered_card_id do
+          nil ->
+            {[{"Any Card", quantity, "common"}], nil}
+
+          card_id ->
+            case Cards.get_card(card_id) do
+              {:ok, card} -> {[{card.name, quantity, card.rarity}], card}
+              _ -> {[{"Unknown Card", quantity, "common"}], nil}
+            end
+        end
+
+      %{
+        id: trade_id,
+        trader: User.short_pubkey(%{pubkey: user_pubkey}),
+        trader_pubkey: user_pubkey,
+        offer_type: "card_exchange",
+        exchange_type: offer_type,
+        wanted_card: wanted_card,
+        offered_card: offered_card,
+        offering_bundle: offering_bundle,
+        wanted_bundle: [{wanted_card.name, quantity, wanted_card.rarity}],
+        quantity: quantity,
+        minutes_ago: minutes_ago,
+        created_at: created_at
+      }
+    else
+      _ -> nil
+    end
+  end
+
   # Format offers for display, separating into offers and searches
-  defp format_offers_for_display(regular_offers, exchange_offers, current_card, display_type) do
+  defp format_offers_for_display(regular_offers, exchange_offers, bitcoin_offers, card_exchanges, current_card, display_type) do
     case display_type do
       :offer ->
         # Show sell offers (people offering this card) and exchange offers offering this card
@@ -292,13 +429,22 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
             offer.offering_card.id == current_card.id
           end)
 
+        # Bitcoin sell offers (sell_for_sats)
+        bitcoin_sell_offers = Enum.filter(bitcoin_offers, &(&1.offer_type == "sell_for_sats"))
+
+        # Card exchanges offering this card
+        card_exchange_offers =
+          Enum.filter(card_exchanges, fn exchange ->
+            exchange.exchange_type == "offer" and exchange.wanted_card.id == current_card.id
+          end)
+
         # Convert to unified format
         formatted_sells = Enum.map(sell_offers, &format_as_offer_display/1)
+        formatted_exchanges = Enum.map(exchange_offering_card, &format_exchange_as_offer_display/1)
+        formatted_bitcoin_sells = Enum.map(bitcoin_sell_offers, &format_bitcoin_as_offer_display/1)
+        formatted_card_exchanges = Enum.map(card_exchange_offers, &format_card_exchange_as_offer_display/1)
 
-        formatted_exchanges =
-          Enum.map(exchange_offering_card, &format_exchange_as_offer_display/1)
-
-        (formatted_sells ++ formatted_exchanges)
+        (formatted_sells ++ formatted_exchanges ++ formatted_bitcoin_sells ++ formatted_card_exchanges)
         |> Enum.sort_by(& &1.minutes_ago, :asc)
         # Limit to 8 for display
         |> Enum.take(8)
@@ -323,13 +469,23 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
             end
           end)
 
+        # Bitcoin buy offers (buy_for_sats)
+        bitcoin_buy_offers = Enum.filter(bitcoin_offers, &(&1.offer_type == "buy_for_sats"))
+
+        # Card exchanges wanting this card
+        card_exchange_searches =
+          Enum.filter(card_exchanges, fn exchange ->
+            exchange.exchange_type == "want" and
+              (exchange.wanted_card.id == current_card.id or exchange.offered_card == nil)
+          end)
+
         # Convert to unified format
         formatted_buys = Enum.map(buy_offers, &format_as_search_display/1)
+        formatted_exchanges = Enum.map(exchange_wanting_card, &format_exchange_as_search_display/1)
+        formatted_bitcoin_buys = Enum.map(bitcoin_buy_offers, &format_bitcoin_as_search_display/1)
+        formatted_card_searches = Enum.map(card_exchange_searches, &format_card_exchange_as_search_display/1)
 
-        formatted_exchanges =
-          Enum.map(exchange_wanting_card, &format_exchange_as_search_display/1)
-
-        (formatted_buys ++ formatted_exchanges)
+        (formatted_buys ++ formatted_exchanges ++ formatted_bitcoin_buys ++ formatted_card_searches)
         |> Enum.sort_by(& &1.minutes_ago, :asc)
         # Limit to 8 for display
         |> Enum.take(8)
@@ -388,6 +544,59 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
       search_bundle: exchange.wanted_cards,
       minutes_ago: exchange.minutes_ago,
       offer_type: "exchange"
+    }
+  end
+
+  # Format Bitcoin sell offer for display (offering card for sats)
+  defp format_bitcoin_as_offer_display(bitcoin_offer) do
+    %{
+      trader: bitcoin_offer.trader,
+      trader_pubkey: bitcoin_offer.trader_pubkey,
+      offer_bundle: [{bitcoin_offer.card.name, bitcoin_offer.quantity, bitcoin_offer.card.rarity}],
+      # What they want in return (Bitcoin sats)
+      search_bundle: [{"Bitcoin Sats", bitcoin_offer.sats_price, "currency"}],
+      minutes_ago: bitcoin_offer.minutes_ago,
+      offer_type: "bitcoin_sell"
+    }
+  end
+
+  # Format Bitcoin buy offer for display (offering sats for card)
+  defp format_bitcoin_as_search_display(bitcoin_offer) do
+    %{
+      trader: bitcoin_offer.trader,
+      trader_pubkey: bitcoin_offer.trader_pubkey,
+      # What they're offering (Bitcoin sats)
+      offer_bundle: [{"Bitcoin Sats", bitcoin_offer.sats_price, "currency"}],
+      # What they want
+      search_bundle: [{bitcoin_offer.card.name, bitcoin_offer.quantity, bitcoin_offer.card.rarity}],
+      minutes_ago: bitcoin_offer.minutes_ago,
+      offer_type: "bitcoin_buy"
+    }
+  end
+
+  # Format card exchange as offer display (offering card for another)
+  defp format_card_exchange_as_offer_display(card_exchange) do
+    %{
+      trader: card_exchange.trader,
+      trader_pubkey: card_exchange.trader_pubkey,
+      offer_bundle: card_exchange.offering_bundle,
+      search_bundle: card_exchange.wanted_bundle,
+      minutes_ago: card_exchange.minutes_ago,
+      offer_type: "card_exchange_offer"
+    }
+  end
+
+  # Format card exchange as search display (wanting card, offering another)
+  defp format_card_exchange_as_search_display(card_exchange) do
+    %{
+      trader: card_exchange.trader,
+      trader_pubkey: card_exchange.trader_pubkey,
+      # What they're offering
+      offer_bundle: card_exchange.offering_bundle,
+      # What they want
+      search_bundle: card_exchange.wanted_bundle,
+      minutes_ago: card_exchange.minutes_ago,
+      offer_type: "card_exchange_search"
     }
   end
 

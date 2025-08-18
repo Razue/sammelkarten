@@ -591,8 +591,9 @@ defmodule Sammelkarten.MarketMaker do
   defp create_bitcoin_offer(trader_pubkey, card_id, offer_type, quantity, sats_price) do
     trade_id = :crypto.strong_rand_bytes(16) |> Base.encode16(case: :lower)
     created_at = DateTime.utc_now()
-    # 1 hour from now
-    expires_at = DateTime.add(created_at, 3600, :second)
+    # Random expiry time: 5-30 minutes to simulate real market dynamics
+    expire_minutes = :rand.uniform(25) + 5
+    expires_at = DateTime.add(created_at, expire_minutes * 60, :second)
 
     record = {
       :dynamic_bitcoin_offers,
@@ -622,8 +623,9 @@ defmodule Sammelkarten.MarketMaker do
   defp create_exchange_offer(trader_pubkey, wanted_card_id, offer_type, offered_card_id, quantity) do
     trade_id = :crypto.strong_rand_bytes(16) |> Base.encode16(case: :lower)
     created_at = DateTime.utc_now()
-    # 1 hour from now
-    expires_at = DateTime.add(created_at, 3600, :second)
+    # Random expiry time: 5-30 minutes to simulate real market dynamics  
+    expire_minutes = :rand.uniform(25) + 5
+    expires_at = DateTime.add(created_at, expire_minutes * 60, :second)
 
     record = {
       :dynamic_card_exchanges,

@@ -3,7 +3,7 @@ defmodule SammelkartenWeb.PreferencesLive do
 
   alias Sammelkarten.Preferences
 
-  @impl true
+  @impl true  
   def mount(_params, _session, socket) do
     # Get user ID (for now, use a default user)
     user_id = "default_user"
@@ -22,6 +22,11 @@ defmodule SammelkartenWeb.PreferencesLive do
       |> assign(:error_message, nil)
 
     {:ok, socket}
+  end
+
+  @impl true
+  def handle_params(_params, _url, socket) do
+    {:noreply, socket}
   end
 
   @impl true
@@ -151,10 +156,10 @@ defmodule SammelkartenWeb.PreferencesLive do
       key when key in ["refresh_rate", "cards_per_page", "ticker_speed"] ->
         {String.to_atom(key), String.to_integer(value)}
 
-      key when key in ["theme", "default_sort", "default_sort_direction", "chart_style"] ->
+      key when key in ["theme", "default_sort", "default_sort_direction", "chart_style", "nostr_pubkey", "nostr_relays"] ->
         {String.to_atom(key), value}
 
-      key when key in ["auto_refresh", "notifications_enabled", "sound_enabled", "show_ticker"] ->
+      key when key in ["auto_refresh", "notifications_enabled", "sound_enabled", "show_ticker", "nostr_enabled", "nostr_auto_connect", "nostr_show_profile"] ->
         {String.to_atom(key), value == "true"}
 
       _ ->

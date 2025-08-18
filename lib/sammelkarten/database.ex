@@ -164,6 +164,11 @@ defmodule Sammelkarten.Database do
         :ticker_speed,
         :chart_style,
         :price_alerts,
+        :nostr_enabled,
+        :nostr_pubkey,
+        :nostr_relays,
+        :nostr_auto_connect,
+        :nostr_show_profile,
         :created_at,
         :updated_at
       ],

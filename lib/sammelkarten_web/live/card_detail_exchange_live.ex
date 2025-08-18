@@ -446,8 +446,6 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
 
         (formatted_sells ++ formatted_exchanges ++ formatted_bitcoin_sells ++ formatted_card_exchanges)
         |> Enum.sort_by(& &1.minutes_ago, :asc)
-        # Limit to 8 for display
-        |> Enum.take(8)
 
       :search ->
         # Show buy offers (people searching for this card) and exchange offers wanting this card
@@ -487,8 +485,6 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
 
         (formatted_buys ++ formatted_exchanges ++ formatted_bitcoin_buys ++ formatted_card_searches)
         |> Enum.sort_by(& &1.minutes_ago, :asc)
-        # Limit to 8 for display
-        |> Enum.take(8)
     end
   end
 

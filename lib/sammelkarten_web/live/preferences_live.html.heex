@@ -1,8 +1,4 @@
-<div
-  id="theme-preferences"
-  class="min-h-screen bg-gray-50 dark:bg-gray-900"
-  phx-hook="ThemeToggle"
->
+<div id="theme-preferences" class="min-h-screen bg-gray-50 dark:bg-gray-900" phx-hook="ThemeToggle">
   <!-- Header Section -->
   <div class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
     <div class="max-w-4xl mx-auto px-4 py-6">
@@ -18,238 +14,117 @@
           <%= if @saved do %>
             <div class="flex items-center text-green-600">
               <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M5 13l4 4L19 7"
-                />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
               <span class="text-sm font-medium">Settings saved successfully!</span>
             </div>
-          <% end %>
-          <%= if @error_message do %>
-            <div class="flex items-center text-red-600">
-              <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <span class="text-sm font-medium">{@error_message}</span>
-            </div>
-          <% end %>
+            <% end %>
+              <%= if @error_message do %>
+                <div class="flex items-center text-red-600">
+                  <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span class="text-sm font-medium">{@error_message}</span>
+                </div>
+                <% end %>
         </div>
       </div>
     </div>
   </div>
-  
-<!-- Preferences Form -->
+
+  <!-- Preferences Form -->
   <div class="max-w-4xl mx-auto px-4 py-8">
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
       <form phx-change="form_change" phx-submit="save_preferences" class="p-6">
         <div class="space-y-8">
-          <!-- Nostr & Authentication Section -->
+          <!-- Nostr Connection Section -->
           <div class="border-b border-gray-200 dark:border-gray-600 pb-8">
             <div class="flex items-center mb-6">
               <div class="flex items-center justify-center h-10 w-10 rounded-full bg-orange-100">
-                <svg
-                  class="h-6 w-6 text-orange-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M15 7a2 2 0 012 2m4 0a6 6 0 01-6 6c-1 5-6 9-11 9l-3-6 4-4 4-4 3 3a6 6 0 016-6z"
-                  />
+                <svg class="h-6 w-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
               <h3 class="text-lg font-semibold text-gray-900 dark:text-white ml-4">
-                Nostr & Authentication
+                Nostr Connection
               </h3>
             </div>
-            <div class="space-y-6">
-              <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                <div class="flex items-start">
-                  <div class="flex-shrink-0">
-                    <svg class="h-5 w-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            <div class="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-2">
+              <%= if @nostr_status.connected do %>
+                <!-- Connected State -->
+                <div class="flex items-start justify-between">
+                  <div class="flex items-start space-x-4">
+                    <div class="flex-shrink-0">
+                      <div
+                        class="h-10 w-10 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                        <svg class="h-6 w-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor"
+                          viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                    </div>
+                    <div class="flex-1">
+                      <h4 class="text-sm font-medium text-gray-900 dark:text-white">Connected to Nostr</h4>
+                      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                        Using <strong>{@nostr_status.extension || "Nostr Extension"}</strong>
+                      </p>
+                      <p class="text-xs text-gray-400 dark:text-gray-500 mt-2 font-mono">
+                        npub: {@nostr_status.pubkey |> String.slice(0, 16)}...
+                      </p>
+                    </div>
+                  </div>
+                  <.link navigate={~p"/auth"}
+                    class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-500 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-600 hover:bg-gray-50 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500">
+                    <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
-                  </div>
-                  <div class="ml-3">
-                    <h4 class="text-sm font-medium text-blue-800 dark:text-blue-200">Nostr Protocol Integration</h4>
-                    <div class="mt-2 text-sm text-blue-700 dark:text-blue-300">
-                      <p>Connect your Nostr identity to enable decentralized trading and social features. Your private key is stored securely in your browser and never sent to our servers.</p>
-                    </div>
-                  </div>
+                    Disconnect
+
+                  </.link>
+
                 </div>
-              </div>
-              
-              <div class="space-y-4">
-                <div class="flex items-start">
-                  <div class="flex items-center h-5">
-                    <input type="hidden" name="preferences[nostr_enabled]" value="false" />
-                    <input
-                      type="checkbox"
-                      name="preferences[nostr_enabled]"
-                      id="nostr_enabled"
-                      value="true"
-                      checked={
-                        if Map.has_key?(@form_data, :nostr_enabled),
-                          do: @form_data[:nostr_enabled],
-                          else: @user_preferences.nostr_enabled || false
-                      }
-                      class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
-                    />
+                <% else %>
+                  <!-- Disconnected State -->
+                  <div class="text-center py-2">
+                    <.link navigate={~p"/auth"}
+                      class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 shadow-sm">
+                      <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                      </svg>
+                      Connect with Extension
+                    </.link>
+
                   </div>
-                  <div class="ml-3 text-sm">
-                    <label for="nostr_enabled" class="font-medium text-gray-700 dark:text-gray-300">
-                      Enable Nostr Integration
-                    </label>
-                    <p class="text-gray-500 dark:text-gray-400">
-                      Connect with the Nostr protocol for decentralized identity and trading
-                    </p>
-                  </div>
-                </div>
-                
-                <div class="pl-7">
-                  <div class="space-y-3">
-                    <div>
-                      <label for="nostr_pubkey" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Public Key (npub or hex)
-                      </label>
-                      <input
-                        type="text"
-                        name="preferences[nostr_pubkey]"
-                        id="nostr_pubkey"
-                        placeholder="npub1... or hex format"
-                        value={@form_data[:nostr_pubkey] || @user_preferences.nostr_pubkey || ""}
-                        class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono text-xs"
-                      />
-                      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                        Your Nostr public key for identity verification
-                      </p>
-                    </div>
-                    
-                    <div>
-                      <label for="nostr_relays" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Preferred Relays
-                      </label>
-                      <textarea
-                        name="preferences[nostr_relays]"
-                        id="nostr_relays"
-                        rows="3"
-                        placeholder="wss://relay.damus.io&#10;wss://nos.lol&#10;wss://relay.snort.social"
-                        class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono text-xs"
-                      >{@form_data[:nostr_relays] || @user_preferences.nostr_relays || "wss://relay.damus.io\nwss://nos.lol\nwss://relay.snort.social"}</textarea>
-                      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                        One relay URL per line (wss:// format)
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div class="flex items-start">
-                  <div class="flex items-center h-5">
-                    <input type="hidden" name="preferences[nostr_auto_connect]" value="false" />
-                    <input
-                      type="checkbox"
-                      name="preferences[nostr_auto_connect]"
-                      id="nostr_auto_connect"
-                      value="true"
-                      checked={
-                        if Map.has_key?(@form_data, :nostr_auto_connect),
-                          do: @form_data[:nostr_auto_connect],
-                          else: @user_preferences.nostr_auto_connect || false
-                      }
-                      class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
-                    />
-                  </div>
-                  <div class="ml-3 text-sm">
-                    <label for="nostr_auto_connect" class="font-medium text-gray-700 dark:text-gray-300">
-                      Auto-connect to relays
-                    </label>
-                    <p class="text-gray-500 dark:text-gray-400">
-                      Automatically connect to your preferred relays when loading the application
-                    </p>
-                  </div>
-                </div>
-                
-                <div class="flex items-start">
-                  <div class="flex items-center h-5">
-                    <input type="hidden" name="preferences[nostr_show_profile]" value="false" />
-                    <input
-                      type="checkbox"
-                      name="preferences[nostr_show_profile]"
-                      id="nostr_show_profile"
-                      value="true"
-                      checked={
-                        if Map.has_key?(@form_data, :nostr_show_profile),
-                          do: @form_data[:nostr_show_profile],
-                          else: @user_preferences.nostr_show_profile || true
-                      }
-                      class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
-                    />
-                  </div>
-                  <div class="ml-3 text-sm">
-                    <label for="nostr_show_profile" class="font-medium text-gray-700 dark:text-gray-300">
-                      Display Nostr profile in trades
-                    </label>
-                    <p class="text-gray-500 dark:text-gray-400">
-                      Show your Nostr profile information when making trades or offers
-                    </p>
-                  </div>
-                </div>
-              </div>
+                  <% end %>
             </div>
           </div>
 
-<!-- Appearance Section -->
+          <!-- Appearance Section -->
           <div class="border-b border-gray-200 dark:border-gray-600 pb-8">
             <div class="flex items-center mb-6">
               <div class="flex items-center justify-center h-10 w-10 rounded-full bg-purple-100">
-                <svg
-                  class="h-6 w-6 text-purple-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z"
-                  />
+                <svg class="h-6 w-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z" />
                 </svg>
               </div>
               <h3 class="text-lg font-semibold text-gray-900 dark:text-white ml-4">Appearance</h3>
             </div>
             <div class="grid grid-cols-1 gap-6">
               <div>
-                <label
-                  for="theme"
-                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
+                <label for="theme" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Theme
                 </label>
-                <select
-                  name="preferences[theme]"
-                  id="theme"
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                >
+                <select name="preferences[theme]" id="theme"
+                  class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
                   <%= for {label, value} <- Sammelkarten.UserPreferences.theme_options() do %>
-                    <option
-                      value={value}
-                      selected={value == (@form_data[:theme] || @user_preferences.theme)}
-                    >
+                    <option value={value} selected={value==(@form_data[:theme] || @user_preferences.theme)}>
                       {label}
                     </option>
-                  <% end %>
+                    <% end %>
                 </select>
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                   Choose your preferred color scheme
@@ -262,18 +137,9 @@
           <div class="border-b border-gray-200 dark:border-gray-600 pb-8">
             <div class="flex items-center mb-6">
               <div class="flex items-center justify-center h-10 w-10 rounded-full bg-blue-100">
-                <svg
-                  class="h-6 w-6 text-blue-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M13 10V3L4 14h7v7l9-11h-7z"
-                  />
+                <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
               <h3 class="text-lg font-semibold text-gray-900 dark:text-white ml-4">
@@ -282,27 +148,17 @@
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label
-                  for="refresh_rate"
-                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
+                <label for="refresh_rate" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Refresh Rate
                 </label>
-                <select
-                  name="preferences[refresh_rate]"
-                  id="refresh_rate"
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                >
+                <select name="preferences[refresh_rate]" id="refresh_rate"
+                  class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
                   <%= for {label, value} <- Sammelkarten.UserPreferences.refresh_rate_options() do %>
-                    <option
-                      value={value}
-                      selected={
-                        value == (@form_data[:refresh_rate] || @user_preferences.refresh_rate)
-                      }
-                    >
+                    <option value={value} selected={ value==(@form_data[:refresh_rate] ||
+                      @user_preferences.refresh_rate) }>
                       {label}
                     </option>
-                  <% end %>
+                    <% end %>
                 </select>
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                   How often prices are updated
@@ -311,19 +167,10 @@
               <div class="flex items-start pt-6 opacity-60 cursor-not-allowed">
                 <div class="flex items-center h-5">
                   <input type="hidden" name="preferences[auto_refresh]" value="false" />
-                  <input
-                    type="checkbox"
-                    name="preferences[auto_refresh]"
-                    id="auto_refresh"
-                    value="true"
-                    checked={
-                      if Map.has_key?(@form_data, :auto_refresh),
-                        do: @form_data[:auto_refresh],
-                        else: @user_preferences.auto_refresh
-                    }
+                  <input type="checkbox" name="preferences[auto_refresh]" id="auto_refresh" value="true"
+                    checked={@effective_auto_refresh}
                     class="h-4 w-4 text-gray-400 focus:ring-gray-300 border-gray-200 rounded cursor-not-allowed"
-                    disabled
-                  />
+                    disabled />
                 </div>
                 <div class="ml-3 text-sm">
                   <label for="auto_refresh" class="font-medium text-gray-400 cursor-not-allowed">
@@ -332,11 +179,9 @@
                   <p class="text-gray-400">
                     <span class="inline-flex items-center">
                       <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path
-                          fill-rule="evenodd"
+                        <path fill-rule="evenodd"
                           d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                          clip-rule="evenodd"
-                        />
+                          clip-rule="evenodd" />
                       </svg>
                       Currently managed by system settings - always enabled for real-time updates
                     </span>
@@ -346,22 +191,13 @@
             </div>
           </div>
 
-<!-- Display Options Section -->
+          <!-- Display Options Section -->
           <div class="border-b border-gray-200 dark:border-gray-600 pb-8">
             <div class="flex items-center mb-6">
               <div class="flex items-center justify-center h-10 w-10 rounded-full bg-green-100">
-                <svg
-                  class="h-6 w-6 text-green-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                  />
+                <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
               </div>
               <h3 class="text-lg font-semibold text-gray-900 dark:text-white ml-4">
@@ -372,18 +208,9 @@
               <div class="flex items-start">
                 <div class="flex items-center h-5">
                   <input type="hidden" name="preferences[show_ticker]" value="false" />
-                  <input
-                    type="checkbox"
-                    name="preferences[show_ticker]"
-                    id="show_ticker"
-                    value="true"
-                    checked={
-                      if Map.has_key?(@form_data, :show_ticker),
-                        do: @form_data[:show_ticker],
-                        else: @user_preferences.show_ticker
-                    }
-                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
+                  <input type="checkbox" name="preferences[show_ticker]" id="show_ticker" value="true"
+                    checked={@effective_show_ticker}
+                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" />
                 </div>
                 <div class="ml-3 text-sm">
                   <label for="show_ticker" class="font-medium text-gray-700 dark:text-gray-300">
@@ -397,25 +224,14 @@
               <div class="flex items-start opacity-60 cursor-not-allowed">
                 <div class="flex items-center h-5">
                   <input type="hidden" name="preferences[notifications_enabled]" value="false" />
-                  <input
-                    type="checkbox"
-                    name="preferences[notifications_enabled]"
-                    id="notifications_enabled"
-                    value="false"
-                    checked={
-                      if Map.has_key?(@form_data, :notifications_enabled),
-                        do: @form_data[:notifications_enabled],
-                        else: @user_preferences.notifications_enabled
-                    }
+                  <input type="checkbox" name="preferences[notifications_enabled]" id="notifications_enabled"
+                    value="false" checked={@effective_notifications_enabled}
                     class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-not-allowed"
-                    disabled
-                  />
+                    disabled />
                 </div>
                 <div class="ml-3 text-sm">
-                  <label
-                    for="notifications_enabled"
-                    class="font-medium text-gray-700 dark:text-gray-300 cursor-not-allowed"
-                  >
+                  <label for="notifications_enabled"
+                    class="font-medium text-gray-700 dark:text-gray-300 cursor-not-allowed">
                     Enable notifications
                   </label>
                   <p class="text-gray-500 dark:text-gray-400">
@@ -426,25 +242,13 @@
               <div class="flex items-start opacity-60 cursor-not-allowed">
                 <div class="flex items-center h-5">
                   <input type="hidden" name="preferences[sound_enabled]" value="false" />
-                  <input
-                    type="checkbox"
-                    name="preferences[sound_enabled]"
-                    id="sound_enabled"
-                    value="true"
-                    checked={
-                      if Map.has_key?(@form_data, :sound_enabled),
-                        do: @form_data[:sound_enabled],
-                        else: @user_preferences.sound_enabled
-                    }
+                  <input type="checkbox" name="preferences[sound_enabled]" id="sound_enabled" value="true"
+                    checked={@effective_sound_enabled}
                     class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-not-allowed"
-                    disabled
-                  />
+                    disabled />
                 </div>
                 <div class="ml-3 text-sm">
-                  <label
-                    for="sound_enabled"
-                    class="font-medium text-gray-700 dark:text-gray-300 cursor-not-allowed"
-                  >
+                  <label for="sound_enabled" class="font-medium text-gray-700 dark:text-gray-300 cursor-not-allowed">
                     Enable sound notifications
                   </label>
                   <p class="text-gray-500 dark:text-gray-400">
@@ -454,23 +258,14 @@
               </div>
             </div>
           </div>
-          
-<!-- Default Sorting Section -->
+
+          <!-- Default Sorting Section -->
           <div>
             <div class="flex items-center mb-6">
               <div class="flex items-center justify-center h-10 w-10 rounded-full bg-orange-100">
-                <svg
-                  class="h-6 w-6 text-orange-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4"
-                  />
+                <svg class="h-6 w-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
                 </svg>
               </div>
               <h3 class="text-lg font-semibold text-gray-900 dark:text-white ml-4">
@@ -479,39 +274,21 @@
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label
-                  for="default_sort"
-                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
+                <label for="default_sort" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Sort by
                 </label>
-                <select
-                  name="preferences[default_sort]"
-                  id="default_sort"
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                >
-                  <option
-                    value="name"
-                    selected={
-                      "name" == (@form_data[:default_sort] || @user_preferences.default_sort)
-                    }
-                  >
+                <select name="preferences[default_sort]" id="default_sort"
+                  class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                  <option value="name" selected={ "name"==(@form_data[:default_sort] || @user_preferences.default_sort)
+                    }>
                     Name
                   </option>
-                  <option
-                    value="price"
-                    selected={
-                      "price" == (@form_data[:default_sort] || @user_preferences.default_sort)
-                    }
-                  >
+                  <option value="price" selected={ "price"==(@form_data[:default_sort] ||
+                    @user_preferences.default_sort) }>
                     Price
                   </option>
-                  <option
-                    value="change"
-                    selected={
-                      "change" == (@form_data[:default_sort] || @user_preferences.default_sort)
-                    }
-                  >
+                  <option value="change" selected={ "change"==(@form_data[:default_sort] ||
+                    @user_preferences.default_sort) }>
                     Change %
                   </option>
                 </select>
@@ -520,35 +297,18 @@
                 </p>
               </div>
               <div>
-                <label
-                  for="default_sort_direction"
-                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
+                <label for="default_sort_direction"
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Direction
                 </label>
-                <select
-                  name="preferences[default_sort_direction]"
-                  id="default_sort_direction"
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                >
-                  <option
-                    value="asc"
-                    selected={
-                      "asc" ==
-                        (@form_data[:default_sort_direction] ||
-                           @user_preferences.default_sort_direction)
-                    }
-                  >
+                <select name="preferences[default_sort_direction]" id="default_sort_direction"
+                  class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                  <option value="asc" selected={ "asc"==(@form_data[:default_sort_direction] ||
+                    @user_preferences.default_sort_direction) }>
                     Ascending
                   </option>
-                  <option
-                    value="desc"
-                    selected={
-                      "desc" ==
-                        (@form_data[:default_sort_direction] ||
-                           @user_preferences.default_sort_direction)
-                    }
-                  >
+                  <option value="desc" selected={ "desc"==(@form_data[:default_sort_direction] ||
+                    @user_preferences.default_sort_direction) }>
                     Descending
                   </option>
                 </select>
@@ -559,56 +319,26 @@
             </div>
           </div>
         </div>
-        
-<!-- Action Buttons -->
+
+        <!-- Action Buttons -->
         <div class="flex items-center justify-between pt-8 mt-8 border-t border-gray-200 dark:border-gray-600">
-          <button
-            type="button"
-            phx-click="reset_preferences"
-            class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-          >
+          <button type="button" phx-click="reset_preferences"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
             <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-              />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
             Reset to Defaults
           </button>
 
           <div class="flex space-x-3">
-            <.link
-              navigate={~p"/cards"}
-              class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-md hover:bg-gray-200 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-            >
+            <.link navigate={~p"/cards"}
+              class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-md hover:bg-gray-200 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
               Cancel
             </.link>
-            <button
-              type="submit"
-              disabled={not @has_changes}
-              class={[
-                "px-4 py-2 text-sm font-medium border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors",
-                if(@has_changes,
-                  do: "text-white bg-blue-600 hover:bg-blue-700 focus:ring-blue-500",
-                  else:
-                    "text-gray-400 dark:text-gray-500 bg-gray-200 dark:bg-gray-700 cursor-not-allowed"
-                )
-              ]}
-            >
-              <svg
-                class="h-4 w-4 mr-2 inline"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M5 13l4 4L19 7"
-                />
+            <button type="submit" disabled={not @has_changes} class={submit_button_classes(@has_changes)}>
+              <svg class="h-4 w-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
               Save Preferences
             </button>

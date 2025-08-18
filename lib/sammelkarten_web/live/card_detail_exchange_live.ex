@@ -809,7 +809,7 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
                           </div>
                           
     <!-- Exchange Visual -->
-                          <div class="flex items-center space-x-4">
+                          <div class="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
                             <!-- What they're offering -->
                             <div class="flex-1">
                               <p class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">
@@ -834,9 +834,9 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
                             </div>
                             
     <!-- Exchange Arrow -->
-                            <div class="flex flex-col items-center justify-center px-2">
+                            <div class="flex flex-col items-center justify-center px-2 py-2">
                               <svg
-                                class="w-8 h-8 text-gray-400"
+                                class="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 transform rotate-90 sm:rotate-0"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -946,7 +946,7 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
                           </div>
                           
     <!-- Exchange Visual -->
-                          <div class="flex items-center space-x-4">
+                          <div class="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
                             <!-- What they want -->
                             <div class="flex-1">
                               <p class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">
@@ -971,9 +971,9 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
                             </div>
                             
     <!-- Exchange Arrow -->
-                            <div class="flex flex-col items-center justify-center px-2">
+                            <div class="flex flex-col items-center justify-center px-2 py-2">
                               <svg
-                                class="w-8 h-8 text-gray-400"
+                                class="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 transform rotate-90 sm:rotate-0"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"

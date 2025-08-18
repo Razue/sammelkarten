@@ -1,0 +1,7 @@
+{
+  "last_updated": "2025-08-18T16:33:30.891862Z",
+  "market_maker_enabled": false,
+  "price_updater_enabled": false,
+  "price_update_interval": 420000,
+  "market_maker_auto_start": false
+}

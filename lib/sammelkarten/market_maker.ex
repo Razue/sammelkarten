@@ -16,9 +16,9 @@ defmodule Sammelkarten.MarketMaker do
 
   # Market maker configuration
   # Target inventory per card
-  @inventory_target 10
+  @inventory_target 2
   # Maximum inventory per card
-  @max_inventory 20
+  @max_inventory 5
   # 30 seconds
   @rebalance_interval 30_000
   # 2% price change triggers rebalance
@@ -26,11 +26,11 @@ defmodule Sammelkarten.MarketMaker do
 
   # Dynamic offer configuration
   # Number of Bitcoin sats offers per card
-  @bitcoin_offer_count 2
+  @bitcoin_offer_count 1
   # Number of card exchange offers per card
-  @exchange_offer_count 3
-  # 45 seconds between offer refreshes
-  @offer_refresh_interval 15_000
+  @exchange_offer_count 2
+  # 30 seconds between offer refreshes
+  @offer_refresh_interval 30_000
 
   defstruct [
     :pubkey,
@@ -68,6 +68,18 @@ defmodule Sammelkarten.MarketMaker do
   """
   def stop_market_making do
     GenServer.cast(__MODULE__, :stop_market_making)
+  end
+
+  @doc """
+  Check if market making is currently active.
+  """
+  def is_active? do
+    case GenServer.call(__MODULE__, :get_status) do
+      %{status: :active} -> true
+      _ -> false
+    end
+  catch
+    :exit, _ -> false
   end
 
   @doc """
@@ -127,7 +139,10 @@ defmodule Sammelkarten.MarketMaker do
       active_exchange_offers: %{}
     }
 
-    start_market_making()
+    # Only auto-start if settings allow it
+    if Sammelkarten.MarketSettings.market_maker_enabled?() do
+      start_market_making()
+    end
 
     Logger.info("Market maker initialized with pubkey: #{pubkey}")
     {:ok, state}
@@ -260,11 +275,12 @@ defmodule Sammelkarten.MarketMaker do
     current_price = card.current_price
 
     # Randomly decide whether to create buy or sell order (or both)
-    order_type = case :rand.uniform(3) do
-      1 -> :buy_only
-      2 -> :sell_only  
-      3 -> :both
-    end
+    order_type =
+      case :rand.uniform(3) do
+        1 -> :buy_only
+        2 -> :sell_only
+        3 -> :both
+      end
 
     case order_type do
       :buy_only ->
@@ -346,9 +362,9 @@ defmodule Sammelkarten.MarketMaker do
     # Update orders based on current market conditions
     case Cards.list_cards() do
       {:ok, cards} ->
-        # Only rebalance 2-5 random cards instead of all cards
-        selected_cards = Enum.take_random(cards, :rand.uniform(4) + 1)
-        
+        # Only rebalance 2-12 random cards instead of all cards
+        selected_cards = Enum.take_random(cards, :rand.uniform(11) + 1)
+
         Enum.each(selected_cards, fn card ->
           rebalance_card_orders(card, state)
         end)
@@ -499,9 +515,9 @@ defmodule Sammelkarten.MarketMaker do
     # Create new offers
     case Cards.list_cards() do
       {:ok, cards} ->
-        # Only create offers for 2-5 random cards instead of all cards
-        selected_cards = Enum.take_random(cards, :rand.uniform(4) + 1)
-        
+        # Only create offers for 2-4 random cards instead of all cards
+        selected_cards = Enum.take_random(cards, :rand.uniform(3) + 1)
+
         Enum.each(selected_cards, fn card ->
           create_bitcoin_offers_for_card(card)
           create_exchange_offers_for_card(card, cards)
@@ -527,8 +543,8 @@ defmodule Sammelkarten.MarketMaker do
       price_variation = (:rand.uniform(30) - 15) / 100
       sats_price = calculate_sats_price(card.current_price, price_variation)
 
-      # Quantity: 1-5 cards
-      quantity = :rand.uniform(5)
+      # Quantity: 1-3 cards
+      quantity = :rand.uniform(3)
 
       create_bitcoin_offer(trader_pubkey, card.id, offer_type, quantity, sats_price)
     end)
@@ -591,8 +607,8 @@ defmodule Sammelkarten.MarketMaker do
   defp create_bitcoin_offer(trader_pubkey, card_id, offer_type, quantity, sats_price) do
     trade_id = :crypto.strong_rand_bytes(16) |> Base.encode16(case: :lower)
     created_at = DateTime.utc_now()
-    # Random expiry time: 5-30 minutes to simulate real market dynamics
-    expire_minutes = :rand.uniform(25) + 5
+    # Random expiry time: 3-30 minutes to simulate real market dynamics
+    expire_minutes = :rand.uniform(27) + 3
     expires_at = DateTime.add(created_at, expire_minutes * 60, :second)
 
     record = {
@@ -623,8 +639,8 @@ defmodule Sammelkarten.MarketMaker do
   defp create_exchange_offer(trader_pubkey, wanted_card_id, offer_type, offered_card_id, quantity) do
     trade_id = :crypto.strong_rand_bytes(16) |> Base.encode16(case: :lower)
     created_at = DateTime.utc_now()
-    # Random expiry time: 5-30 minutes to simulate real market dynamics  
-    expire_minutes = :rand.uniform(25) + 5
+    # Random expiry time: 3-30 minutes to simulate real market dynamics
+    expire_minutes = :rand.uniform(27) + 3
     expires_at = DateTime.add(created_at, expire_minutes * 60, :second)
 
     record = {
@@ -675,10 +691,10 @@ defmodule Sammelkarten.MarketMaker do
   end
 
   defp generate_realistic_quantity do
-    # 85% chance of 1x, 12% chance of 2x, 3% chance of 3x
+    # 90% chance of 1x, 8% chance of 2x, 2% chance of 3x
     case :rand.uniform(100) do
-      n when n <= 85 -> 1
-      n when n <= 97 -> 2
+      n when n <= 90 -> 1
+      n when n <= 98 -> 2
       _ -> 3
     end
   end
@@ -686,24 +702,29 @@ defmodule Sammelkarten.MarketMaker do
   defp generate_dynamic_buy_price(current_price) do
     # Buy orders (searches) are typically 1-8% below market price
     # with some variation to create realistic market depth
-    discount_percentage = (:rand.uniform(70) + 10) / 1000  # 1.0% to 8.0%
-    price_variation = (:rand.uniform(20) - 10) / 1000      # ±1.0% additional variation
-    
+    # 1.0% to 8.0%
+    discount_percentage = (:rand.uniform(70) + 10) / 1000
+    # ±1.0% additional variation
+    price_variation = (:rand.uniform(20) - 10) / 1000
+
     final_percentage = discount_percentage + price_variation
     price_adjustment = trunc(current_price * final_percentage)
-    
-    max(current_price - price_adjustment, trunc(current_price * 0.85))  # Never below 85% of market
+
+    # Never below 85% of market
+    max(current_price - price_adjustment, trunc(current_price * 0.85))
   end
 
   defp generate_dynamic_sell_price(current_price) do
-    # Sell orders (offers) are typically 1-8% above market price  
+    # Sell orders (offers) are typically 1-8% above market price
     # with some variation to create realistic market depth
-    markup_percentage = (:rand.uniform(70) + 10) / 1000    # 1.0% to 8.0%
-    price_variation = (:rand.uniform(20) - 10) / 1000      # ±1.0% additional variation
-    
+    # 1.0% to 8.0%
+    markup_percentage = (:rand.uniform(70) + 10) / 1000
+    # ±1.0% additional variation
+    price_variation = (:rand.uniform(20) - 10) / 1000
+
     final_percentage = markup_percentage + price_variation
     price_adjustment = trunc(current_price * final_percentage)
-    
+
     current_price + price_adjustment
   end
 end

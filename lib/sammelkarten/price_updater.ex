@@ -78,6 +78,18 @@ defmodule Sammelkarten.PriceUpdater do
     GenServer.call(__MODULE__, :status)
   end
 
+  @doc """
+  Check if price updater is currently running (not paused).
+  """
+  def is_active? do
+    case status() do
+      %{paused: false, auto_refresh_enabled: true} -> true
+      _ -> false
+    end
+  catch
+    :exit, _ -> false
+  end
+
   ## Server Implementation
 
   @impl true
@@ -86,7 +98,7 @@ defmodule Sammelkarten.PriceUpdater do
     {default_interval, auto_refresh_enabled} =
       case Sammelkarten.Preferences.get_user_preferences("default_user") do
         {:ok, preferences} -> {preferences.refresh_rate, preferences.auto_refresh}
-        {:error, _} -> {@update_interval, true}
+        {:error, _} -> {@update_interval, Sammelkarten.MarketSettings.price_updater_enabled?()}
       end
 
     state = %{

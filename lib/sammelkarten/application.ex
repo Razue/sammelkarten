@@ -19,6 +19,8 @@ defmodule Sammelkarten.Application do
       {Phoenix.PubSub, name: Sammelkarten.PubSub},
       # Start the Finch HTTP client for sending emails
       {Finch, name: Sammelkarten.Finch},
+      # Start the market settings manager
+      Sammelkarten.MarketSettings,
       # Start the price updater for background price simulation
       Sammelkarten.PriceUpdater,
       # Start the Nostr client for relay connections

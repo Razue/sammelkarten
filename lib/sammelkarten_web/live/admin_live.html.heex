@@ -47,6 +47,99 @@
       </div>
     </div>
   </div>
+
+  <!-- Market Settings Section -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+    <div class="bg-white shadow-sm rounded-lg overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-lg font-medium text-gray-900">Market Settings</h2>
+        <p class="text-sm text-gray-600 mt-1">Control MarketMaker and PriceUpdater without database reset</p>
+      </div>
+      
+      <div class="p-6 space-y-6">
+        <!-- MarketMaker Controls -->
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-base font-medium text-gray-900">MarketMaker</h3>
+            <p class="text-sm text-gray-600">
+              Status: 
+              <span class={if @market_maker_active, do: "text-green-600 font-medium", else: "text-red-600 font-medium"}>
+                {if @market_maker_active, do: "Active", else: "Inactive"}
+              </span>
+              | Settings: 
+              <span class={if @market_settings.market_maker_enabled, do: "text-green-600", else: "text-gray-500"}>
+                {if @market_settings.market_maker_enabled, do: "Enabled", else: "Disabled"}
+              </span>
+            </p>
+          </div>
+          <button
+            phx-click="toggle_market_maker"
+            class={
+              if @market_settings.market_maker_enabled,
+                do: "bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors",
+                else: "bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            }
+          >
+            {if @market_settings.market_maker_enabled, do: "Disable & Stop", else: "Enable & Start"}
+          </button>
+        </div>
+
+        <!-- PriceUpdater Controls -->
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-base font-medium text-gray-900">PriceUpdater</h3>
+            <p class="text-sm text-gray-600">
+              Status: 
+              <span class={if @price_updater_active, do: "text-green-600 font-medium", else: "text-red-600 font-medium"}>
+                {if @price_updater_active, do: "Active", else: "Inactive"}
+              </span>
+              | Settings: 
+              <span class={if @market_settings.price_updater_enabled, do: "text-green-600", else: "text-gray-500"}>
+                {if @market_settings.price_updater_enabled, do: "Enabled", else: "Disabled"}
+              </span>
+            </p>
+          </div>
+          <button
+            phx-click="toggle_price_updater"
+            class={
+              if @market_settings.price_updater_enabled,
+                do: "bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors",
+                else: "bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            }
+          >
+            {if @market_settings.price_updater_enabled, do: "Disable & Pause", else: "Enable & Resume"}
+          </button>
+        </div>
+
+        <!-- Price Update Interval -->
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-base font-medium text-gray-900">Price Update Interval</h3>
+            <p class="text-sm text-gray-600">
+              Current: {div(@market_settings.price_update_interval, 1000)} seconds
+            </p>
+          </div>
+          <form phx-submit="update_price_interval" class="flex items-center space-x-2">
+            <input
+              type="number"
+              name="interval"
+              min="30"
+              max="3600"
+              value={div(@market_settings.price_update_interval, 1000)}
+              class="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            />
+            <span class="text-sm text-gray-600">seconds</span>
+            <button
+              type="submit"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg font-medium transition-colors text-sm"
+            >
+              Update
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
   
 <!-- Messages -->
   <%= if @success_message do %>

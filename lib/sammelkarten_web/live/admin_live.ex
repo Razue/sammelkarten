@@ -1,7 +1,7 @@
 defmodule SammelkartenWeb.AdminLive do
   use SammelkartenWeb, :live_view
 
-  alias Sammelkarten.{Cards, Database}
+  alias Sammelkarten.{Cards, Database, MarketSettings, MarketMaker, PriceUpdater}
   alias Sammelkarten.Formatter
 
   @impl true
@@ -14,6 +14,11 @@ defmodule SammelkartenWeb.AdminLive do
           {:error, _} -> []
         end
 
+      # Get market settings and status
+      market_settings = MarketSettings.get_settings()
+      market_maker_active = MarketMaker.is_active?()
+      price_updater_active = PriceUpdater.is_active?()
+
       socket =
         assign(socket,
           cards: cards,
@@ -22,7 +27,10 @@ defmodule SammelkartenWeb.AdminLive do
           show_add_form: false,
           show_edit_form: false,
           error_message: nil,
-          success_message: nil
+          success_message: nil,
+          market_settings: market_settings,
+          market_maker_active: market_maker_active,
+          price_updater_active: price_updater_active
         )
 
       {:ok, socket}
@@ -179,6 +187,82 @@ defmodule SammelkartenWeb.AdminLive do
   @impl true
   def handle_event("clear_messages", _params, socket) do
     {:noreply, assign(socket, error_message: nil, success_message: nil)}
+  end
+
+  @impl true
+  def handle_event("toggle_market_maker", _params, socket) do
+    current_enabled = socket.assigns.market_settings.market_maker_enabled
+    
+    case MarketSettings.set_market_maker_enabled(!current_enabled) do
+      {:ok, new_settings} ->
+        market_maker_active = MarketMaker.is_active?()
+        
+        message = if new_settings.market_maker_enabled do
+          "MarketMaker enabled and started"
+        else
+          "MarketMaker disabled and stopped"
+        end
+        
+        {:noreply,
+         assign(socket,
+           market_settings: new_settings,
+           market_maker_active: market_maker_active,
+           success_message: message,
+           error_message: nil
+         )}
+        
+      {:error, reason} ->
+        {:noreply, assign(socket, error_message: "Failed to toggle MarketMaker: #{inspect(reason)}")}
+    end
+  end
+
+  @impl true
+  def handle_event("toggle_price_updater", _params, socket) do
+    current_enabled = socket.assigns.market_settings.price_updater_enabled
+    
+    case MarketSettings.set_price_updater_enabled(!current_enabled) do
+      {:ok, new_settings} ->
+        price_updater_active = PriceUpdater.is_active?()
+        
+        message = if new_settings.price_updater_enabled do
+          "PriceUpdater enabled and resumed"
+        else
+          "PriceUpdater disabled and paused"
+        end
+        
+        {:noreply,
+         assign(socket,
+           market_settings: new_settings,
+           price_updater_active: price_updater_active,
+           success_message: message,
+           error_message: nil
+         )}
+        
+      {:error, reason} ->
+        {:noreply, assign(socket, error_message: "Failed to toggle PriceUpdater: #{inspect(reason)}")}
+    end
+  end
+
+  @impl true
+  def handle_event("update_price_interval", %{"interval" => interval_str}, socket) do
+    case Integer.parse(interval_str) do
+      {interval, ""} when interval > 0 ->
+        case MarketSettings.set_price_update_interval(interval * 1000) do
+          {:ok, new_settings} ->
+            {:noreply,
+             assign(socket,
+               market_settings: new_settings,
+               success_message: "Price update interval set to #{interval} seconds",
+               error_message: nil
+             )}
+             
+          {:error, reason} ->
+            {:noreply, assign(socket, error_message: "Failed to update interval: #{inspect(reason)}")}
+        end
+        
+      _ ->
+        {:noreply, assign(socket, error_message: "Invalid interval value")}
+    end
   end
 
   @impl true

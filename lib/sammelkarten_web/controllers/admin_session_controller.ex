@@ -20,6 +20,6 @@ defmodule SammelkartenWeb.AdminSessionController do
     conn
     |> delete_session(:admin_authenticated)
     # |> put_flash(:info, "Logged out successfully")
-    |> redirect(to: ~p"/cards")
+    |> redirect(to: ~p"/admin/login")
   end
 end

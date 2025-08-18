@@ -32,6 +32,6 @@ defmodule SammelkartenWeb.AdminLoginLive do
 
   @impl true
   def handle_event("go_back", _params, socket) do
-    {:noreply, push_navigate(socket, to: ~p"/cards")}
+    {:noreply, push_navigate(socket, to: ~p"/")}
   end
 end

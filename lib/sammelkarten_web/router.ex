@@ -33,8 +33,6 @@ defmodule SammelkartenWeb.Router do
     live "/insights", MarketInsightsLive, :index
     live "/leaderboards", LeaderboardsLive, :index
     live "/trading", TradingLive, :index
-    live "/trading/exchanges", DashboardExchangeLive, :index
-    live "/trading/exchanges/:slug", CardDetailExchangeLive, :show
 
     # Nostr authentication routes
     post "/nostr/session", NostrSessionController, :create

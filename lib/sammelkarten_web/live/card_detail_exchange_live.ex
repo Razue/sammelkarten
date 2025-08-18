@@ -101,7 +101,7 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
 
   @impl true
   def handle_event("go_back", _params, socket) do
-    {:noreply, push_navigate(socket, to: "/trading/exchanges")}
+    {:noreply, push_navigate(socket, to: "/")}
   end
 
   # Load real exchange data from database
@@ -120,8 +120,25 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
       card_exchanges = load_dynamic_card_exchanges_for_card(card.id)
 
       # Separate into offers and searches based on the trade type and involvement
-      offer_traders = format_offers_for_display(regular_offers, exchange_offers, bitcoin_offers, card_exchanges, card, :offer)
-      search_traders = format_offers_for_display(regular_offers, exchange_offers, bitcoin_offers, card_exchanges, card, :search)
+      offer_traders =
+        format_offers_for_display(
+          regular_offers,
+          exchange_offers,
+          bitcoin_offers,
+          card_exchanges,
+          card,
+          :offer
+        )
+
+      search_traders =
+        format_offers_for_display(
+          regular_offers,
+          exchange_offers,
+          bitcoin_offers,
+          card_exchanges,
+          card,
+          :search
+        )
 
       {offer_traders, search_traders}
     rescue
@@ -320,9 +337,7 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
       transaction = fn ->
         # Get all dynamic exchanges
         all_exchanges =
-          :mnesia.match_object(
-            {:dynamic_card_exchanges, :_, :_, :_, :_, :_, :_, "open", :_, :_}
-          )
+          :mnesia.match_object({:dynamic_card_exchanges, :_, :_, :_, :_, :_, :_, "open", :_, :_})
 
         # Filter to include exchanges involving this card
         Enum.filter(all_exchanges, fn {_, _, _, wanted_card_id, offered_card_id, _, _, _, _, _} ->
@@ -418,7 +433,14 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
   end
 
   # Format offers for display, separating into offers and searches
-  defp format_offers_for_display(regular_offers, exchange_offers, bitcoin_offers, card_exchanges, current_card, display_type) do
+  defp format_offers_for_display(
+         regular_offers,
+         exchange_offers,
+         bitcoin_offers,
+         card_exchanges,
+         current_card,
+         display_type
+       ) do
     case display_type do
       :offer ->
         # Show sell offers (people offering this card) and exchange offers offering this card
@@ -440,11 +462,18 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
 
         # Convert to unified format
         formatted_sells = Enum.map(sell_offers, &format_as_offer_display/1)
-        formatted_exchanges = Enum.map(exchange_offering_card, &format_exchange_as_offer_display/1)
-        formatted_bitcoin_sells = Enum.map(bitcoin_sell_offers, &format_bitcoin_as_offer_display/1)
-        formatted_card_exchanges = Enum.map(card_exchange_offers, &format_card_exchange_as_offer_display/1)
 
-        (formatted_sells ++ formatted_exchanges ++ formatted_bitcoin_sells ++ formatted_card_exchanges)
+        formatted_exchanges =
+          Enum.map(exchange_offering_card, &format_exchange_as_offer_display/1)
+
+        formatted_bitcoin_sells =
+          Enum.map(bitcoin_sell_offers, &format_bitcoin_as_offer_display/1)
+
+        formatted_card_exchanges =
+          Enum.map(card_exchange_offers, &format_card_exchange_as_offer_display/1)
+
+        (formatted_sells ++
+           formatted_exchanges ++ formatted_bitcoin_sells ++ formatted_card_exchanges)
         |> Enum.sort_by(& &1.minutes_ago, :asc)
 
       :search ->
@@ -479,11 +508,17 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
 
         # Convert to unified format
         formatted_buys = Enum.map(buy_offers, &format_as_search_display/1)
-        formatted_exchanges = Enum.map(exchange_wanting_card, &format_exchange_as_search_display/1)
-        formatted_bitcoin_buys = Enum.map(bitcoin_buy_offers, &format_bitcoin_as_search_display/1)
-        formatted_card_searches = Enum.map(card_exchange_searches, &format_card_exchange_as_search_display/1)
 
-        (formatted_buys ++ formatted_exchanges ++ formatted_bitcoin_buys ++ formatted_card_searches)
+        formatted_exchanges =
+          Enum.map(exchange_wanting_card, &format_exchange_as_search_display/1)
+
+        formatted_bitcoin_buys = Enum.map(bitcoin_buy_offers, &format_bitcoin_as_search_display/1)
+
+        formatted_card_searches =
+          Enum.map(card_exchange_searches, &format_card_exchange_as_search_display/1)
+
+        (formatted_buys ++
+           formatted_exchanges ++ formatted_bitcoin_buys ++ formatted_card_searches)
         |> Enum.sort_by(& &1.minutes_ago, :asc)
     end
   end
@@ -564,7 +599,9 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
       # What they're offering (Bitcoin sats)
       offer_bundle: [{"Bitcoin Sats", bitcoin_offer.sats_price, "currency"}],
       # What they want
-      search_bundle: [{bitcoin_offer.card.name, bitcoin_offer.quantity, bitcoin_offer.card.rarity}],
+      search_bundle: [
+        {bitcoin_offer.card.name, bitcoin_offer.quantity, bitcoin_offer.card.rarity}
+      ],
       minutes_ago: bitcoin_offer.minutes_ago,
       offer_type: "bitcoin_buy"
     }
@@ -625,10 +662,7 @@ defmodule SammelkartenWeb.CardDetailExchangeLive do
               <nav class="flex" aria-label="Breadcrumb">
                 <ol class="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
                   <li>
-                    <.link
-                      navigate="/trading/exchanges"
-                      class="hover:text-gray-700 dark:hover:text-gray-300"
-                    >
+                    <.link navigate="/" class="hover:text-gray-700 dark:hover:text-gray-300">
                       Card Collection Exchange
                     </.link>
                   </li>

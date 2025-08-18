@@ -24,8 +24,8 @@ defmodule SammelkartenWeb.Components.ExchangeTicker do
         end,
         :desc
       )
-      # Limit to 10 most active cards for performance
-      |> Enum.take(10)
+      # Limit to 15 most active cards for performance
+      |> Enum.take(15)
 
     socket =
       socket
@@ -173,26 +173,28 @@ defmodule SammelkartenWeb.Components.ExchangeTicker do
 
       # Apply the same filtering logic as detail page for offers
       sell_offers = Enum.filter(regular_offers, &(&1.offer_type == "sell"))
-      
-      exchange_offering_card = Enum.filter(exchange_offers, fn offer ->
-        offer.offering_card.id == card.id
-      end)
-      
+
+      exchange_offering_card =
+        Enum.filter(exchange_offers, fn offer ->
+          offer.offering_card.id == card.id
+        end)
+
       bitcoin_sell_offers = Enum.filter(bitcoin_offers, &(&1.offer_type == "sell_for_sats"))
-      
-      card_exchange_offers = Enum.filter(card_exchanges, fn exchange ->
-        exchange.exchange_type == "offer" and exchange.wanted_card.id == card.id
-      end)
+
+      card_exchange_offers =
+        Enum.filter(card_exchanges, fn exchange ->
+          exchange.exchange_type == "offer" and exchange.wanted_card.id == card.id
+        end)
 
       # Count total offers (same as detail page display)
-      length(sell_offers) + length(exchange_offering_card) + 
-      length(bitcoin_sell_offers) + length(card_exchange_offers)
+      length(sell_offers) + length(exchange_offering_card) +
+        length(bitcoin_sell_offers) + length(card_exchange_offers)
     rescue
       _ -> 0
     end
   end
 
-  # Calculate search quantity using the same logic as DashboardExchangeLive  
+  # Calculate search quantity using the same logic as DashboardExchangeLive
   defp calculate_search_quantity(card) do
     try do
       # Load the same data as detail page
@@ -203,28 +205,34 @@ defmodule SammelkartenWeb.Components.ExchangeTicker do
 
       # Apply the same filtering logic as detail page for searches
       buy_offers = Enum.filter(regular_offers, &(&1.offer_type == "buy"))
-      
-      exchange_wanting_card = Enum.filter(exchange_offers, fn offer ->
-        case offer.wanted_type do
-          "open" -> true
-          "specific" ->
-            Enum.any?(offer.wanted_cards, fn {name, _, _} ->
-              String.downcase(name) == String.downcase(card.name)
-            end)
-          _ -> false
-        end
-      end)
-      
+
+      exchange_wanting_card =
+        Enum.filter(exchange_offers, fn offer ->
+          case offer.wanted_type do
+            "open" ->
+              true
+
+            "specific" ->
+              Enum.any?(offer.wanted_cards, fn {name, _, _} ->
+                String.downcase(name) == String.downcase(card.name)
+              end)
+
+            _ ->
+              false
+          end
+        end)
+
       bitcoin_buy_offers = Enum.filter(bitcoin_offers, &(&1.offer_type == "buy_for_sats"))
-      
-      card_exchange_searches = Enum.filter(card_exchanges, fn exchange ->
-        exchange.exchange_type == "want" and
-          (exchange.wanted_card.id == card.id or exchange.offered_card == nil)
-      end)
+
+      card_exchange_searches =
+        Enum.filter(card_exchanges, fn exchange ->
+          exchange.exchange_type == "want" and
+            (exchange.wanted_card.id == card.id or exchange.offered_card == nil)
+        end)
 
       # Count total searches (same as detail page display)
-      length(buy_offers) + length(exchange_wanting_card) + 
-      length(bitcoin_buy_offers) + length(card_exchange_searches)
+      length(buy_offers) + length(exchange_wanting_card) +
+        length(bitcoin_buy_offers) + length(card_exchange_searches)
     rescue
       _ -> 0
     end
@@ -275,6 +283,7 @@ defmodule SammelkartenWeb.Components.ExchangeTicker do
               {:ok, wanted_data} ->
                 wanted_card_ids = wanted_data["card_ids"] || []
                 card_id in wanted_card_ids or wanted_data["type"] == "open"
+
               _ ->
                 false
             end
@@ -326,9 +335,7 @@ defmodule SammelkartenWeb.Components.ExchangeTicker do
     try do
       transaction = fn ->
         all_exchanges =
-          :mnesia.match_object(
-            {:dynamic_card_exchanges, :_, :_, :_, :_, :_, :_, "open", :_, :_}
-          )
+          :mnesia.match_object({:dynamic_card_exchanges, :_, :_, :_, :_, :_, :_, "open", :_, :_})
 
         Enum.filter(all_exchanges, fn {_, _, _, wanted_card_id, offered_card_id, _, _, _, _, _} ->
           wanted_card_id == card_id or offered_card_id == card_id or offered_card_id == nil
@@ -368,6 +375,7 @@ defmodule SammelkartenWeb.Components.ExchangeTicker do
           total_value: total_value,
           created_at: created_at
         }
+
       {:error, _} ->
         nil
     end
@@ -387,11 +395,13 @@ defmodule SammelkartenWeb.Components.ExchangeTicker do
         case wanted_type do
           "open" ->
             [{"Any Card", 1, "common"}]
+
           "specific" ->
             wanted_card_ids
             |> Enum.map(&Sammelkarten.Cards.get_card/1)
             |> Enum.filter(&match?({:ok, _}, &1))
             |> Enum.map(fn {:ok, card} -> {card.name, 1, card.rarity} end)
+
           _ ->
             []
         end
@@ -430,6 +440,7 @@ defmodule SammelkartenWeb.Components.ExchangeTicker do
           sats_price: sats_price,
           created_at: created_at
         }
+
       {:error, _} ->
         nil
     end
@@ -445,6 +456,7 @@ defmodule SammelkartenWeb.Components.ExchangeTicker do
         case offered_card_id do
           nil ->
             {[{"Any Card", quantity, "common"}], nil}
+
           card_id ->
             case Sammelkarten.Cards.get_card(card_id) do
               {:ok, card} -> {[{card.name, quantity, card.rarity}], card}

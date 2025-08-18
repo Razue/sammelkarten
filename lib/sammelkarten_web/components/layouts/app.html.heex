@@ -19,8 +19,8 @@
           📊 My Portfolio
         </.link>
         <.link navigate={~p"/trading"}
-          class="nav-link text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 px-3 py-2 text-label-md border border-green-200 rounded-lg hover:bg-green-50 dark:border-green-700 dark:hover:bg-green-900 transition-colors">
-          🔄 Exchange
+          class="nav-link text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 px-3 py-2 text-label-md border border-amber-200 rounded-lg hover:bg-amber-50 dark:border-amber-700 dark:hover:bg-amber-900 transition-colors">
+          ⚡ P2P Trading
         </.link>
         <.link navigate={~p"/market"}
           class="nav-link text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 px-3 py-2 text-label-md border border-purple-200 rounded-lg hover:bg-purple-50 dark:border-purple-700 dark:hover:bg-purple-900 transition-colors">
@@ -39,49 +39,54 @@
       <!-- Simple Mobile Navigation (CSS-only) -->
       <div class="md:hidden">
         <input type="checkbox" id="mobile-nav-toggle" class="mobile-nav-checkbox">
-        <label for="mobile-nav-toggle" class="mobile-nav-toggle text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">
+        <label for="mobile-nav-toggle"
+          class="mobile-nav-toggle text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">
           <div class="mobile-nav-line"></div>
           <div class="mobile-nav-line"></div>
           <div class="mobile-nav-line"></div>
         </label>
-        
+
         <!-- Overlay -->
         <label for="mobile-nav-toggle" class="mobile-nav-overlay"></label>
-        
+
         <!-- Mobile Menu -->
         <div class="mobile-nav-menu bg-white dark:bg-gray-800">
           <div class="flex items-center justify-between mb-6 p-4 border-b border-gray-200 dark:border-gray-700">
             <div class="flex items-center space-x-3">
-              <div class="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+              <div
+                class="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
                 <span class="text-white font-bold text-sm">S</span>
               </div>
               <span class="text-heading-lg text-gray-900 dark:text-white">Menu</span>
             </div>
-            <label for="mobile-nav-toggle" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 cursor-pointer">
-              <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+            <label for="mobile-nav-toggle"
+              class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 cursor-pointer">
             </label>
           </div>
-          
+
           <div class="space-y-2 px-4">
-            <.link navigate={~p"/portfolio"} class="flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg">
+            <.link navigate={~p"/portfolio"}
+              class="flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg">
               <span class="text-lg">📊</span>
               <span class="font-medium">Portfolio</span>
             </.link>
-            <.link navigate={~p"/trading"} class="flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-900 hover:text-green-600 dark:hover:text-green-400 rounded-lg">
-              <span class="text-lg">🔄</span>
-              <span class="font-medium">Exchange</span>
+            <.link navigate={~p"/trading"}
+              class="flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-amber-50 dark:hover:bg-amber-900 hover:text-amber-600 dark:hover:text-amber-400 rounded-lg">
+              <span class="text-lg">⚡</span>
+              <span class="font-medium">P2P Trading</span>
             </.link>
-            <.link navigate={~p"/market"} class="flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900 hover:text-purple-600 dark:hover:text-purple-400 rounded-lg">
+            <.link navigate={~p"/market"}
+              class="flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900 hover:text-purple-600 dark:hover:text-purple-400 rounded-lg">
               <span class="text-lg">📈</span>
               <span class="font-medium">Market</span>
             </.link>
-            <.link navigate={~p"/preferences"} class="flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg">
+            <.link navigate={~p"/preferences"}
+              class="flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg">
               <span class="text-lg">⚙️</span>
               <span class="font-medium">Settings</span>
             </.link>
-            <.link navigate={~p"/donation"} class="flex items-center space-x-3 px-4 py-3 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900 rounded-lg">
+            <.link navigate={~p"/donation"}
+              class="flex items-center space-x-3 px-4 py-3 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900 rounded-lg">
               <span class="text-lg">💝</span>
               <span class="font-medium">Donate</span>
             </.link>

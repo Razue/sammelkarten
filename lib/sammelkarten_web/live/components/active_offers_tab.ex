@@ -54,6 +54,15 @@ defmodule SammelkartenWeb.TradingLive.ActiveOffersTab do
           >
             💰 Sell Orders
           </button>
+          <button
+            phx-click="filter_offers"
+            phx-value-type="exchange"
+            class={"px-4 py-2 rounded-lg text-label-md
+            transition-colors #{if @filter_type=="exchange" , do: "bg-blue-600 text-white" ,
+            else: "bg-card text-text hover:bg-card-hover" }"}
+          >
+            🔄 Exchanges
+          </button>
         </div>
         <div class="flex gap-2">
           <button
@@ -169,21 +178,41 @@ defmodule SammelkartenWeb.TradingLive.ActiveOffersTab do
                             </span>
                         <% end %>
                       </div>
-                      <!-- Price per card -->
+                      <!-- Price per card or Exchange info -->
                       <div class="text-right">
-                        <div class="text-heading-sm font-semibold text-gray-900 dark:text-white">
-                          {format_price(offer.price)}
-                        </div>
-                        <div class="text-label-xs text-gray-500 dark:text-gray-400">per card</div>
+                        <%= if offer.offer_type == "exchange" do %>
+                          <div class="text-heading-sm font-semibold text-blue-600 dark:text-blue-400">
+                            🔄 Exchange
+                          </div>
+                          <div class="text-label-xs text-gray-500 dark:text-gray-400">
+                            <%= if Map.has_key?(offer, :wanted_type) and offer.wanted_type == "open" do %>
+                              for any card
+                            <% else %>
+                              for specific card
+                            <% end %>
+                          </div>
+                        <% else %>
+                          <div class="text-heading-sm font-semibold text-gray-900 dark:text-white">
+                            {format_price(offer.price)}
+                          </div>
+                          <div class="text-label-xs text-gray-500 dark:text-gray-400">per card</div>
+                        <% end %>
                       </div>
                     </div>
                     <!-- Total Value and Trader Info -->
                     <div class="flex items-center justify-between">
                       <div>
-                        <div class="text-label-sm text-gray-600 dark:text-gray-400">Total</div>
-                        <div class="text-heading-xs font-bold text-gray-900 dark:text-white">
-                          {format_price(offer.total_value)}
-                        </div>
+                        <%= if offer.offer_type == "exchange" do %>
+                          <div class="text-label-sm text-gray-600 dark:text-gray-400">Exchange</div>
+                          <div class="text-heading-xs font-bold text-blue-600 dark:text-blue-400">
+                            No Money
+                          </div>
+                        <% else %>
+                          <div class="text-label-sm text-gray-600 dark:text-gray-400">Total</div>
+                          <div class="text-heading-xs font-bold text-gray-900 dark:text-white">
+                            {format_price(offer.total_value)}
+                          </div>
+                        <% end %>
                       </div>
                       <div class="text-right">
                         <div class="text-label-sm text-gray-600 dark:text-gray-400">Trader</div>
@@ -298,21 +327,41 @@ defmodule SammelkartenWeb.TradingLive.ActiveOffersTab do
                             </span>
                         <% end %>
                       </div>
-                      <!-- Price per card -->
+                      <!-- Price per card or Exchange info -->
                       <div class="text-right">
-                        <div class="text-heading-sm font-semibold text-gray-900 dark:text-white">
-                          {format_price(offer.price)}
-                        </div>
-                        <div class="text-label-xs text-gray-500 dark:text-gray-400">per card</div>
+                        <%= if offer.offer_type == "exchange" do %>
+                          <div class="text-heading-sm font-semibold text-blue-600 dark:text-blue-400">
+                            🔄 Exchange
+                          </div>
+                          <div class="text-label-xs text-gray-500 dark:text-gray-400">
+                            <%= if Map.has_key?(offer, :wanted_type) and offer.wanted_type == "open" do %>
+                              for any card
+                            <% else %>
+                              for specific card
+                            <% end %>
+                          </div>
+                        <% else %>
+                          <div class="text-heading-sm font-semibold text-gray-900 dark:text-white">
+                            {format_price(offer.price)}
+                          </div>
+                          <div class="text-label-xs text-gray-500 dark:text-gray-400">per card</div>
+                        <% end %>
                       </div>
                     </div>
                     <!-- Total Value and Trader Info -->
                     <div class="flex items-center justify-between">
                       <div>
-                        <div class="text-label-sm text-gray-600 dark:text-gray-400">Total</div>
-                        <div class="text-heading-xs font-bold text-gray-900 dark:text-white">
-                          {format_price(offer.total_value)}
-                        </div>
+                        <%= if offer.offer_type == "exchange" do %>
+                          <div class="text-label-sm text-gray-600 dark:text-gray-400">Exchange</div>
+                          <div class="text-heading-xs font-bold text-blue-600 dark:text-blue-400">
+                            No Money
+                          </div>
+                        <% else %>
+                          <div class="text-label-sm text-gray-600 dark:text-gray-400">Total</div>
+                          <div class="text-heading-xs font-bold text-gray-900 dark:text-white">
+                            {format_price(offer.total_value)}
+                          </div>
+                        <% end %>
                       </div>
                       <div class="text-right">
                         <div class="text-label-sm text-gray-600 dark:text-gray-400">Trader</div>

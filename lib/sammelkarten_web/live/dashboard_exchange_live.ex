@@ -240,24 +240,22 @@ defmodule SammelkartenWeb.DashboardExchangeLive do
   # Calculate real offer quantity from database - number of people offering this card
   defp calculate_offer_quantity(card) do
     try do
-      transaction = fn ->
-        # Get sell offers for this card
-        sell_offers = :mnesia.match_object(
-          {:user_trades, :_, :_, card.id, "sell", :_, :_, :_, :_, "open", :_, :_, :_}
-        )
+      # Get Bitcoin sell offers for this card
+      bitcoin_offers = :mnesia.dirty_match_object(
+        {:dynamic_bitcoin_offers, :_, :_, card.id, "sell_for_sats", :_, :_, "open", :_, :_}
+      )
 
-        # Get exchange offers offering this card
-        exchange_offers = :mnesia.match_object(
-          {:user_trades, :_, :_, card.id, "exchange", :_, :_, :_, :_, "open", :_, :_, :_}
-        )
+      # Get card exchange offers offering this card
+      exchange_offers = :mnesia.dirty_match_object(
+        {:dynamic_card_exchanges, :_, :_, card.id, :_, "offer", :_, "open", :_, :_}
+      )
 
-        length(sell_offers) + length(exchange_offers)
-      end
+      # Get card exchange offers that offer this card in exchange for other cards
+      other_exchange_offers = :mnesia.dirty_match_object(
+        {:dynamic_card_exchanges, :_, :_, :_, card.id, "want", :_, "open", :_, :_}
+      )
 
-      case :mnesia.transaction(transaction) do
-        {:atomic, count} -> count
-        {:aborted, _reason} -> 0
-      end
+      length(bitcoin_offers) + length(exchange_offers) + length(other_exchange_offers)
     rescue
       _ -> 0
     end
@@ -266,40 +264,17 @@ defmodule SammelkartenWeb.DashboardExchangeLive do
   # Calculate real search quantity from database - number of people searching for this card
   defp calculate_search_quantity(card) do
     try do
-      transaction = fn ->
-        # Get buy offers for this card
-        buy_offers = :mnesia.match_object(
-          {:user_trades, :_, :_, card.id, "buy", :_, :_, :_, :_, "open", :_, :_, :_}
-        )
+      # Get Bitcoin buy offers for this card
+      bitcoin_offers = :mnesia.dirty_match_object(
+        {:dynamic_bitcoin_offers, :_, :_, card.id, "buy_for_sats", :_, :_, "open", :_, :_}
+      )
 
-        # Get exchange offers wanting this card
-        all_exchanges = :mnesia.match_object(
-          {:user_trades, :_, :_, :_, "exchange", :_, :_, :_, :_, "open", :_, :_, :_}
-        )
+      # Get card exchange offers wanting this card
+      exchange_offers = :mnesia.dirty_match_object(
+        {:dynamic_card_exchanges, :_, :_, card.id, :_, "want", :_, "open", :_, :_}
+      )
 
-        # Filter exchanges that want this card
-        wanting_card_exchanges = Enum.filter(all_exchanges, fn 
-          {_, _, _, _, _, _, _, _, wanted_data_json, _, _, _, _} ->
-            case Jason.decode(wanted_data_json || "{}") do
-              {:ok, wanted_data} ->
-                case wanted_data["type"] do
-                  "open" -> true
-                  "specific" ->
-                    wanted_card_ids = wanted_data["card_ids"] || []
-                    card.id in wanted_card_ids
-                  _ -> false
-                end
-              _ -> false
-            end
-        end)
-
-        length(buy_offers) + length(wanting_card_exchanges)
-      end
-
-      case :mnesia.transaction(transaction) do
-        {:atomic, count} -> count
-        {:aborted, _reason} -> 0
-      end
+      length(bitcoin_offers) + length(exchange_offers)
     rescue
       _ -> 0
     end

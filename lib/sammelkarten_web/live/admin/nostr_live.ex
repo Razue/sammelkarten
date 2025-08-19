@@ -20,6 +20,7 @@ defmodule SammelkartenWeb.Admin.NostrLive do
         |> assign(:publish_result, nil)
         |> assign(:collection_result, nil)
         |> assign(:trade_result, nil)
+        |> assign(:portfolio_result, nil)
         |> assign(:test_pubkey, "")
         |> assign(:test_offer, default_test_offer())
 
@@ -190,11 +191,60 @@ defmodule SammelkartenWeb.Admin.NostrLive do
 
   @impl true
   def handle_event("test_portfolio_snapshot", %{"pubkey" => pubkey}, socket) do
-    case Publisher.publish_portfolio_snapshot(pubkey) do
-      {:ok, event} ->
-        {:noreply, put_flash(socket, :info, "Portfolio snapshot published for #{pubkey}: #{event.id}")}
-      {:error, reason} ->
-        {:noreply, put_flash(socket, :error, "Failed to publish portfolio: #{inspect(reason)}")}
+    try do
+      case Publisher.publish_portfolio_snapshot(pubkey) do
+        {:ok, event} ->
+          # Wait a moment for indexing
+          Process.sleep(100)
+          
+          # Verify indexing worked
+          case Indexer.get_portfolio(event.pubkey) do
+            {:ok, portfolio_data} ->
+              message = """
+              ✅ Portfolio snapshot published successfully!
+              • Event ID: #{String.slice(event.id, 0, 16)}...
+              • Pubkey: #{String.slice(event.pubkey, 0, 16)}...
+              • Data indexed: #{inspect(portfolio_data.data)}
+              """
+              
+              socket =
+                socket
+                |> assign(:portfolio_result, {:success, message})
+                |> push_event("show_flash", %{type: "info", message: "Portfolio snapshot test completed successfully"})
+              
+              {:noreply, socket}
+            
+            {:error, :not_found} ->
+              message = """
+              ⚠️ Portfolio snapshot published but not indexed yet
+              • Event ID: #{String.slice(event.id, 0, 16)}...
+              • Try checking indexer status
+              """
+              
+              socket =
+                socket
+                |> assign(:portfolio_result, {:warning, message})
+                |> push_event("show_flash", %{type: "warning", message: "Portfolio published but not indexed"})
+              
+              {:noreply, socket}
+          end
+        
+        {:error, reason} ->
+          socket =
+            socket
+            |> assign(:portfolio_result, {:error, "Failed to publish: #{inspect(reason)}"})
+            |> push_event("show_flash", %{type: "error", message: "Portfolio snapshot test failed"})
+          
+          {:noreply, socket}
+      end
+    rescue
+      error ->
+        socket =
+          socket
+          |> assign(:portfolio_result, {:error, "Test failed: #{Exception.message(error)}"})
+          |> push_event("show_flash", %{type: "error", message: "Portfolio snapshot test failed"})
+        
+        {:noreply, socket}
     end
   end
 

@@ -116,6 +116,16 @@ defmodule Sammelkarten.Nostr.Indexer do
   end
 
   @doc """
+  Get a portfolio snapshot by pubkey.
+  """
+  def get_portfolio(pubkey) do
+    case :ets.lookup(@portfolio_table, pubkey) do
+      [{^pubkey, portfolio_data}] -> {:ok, portfolio_data}
+      [] -> {:error, :not_found}
+    end
+  end
+
+  @doc """
   Index a single event (used for real-time updates).
   """
   def index_event(%Event{} = event) do

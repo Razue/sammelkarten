@@ -270,6 +270,7 @@ Sprint 6: Hardening, Load, Monitoring, Docs
 - ✅ Publisher integration with portfolio snapshot publishing (32126)
 - ✅ Indexer enhancement with portfolio event processing
 - ✅ Admin UI portfolio testing interface
+- ✅ Full workflow: calculate → publish → index → retrieve tested and verified
 
 #### Phase 9: Indexer & Projection Layer Enhancement (Pending)
 - Subscription filters for offers/executions/cancels (32123/24/27)

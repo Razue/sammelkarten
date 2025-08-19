@@ -20,7 +20,7 @@ defmodule Sammelkarten.Portfolio do
   """
   def calculate_portfolio_values(user_pubkey) do
     with {:ok, collection} <- UserCollection.aggregate_user_collection(user_pubkey) do
-      cards_data = collection.cards || %{}
+      cards_data = collection || %{}
       
       portfolio_stats = 
         cards_data
@@ -32,7 +32,15 @@ defmodule Sammelkarten.Portfolio do
            |> Map.put(:updated_at, :os.system_time(:second))
            |> Map.put(:pubkey, user_pubkey)}
     else
-      {:error, _reason} -> {:ok, empty_portfolio(user_pubkey)}
+      {:error, _reason} -> 
+        {:ok, %{
+          total_value: 0,
+          card_count: 0,
+          unique_cards: 0,
+          top_cards: [],
+          updated_at: :os.system_time(:second),
+          pubkey: user_pubkey
+        }}
     end
   end
   
@@ -108,14 +116,4 @@ defmodule Sammelkarten.Portfolio do
     }
   end
   
-  defp empty_portfolio(user_pubkey) do
-    %{
-      total_value: 0,
-      card_count: 0,
-      unique_cards: 0,
-      top_cards: [],
-      updated_at: :os.system_time(:second),
-      pubkey: user_pubkey
-    }
-  end
 end

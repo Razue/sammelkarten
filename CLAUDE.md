@@ -492,3 +492,4 @@ mix phx.server
 ---
 
 *Last updated: Session 14 - Exchange card detail pages with pseudonym traders completed*
+- Use built-in ripgrep by default

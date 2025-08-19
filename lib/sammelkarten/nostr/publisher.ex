@@ -5,7 +5,7 @@ defmodule Sammelkarten.Nostr.Publisher do
   """
 
   alias Sammelkarten.Nostr.{Event, Signer, Schema}
-  alias Sammelkarten.{Cards, Card}
+  alias Sammelkarten.{Cards, Card, UserCollection}
 
   require Logger
 
@@ -67,6 +67,27 @@ defmodule Sammelkarten.Nostr.Publisher do
     else
       {:error, reason} = error ->
         Logger.error("Failed to publish user collection: #{inspect(reason)}")
+        error
+    end
+  end
+
+  @doc """
+  Publish user collection snapshot from current local state.
+  This is a convenience function that aggregates the collection and publishes it.
+  """
+  @spec publish_user_collection_snapshot(String.t(), String.t()) :: {:ok, Event.t()} | {:error, term}
+  def publish_user_collection_snapshot(user_pubkey, user_privkey) do
+    with {:ok, snapshot} <- UserCollection.create_collection_snapshot(user_pubkey),
+         {:ok, collection_data} <- UserCollection.decode_collection_json(snapshot.json_content),
+         event <- Event.user_collection(user_pubkey, collection_data.cards),
+         {:ok, validated_event} <- Schema.validate(event),
+         {:ok, signed_event} <- Signer.sign(validated_event, user_privkey),
+         {:ok, _result} <- publish_to_relays(signed_event) do
+      Logger.info("Published collection snapshot for #{String.slice(user_pubkey, 0, 8)}... (#{collection_data.total_cards} cards)")
+      {:ok, signed_event}
+    else
+      {:error, reason} = error ->
+        Logger.error("Failed to publish collection snapshot: #{inspect(reason)}")
         error
     end
   end

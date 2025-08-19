@@ -98,6 +98,24 @@ defmodule Sammelkarten.Nostr.Indexer do
   end
 
   @doc """
+  Fetch user collection by pubkey.
+  """
+  def fetch_user_collection(pubkey) do
+    case :ets.lookup(@collections_table, pubkey) do
+      [{^pubkey, collection_data}] -> {:ok, collection_data}
+      [] -> {:error, :not_found}
+    end
+  end
+
+  @doc """
+  List all user collections.
+  """
+  def list_user_collections do
+    :ets.tab2list(@collections_table)
+    |> Enum.map(fn {_pubkey, collection_data} -> collection_data end)
+  end
+
+  @doc """
   Index a single event (used for real-time updates).
   """
   def index_event(%Event{} = event) do
@@ -256,6 +274,62 @@ defmodule Sammelkarten.Nostr.Indexer do
     %{state | latest_timestamp: max(state.latest_timestamp, event.created_at)}
   end
 
+  defp process_event(%Event{kind: @user_collection} = event, state) do
+    # Extract discriminator from d tag: collection:<pubkey_or_id>
+    discriminator = Event.get_tag_value(event, "d") |> extract_collection_discriminator()
+    
+    if discriminator do
+      collection_data = %{
+        pubkey: event.pubkey,
+        discriminator: discriminator,
+        cards: decode_json_content(event.content),
+        event_id: event.id,
+        created_at: event.created_at,
+        updated_at: DateTime.utc_now() |> DateTime.to_unix()
+      }
+      
+      # Store by pubkey for easy lookup
+      :ets.insert(@collections_table, {event.pubkey, collection_data})
+      
+      # Broadcast update
+      PubSub.broadcast(Sammelkarten.PubSub, "nostr:collections", {:collection_updated, collection_data})
+      
+      Logger.debug("Indexed user collection: #{event.pubkey} (#{discriminator})")
+    else
+      Logger.warning("Invalid collection event: missing or invalid d tag")
+    end
+    
+    %{state | latest_timestamp: max(state.latest_timestamp, event.created_at)}
+  end
+
+  defp process_event(%Event{kind: @portfolio_snapshot} = event, state) do
+    # Extract discriminator from d tag: portfolio:<pubkey_or_id>
+    discriminator = Event.get_tag_value(event, "d") |> extract_portfolio_discriminator()
+    
+    if discriminator do
+      portfolio_data = %{
+        pubkey: event.pubkey,
+        discriminator: discriminator,
+        data: decode_json_content(event.content),
+        event_id: event.id,
+        created_at: event.created_at,
+        updated_at: DateTime.utc_now() |> DateTime.to_unix()
+      }
+      
+      # Store by pubkey for easy lookup
+      :ets.insert(@portfolios_table, {event.pubkey, portfolio_data})
+      
+      # Broadcast update
+      PubSub.broadcast(Sammelkarten.PubSub, "nostr:portfolios", {:portfolio_updated, portfolio_data})
+      
+      Logger.debug("Indexed portfolio snapshot: #{event.pubkey} (#{discriminator})")
+    else
+      Logger.warning("Invalid portfolio event: missing or invalid d tag")
+    end
+    
+    %{state | latest_timestamp: max(state.latest_timestamp, event.created_at)}
+  end
+
   defp process_event(%Event{kind: @trade_cancel} = event, state) do
     offer_id = Event.get_tag_values(event, "e") |> List.first()
     
@@ -283,6 +357,12 @@ defmodule Sammelkarten.Nostr.Indexer do
 
   defp extract_card_id("card:" <> card_id), do: card_id
   defp extract_card_id(_), do: nil
+
+  defp extract_collection_discriminator("collection:" <> discriminator), do: discriminator
+  defp extract_collection_discriminator(_), do: nil
+
+  defp extract_portfolio_discriminator("portfolio:" <> discriminator), do: discriminator
+  defp extract_portfolio_discriminator(_), do: nil
 
   defp decode_json_content(""), do: %{}
   defp decode_json_content(content) do

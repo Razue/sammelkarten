@@ -238,7 +238,7 @@ defmodule Sammelkarten.Cards do
   Get all cards owned by a user.
   """
   def get_user_cards(user_pubkey) do
-    match_spec = [{{:user_collections, :_, user_pubkey, :"$3", :"$4", :"$5", :_}, [], [:"$_"]}]
+    match_spec = [{{:user_collections, :_, user_pubkey, :"$3", :"$4", :"$5", :"$6", :_}, [], [:"$_"]}]
 
     case :mnesia.transaction(fn -> :mnesia.select(:user_collections, match_spec) end) do
       {:atomic, records} ->
@@ -270,13 +270,14 @@ defmodule Sammelkarten.Cards do
               user_pubkey,
               card_id,
               quantity,
+              DateTime.utc_now(),
               purchase_price,
-              DateTime.utc_now()
+              nil
             }
 
             :mnesia.write(record)
 
-          {_, existing_id, _, _, existing_quantity, existing_price, _} ->
+          {_, existing_id, _, _, existing_quantity, _, existing_price, _} ->
             # Update existing entry with averaged price
             new_quantity = existing_quantity + quantity
             avg_price = (existing_price * existing_quantity + purchase_price * quantity) / new_quantity
@@ -287,8 +288,9 @@ defmodule Sammelkarten.Cards do
               user_pubkey,
               card_id,
               new_quantity,
+              DateTime.utc_now(),
               avg_price,
-              DateTime.utc_now()
+              nil
             }
 
             :mnesia.write(updated_record)
@@ -316,10 +318,10 @@ defmodule Sammelkarten.Cards do
       nil ->
         {:error, :card_not_owned}
 
-      {_, _record_id, _, _, existing_quantity, _price, _} when existing_quantity < quantity ->
+      {_, _record_id, _, _, existing_quantity, _, _price, _} when existing_quantity < quantity ->
         {:error, :insufficient_quantity}
 
-      {_, record_id, _, _, existing_quantity, price, _} ->
+      {_, record_id, _, _, existing_quantity, _, price, _} ->
         transaction_result =
           :mnesia.transaction(fn ->
             if existing_quantity == quantity do
@@ -335,8 +337,9 @@ defmodule Sammelkarten.Cards do
                 user_pubkey,
                 card_id,
                 new_quantity,
+                DateTime.utc_now(),
                 price,
-                DateTime.utc_now()
+                nil
               }
 
               :mnesia.write(updated_record)
@@ -356,7 +359,7 @@ defmodule Sammelkarten.Cards do
   end
 
   defp find_user_card_record(user_pubkey, card_id) do
-    match_spec = [{{:user_collections, :_, user_pubkey, card_id, :_, :_, :_}, [], [:"$_"]}]
+    match_spec = [{{:user_collections, :_, user_pubkey, card_id, :_, :_, :_, :_}, [], [:"$_"]}]
 
     case :mnesia.transaction(fn -> :mnesia.select(:user_collections, match_spec) end) do
       {:atomic, [record]} -> record
@@ -365,13 +368,13 @@ defmodule Sammelkarten.Cards do
     end
   end
 
-  defp user_card_from_record({:user_collections, _id, user_pubkey, card_id, quantity, purchase_price, updated_at}) do
+  defp user_card_from_record({:user_collections, _id, user_pubkey, card_id, quantity, acquired_at, acquisition_price, _notes}) do
     %{
       user_pubkey: user_pubkey,
       card_id: card_id,
       quantity: quantity,
-      purchase_price: purchase_price,
-      updated_at: updated_at
+      purchase_price: acquisition_price,
+      updated_at: acquired_at
     }
   end
 

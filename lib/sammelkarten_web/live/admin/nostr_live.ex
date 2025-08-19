@@ -5,7 +5,7 @@ defmodule SammelkartenWeb.Admin.NostrLive do
   """
 
   use SammelkartenWeb, :live_view
-  alias Sammelkarten.{Cards, Card}
+  alias Sammelkarten.{Cards, Card, UserCollection}
   alias Sammelkarten.Nostr.{Publisher, Indexer}
 
   @impl true
@@ -18,6 +18,8 @@ defmodule SammelkartenWeb.Admin.NostrLive do
         |> assign(:indexer_state, get_indexer_state())
         |> assign(:publishing, false)
         |> assign(:publish_result, nil)
+        |> assign(:collection_result, nil)
+        |> assign(:test_pubkey, "")
 
       {:ok, socket}
     else
@@ -130,12 +132,68 @@ defmodule SammelkartenWeb.Admin.NostrLive do
   end
 
   @impl true
+  def handle_event("test_collection_snapshot", %{"pubkey" => pubkey}, socket) do
+    case UserCollection.create_collection_snapshot(pubkey) do
+      {:ok, snapshot} ->
+        socket =
+          socket
+          |> assign(:collection_result, {:success, "Collection snapshot created: #{inspect(snapshot)}"})
+          |> push_event("show_flash", %{type: "info", message: "Collection snapshot created successfully"})
+
+        {:noreply, socket}
+
+      {:error, reason} ->
+        socket =
+          socket
+          |> assign(:collection_result, {:error, "Failed to create collection snapshot: #{inspect(reason)}"})
+          |> push_event("show_flash", %{type: "error", message: "Failed to create collection snapshot"})
+
+        {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("test_collection_validation", %{"pubkey" => pubkey, "json" => json}, socket) do
+    case UserCollection.validate_collection_snapshot(pubkey, json) do
+      {:ok, :consistent} ->
+        socket =
+          socket
+          |> assign(:collection_result, {:success, "Collection snapshot is consistent with current state"})
+          |> push_event("show_flash", %{type: "info", message: "Collection validation passed"})
+
+        {:noreply, socket}
+
+      {:error, {:inconsistent_collections, current, snapshot}} ->
+        socket =
+          socket
+          |> assign(:collection_result, {:error, "Collections are inconsistent. Current: #{inspect(current)}, Snapshot: #{inspect(snapshot)}"})
+          |> push_event("show_flash", %{type: "warning", message: "Collection validation failed: inconsistent data"})
+
+        {:noreply, socket}
+
+      {:error, reason} ->
+        socket =
+          socket
+          |> assign(:collection_result, {:error, "Validation failed: #{inspect(reason)}"})
+          |> push_event("show_flash", %{type: "error", message: "Collection validation error"})
+
+        {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("update_test_pubkey", %{"pubkey" => pubkey}, socket) do
+    {:noreply, assign(socket, :test_pubkey, pubkey)}
+  end
+
+  @impl true
   def handle_event("refresh", _params, socket) do
     socket =
       socket
       |> assign(:cards, list_cards())
       |> assign(:indexer_state, get_indexer_state())
       |> assign(:publish_result, nil)
+      |> assign(:collection_result, nil)
 
     {:noreply, socket}
   end

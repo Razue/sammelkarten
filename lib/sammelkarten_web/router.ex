@@ -49,6 +49,7 @@ defmodule SammelkartenWeb.Router do
 
     live "/", AdminLive, :index
     live "/relays", RelayAdminLive, :index
+    live "/nostr", Admin.NostrLive, :index
   end
 
   scope "/", SammelkartenWeb do

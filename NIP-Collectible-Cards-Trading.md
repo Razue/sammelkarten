@@ -52,9 +52,9 @@ Confirms execution of a trade between two users.
 - `pubkey`: Executor's public key
 - `created_at`: Timestamp
 - `tags`:
-  - `['offer_id', <offer_event_id>]`
-  - `['buyer', <buyer_pubkey>]`
-  - `['seller', <seller_pubkey>]`
+  - `['e', <offer_event_id>, 'offer']` (references original offer)
+  - `['p', <buyer_pubkey>, 'buyer']`
+  - `['p', <seller_pubkey>, 'seller']`
   - `['card', <card_id>]`
   - `['quantity', <quantity>]`
   - `['price', <price>]`

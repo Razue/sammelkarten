@@ -1,0 +1,237 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="bg-white shadow">
+    <div class="px-4 py-5 sm:px-6">
+      <h1 class="text-2xl font-bold text-gray-900">Nostr Publishing Admin</h1>
+      <p class="text-sm text-gray-500 mt-1">
+        Manage card definitions and monitor Nostr indexer status
+      </p>
+    </div>
+  </div>
+
+  <!-- Indexer Status -->
+  <div class="bg-white shadow rounded-lg">
+    <div class="px-4 py-5 sm:p-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-medium text-gray-900">Indexer Status</h2>
+          <p class="text-sm text-gray-500">
+            Latest timestamp: <%= format_timestamp(@indexer_state.latest_timestamp) %>
+          </p>
+        </div>
+        <div class="space-x-3">
+          <button
+            type="button"
+            phx-click="rebuild_index"
+            class="btn-secondary"
+            disabled={@publishing}
+          >
+            Rebuild Index
+          </button>
+          <button
+            type="button"
+            phx-click="refresh"
+            class="btn-secondary"
+            disabled={@publishing}
+          >
+            Refresh
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Publishing Actions -->
+  <div class="bg-white shadow rounded-lg">
+    <div class="px-4 py-5 sm:p-6">
+      <h2 class="text-lg font-medium text-gray-900 mb-4">Bulk Publishing</h2>
+      <div class="space-x-4">
+        <button
+          type="button"
+          phx-click="publish_all_cards"
+          class="btn-primary"
+          disabled={@publishing}
+        >
+          <%= if @publishing do %>
+            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Publishing...
+          <% else %>
+            Publish All Cards
+          <% end %>
+        </button>
+        <span class="text-sm text-gray-500">
+          Publishes all <%= length(@cards) %> cards as Nostr events
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Publishing Result -->
+  <%= if @publish_result do %>
+    <div class={[
+      "rounded-md p-4",
+      case @publish_result do
+        {:success, _} -> "bg-green-50 border border-green-200"
+        {:error, _} -> "bg-red-50 border border-red-200"
+      end
+    ]}>
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <%= if match?({:success, _}, @publish_result) do %>
+            <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+          <% else %>
+            <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+            </svg>
+          <% end %>
+        </div>
+        <div class="ml-3">
+          <p class={[
+            "text-sm font-medium",
+            case @publish_result do
+              {:success, _} -> "text-green-800"
+              {:error, _} -> "text-red-800"
+            end
+          ]}>
+            <%= case @publish_result do
+              {:success, message} -> message
+              {:error, message} -> message
+            end %>
+          </p>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Cards List -->
+  <div class="bg-white shadow rounded-lg">
+    <div class="px-4 py-5 sm:p-6">
+      <h2 class="text-lg font-medium text-gray-900 mb-4">Card Definitions</h2>
+      
+      <%= if length(@cards) == 0 do %>
+        <div class="text-center py-8">
+          <p class="text-gray-500">No cards found.</p>
+        </div>
+      <% else %>
+        <!-- Mobile Card View -->
+        <div class="block md:hidden space-y-4">
+          <%= for card <- @cards do %>
+            <div class="bg-white border border-gray-200 rounded-lg p-4">
+              <div class="flex items-start space-x-3">
+                <div class="flex-shrink-0">
+                  <img class="h-12 w-12 rounded object-cover" src={"/images/cards/#{card.image_path}"} alt={card.name} />
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="text-sm font-medium text-gray-900"><%= card.name %></div>
+                  <div class="text-xs text-gray-500 mt-1 line-clamp-2"><%= card.description %></div>
+                  <div class="flex items-center justify-between mt-3">
+                    <div>
+                      <div class="text-xs text-gray-400">ID: <%= card.id %></div>
+                      <div class="text-xs text-gray-400">Slug: <%= card.slug %></div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                      <span class={[
+                        "inline-flex px-2 py-1 text-xs font-semibold rounded-full",
+                        case card.rarity do
+                          "legendary" -> "bg-yellow-100 text-yellow-800"
+                          "epic" -> "bg-purple-100 text-purple-800"
+                          "rare" -> "bg-blue-100 text-blue-800"
+                          "common" -> "bg-gray-100 text-gray-800"
+                          _ -> "bg-gray-100 text-gray-800"
+                        end
+                      ]}>
+                        <%= String.capitalize(card.rarity) %>
+                      </span>
+                      <button
+                        type="button"
+                        phx-click="publish_card"
+                        phx-value-card_id={card.id}
+                        class="text-blue-600 hover:text-blue-900 text-xs font-medium"
+                        disabled={@publishing}
+                      >
+                        Publish
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Desktop Table View -->
+        <div class="hidden md:block overflow-x-auto shadow ring-1 ring-black ring-opacity-5 rounded-lg">
+          <table class="min-w-full divide-y divide-gray-300">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-2/5">
+                  Card
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
+                  ID / Slug
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
+                  Rarity
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
+                  Action
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <%= for card <- @cards do %>
+                <tr>
+                  <td class="px-6 py-4">
+                    <div class="flex items-center">
+                      <div class="flex-shrink-0 h-10 w-10">
+                        <img class="h-10 w-10 rounded object-cover" src={"/images/cards/#{card.image_path}"} alt={card.name} />
+                      </div>
+                      <div class="ml-4 min-w-0 flex-1">
+                        <div class="text-sm font-medium text-gray-900"><%= card.name %></div>
+                        <div class="text-sm text-gray-500 truncate"><%= String.slice(card.description, 0, 60) %><%= if String.length(card.description) > 60, do: "..." %></div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4">
+                    <div class="text-sm text-gray-900"><%= card.id %></div>
+                    <div class="text-sm text-gray-500"><%= card.slug %></div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class={[
+                      "inline-flex px-2 py-1 text-xs font-semibold rounded-full",
+                      case card.rarity do
+                        "legendary" -> "bg-yellow-100 text-yellow-800"
+                        "epic" -> "bg-purple-100 text-purple-800"
+                        "rare" -> "bg-blue-100 text-blue-800"
+                        "common" -> "bg-gray-100 text-gray-800"
+                        _ -> "bg-gray-100 text-gray-800"
+                      end
+                    ]}>
+                      <%= String.capitalize(card.rarity) %>
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <button
+                      type="button"
+                      phx-click="publish_card"
+                      phx-value-card_id={card.id}
+                      class="text-blue-600 hover:text-blue-900"
+                      disabled={@publishing}
+                    >
+                      Publish
+                    </button>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

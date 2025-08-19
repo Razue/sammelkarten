@@ -6,9 +6,7 @@ defmodule Sammelkarten.Nostr.EventTest do
   test "build, sign, verify roundtrip" do
     {:ok, %{priv: priv, pub: pub}} = Signer.generate_keypair()
 
-    ev =
-      Event.new(pub, 32121, ~s({"demo":true}), [["d", "card:demo"], ["name", "Demo"]])
-      |> IO.inspect(label: "## ## ## Event")
+    ev = Event.new(pub, 32121, ~s({"demo":true}), [["d", "card:demo"], ["name", "Demo"]])
 
     {:ok, signed} = Signer.sign(ev, priv)
     assert signed.id

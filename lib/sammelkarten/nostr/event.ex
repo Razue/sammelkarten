@@ -136,9 +136,9 @@ defmodule Sammelkarten.Nostr.Event do
     content = Jason.encode!(execution_data)
 
     tags = [
-      ["offer_id", offer_id],
-      ["buyer", buyer_pubkey],
-      ["seller", seller_pubkey],
+      ["e", offer_id, "offer"],
+      ["p", buyer_pubkey, "buyer"],
+      ["p", seller_pubkey, "seller"],
       ["card", card_id],
       ["quantity", to_string(execution_data.quantity)],
       ["price", to_string(execution_data.price)]

@@ -111,10 +111,28 @@ defmodule Sammelkarten.Nostr.Schema do
   end
 
   defp trade_execution(ev) do
+    has_offer_ref =
+      Enum.any?(ev.tags, fn
+        ["e", _id | _] -> true
+        _ -> false
+      end)
+
+    buyer_ps =
+      Enum.filter(ev.tags, fn
+        ["p", _pk, "buyer" | _] -> true
+        _ -> false
+      end)
+
+    seller_ps =
+      Enum.filter(ev.tags, fn
+        ["p", _pk, "seller" | _] -> true
+        _ -> false
+      end)
+
     []
-    |> require(has_tag?(ev, "offer_id"), :offer_id)
-    |> require(has_tag?(ev, "buyer"), :buyer)
-    |> require(has_tag?(ev, "seller"), :seller)
+    |> require(has_offer_ref, :e_offer_ref)
+    |> require(length(buyer_ps) == 1, :buyer)
+    |> require(length(seller_ps) == 1, :seller)
     |> require(has_tag?(ev, "card"), :card)
     |> require(positive_int?(first_tag(ev, "quantity")), {:quantity, :invalid})
     |> require(positive_int?(first_tag(ev, "price")), {:price, :invalid})

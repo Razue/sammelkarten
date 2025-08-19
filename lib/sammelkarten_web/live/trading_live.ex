@@ -839,7 +839,7 @@ defmodule SammelkartenWeb.TradingLive do
 
             # Create trade execution data for Nostr event
             execution_data = %{
-              trade_id: offer_id,
+              offer_id: offer_id,
               buyer_pubkey: actual_buyer_pubkey,
               seller_pubkey: actual_seller_pubkey,
               card_id: card_id,

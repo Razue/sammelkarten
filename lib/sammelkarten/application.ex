@@ -33,6 +33,9 @@ defmodule Sammelkarten.Application do
       Sammelkarten.TradingBot,
       # Start the market maker system
       {Sammelkarten.MarketMaker, [pubkey: "sammelkarten_market_maker"]},
+      # Start Nostr relay components
+      # {Sammelkarten.Nostr.Relay.Storage, []},
+      {Sammelkarten.Nostr.Relay, []},
       # Start to serve requests, typically the last entry
       SammelkartenWeb.Endpoint
     ]

@@ -62,7 +62,8 @@ defmodule Sammelkarten.MixProject do
       {:curvy, "~> 0.3"},
       {:gun, "~> 2.0"},
       {:websocket_client, "~> 1.5"},
-      {:bech32, "~> 1.0"}
+      {:bech32, "~> 1.0"},
+      {:exqlite, "~> 0.20"}
     ]
   end
 

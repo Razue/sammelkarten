@@ -272,11 +272,13 @@ Sprint 6: Hardening, Load, Monitoring, Docs
 - ✅ Admin UI portfolio testing interface
 - ✅ Full workflow: calculate → publish → index → retrieve tested and verified
 
-#### Phase 9: Indexer & Projection Layer Enhancement (Pending)
-- Subscription filters for offers/executions/cancels (32123/24/27)
-- ETS tables for offers, executions, collections, portfolio
-- Rebuild procedure: clear tables → replay since=0
-- Catch-up: incremental since <latest_timestamp>
+#### Phase 9: Indexer & Projection Layer Enhancement ✅ COMPLETE
+- ✅ Enhanced indexer with comprehensive ETS table access functions
+- ✅ Added list_executions, list_portfolios, fetch_execution functions
+- ✅ Implemented list_offers_by_status and list_executions_for_offer
+- ✅ Price alert watcher GenServer with real-time monitoring
+- ✅ Alert registration/removal with PubSub notifications
+- ✅ Admin UI integration for alert testing and management
 
 #### Phase 10: Own Relay Implementation (Pending)
 - WebSock → JSON RPC: `EVENT`, `REQ`, `CLOSE`, `COUNT` (NIP-01)

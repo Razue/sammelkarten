@@ -6,7 +6,7 @@ defmodule SammelkartenWeb.Admin.NostrLive do
 
   use SammelkartenWeb, :live_view
   alias Sammelkarten.{Cards, UserCollection}
-  alias Sammelkarten.Nostr.{Publisher, Indexer, Event}
+  alias Sammelkarten.Nostr.{Publisher, Indexer, Event, PriceAlertWatcher}
 
   @impl true
   def mount(_params, session, socket) do
@@ -23,10 +23,49 @@ defmodule SammelkartenWeb.Admin.NostrLive do
         |> assign(:portfolio_result, nil)
         |> assign(:test_pubkey, "")
         |> assign(:test_offer, default_test_offer())
+        |> assign(:alerts, list_alerts())
+        |> assign(:alert_result, nil)
 
       {:ok, socket}
     else
       {:ok, redirect(socket, to: "/admin")}
+    end
+  end
+
+  @impl true
+  def handle_event("register_alert", %{"pubkey" => pubkey, "card_id" => card_id, "direction" => direction, "threshold" => threshold}, socket) do
+    direction_atom = String.to_atom(direction)
+    threshold_int = String.to_integer(threshold)
+    
+    case PriceAlertWatcher.register_alert(pubkey, card_id, direction_atom, threshold_int) do
+      :ok ->
+        socket =
+          socket
+          |> assign(:alert_result, {:success, "Alert registered successfully"})
+          |> assign(:alerts, list_alerts())
+        {:noreply, socket}
+      
+      {:error, reason} ->
+        socket = assign(socket, :alert_result, {:error, "Failed to register alert: #{inspect(reason)}"})
+        {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("remove_alert", %{"pubkey" => pubkey, "card_id" => card_id, "direction" => direction}, socket) do
+    direction_atom = String.to_atom(direction)
+    
+    case PriceAlertWatcher.remove_alert(pubkey, card_id, direction_atom) do
+      :ok ->
+        socket =
+          socket
+          |> assign(:alert_result, {:success, "Alert removed successfully"})
+          |> assign(:alerts, list_alerts())
+        {:noreply, socket}
+      
+      {:error, reason} ->
+        socket = assign(socket, :alert_result, {:error, "Failed to remove alert: #{inspect(reason)}"})
+        {:noreply, socket}
     end
   end
 
@@ -457,5 +496,13 @@ defmodule SammelkartenWeb.Admin.NostrLive do
       price: "150000",
       quantity: "1"
     }
+  end
+
+  defp list_alerts do
+    try do
+      PriceAlertWatcher.list_alerts()
+    rescue
+      _ -> []
+    end
   end
 end

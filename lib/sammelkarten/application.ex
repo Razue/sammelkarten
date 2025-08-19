@@ -27,6 +27,8 @@ defmodule Sammelkarten.Application do
       Sammelkarten.Nostr.Client,
       # Start the Nostr indexer for event processing
       Sammelkarten.Nostr.Indexer,
+      # Start the price alert watcher
+      Sammelkarten.Nostr.PriceAlertWatcher,
       # Start the trading bot system
       Sammelkarten.TradingBot,
       # Start the market maker system

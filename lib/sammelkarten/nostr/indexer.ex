@@ -98,6 +98,22 @@ defmodule Sammelkarten.Nostr.Indexer do
   end
 
   @doc """
+  List all executions.
+  """
+  def list_executions do
+    :ets.tab2list(@executions_table)
+    |> Enum.map(fn {_event_id, execution_data} -> execution_data end)
+  end
+
+  @doc """
+  List all portfolios.
+  """
+  def list_portfolios do
+    :ets.tab2list(@portfolio_table)
+    |> Enum.map(fn {_pubkey, portfolio_data} -> portfolio_data end)
+  end
+
+  @doc """
   Fetch user collection by pubkey.
   """
   def fetch_user_collection(pubkey) do
@@ -123,6 +139,34 @@ defmodule Sammelkarten.Nostr.Indexer do
       [{^pubkey, portfolio_data}] -> {:ok, portfolio_data}
       [] -> {:error, :not_found}
     end
+  end
+
+  @doc """
+  Fetch execution by event ID.
+  """
+  def fetch_execution(event_id) do
+    case :ets.lookup(@executions_table, event_id) do
+      [{^event_id, execution_data}] -> {:ok, execution_data}
+      [] -> {:error, :not_found}
+    end
+  end
+
+  @doc """
+  List offers by status.
+  """
+  def list_offers_by_status(status) do
+    :ets.tab2list(@offers_table)
+    |> Enum.map(fn {_event_id, offer_data} -> offer_data end)
+    |> Enum.filter(fn offer -> offer.status == status end)
+  end
+
+  @doc """
+  List executions for a specific offer.
+  """
+  def list_executions_for_offer(offer_id) do
+    :ets.tab2list(@executions_table)
+    |> Enum.map(fn {_event_id, execution_data} -> execution_data end)
+    |> Enum.filter(fn execution -> execution.offer_id == offer_id end)
   end
 
   @doc """

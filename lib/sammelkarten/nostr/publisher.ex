@@ -5,7 +5,7 @@ defmodule Sammelkarten.Nostr.Publisher do
   """
 
   alias Sammelkarten.Nostr.{Event, Signer, Schema}
-  alias Sammelkarten.{Cards, Card, UserCollection}
+  alias Sammelkarten.UserCollection
 
   require Logger
 
@@ -106,6 +106,60 @@ defmodule Sammelkarten.Nostr.Publisher do
     else
       {:error, reason} = error ->
         Logger.error("Failed to publish portfolio snapshot: #{inspect(reason)}")
+        error
+    end
+  end
+
+  @doc """
+  Publish trade offer event (32123).
+  """
+  @spec publish_trade_offer(String.t(), map(), String.t()) :: {:ok, Event.t()} | {:error, term}
+  def publish_trade_offer(user_pubkey, offer_data, user_privkey) do
+    with event <- Event.trade_offer(user_pubkey, offer_data),
+         {:ok, validated_event} <- Schema.validate(event),
+         {:ok, signed_event} <- Signer.sign(validated_event, user_privkey),
+         {:ok, _result} <- publish_to_relays(signed_event) do
+      Logger.info("Published trade offer for #{offer_data.card_id} by #{String.slice(user_pubkey, 0, 8)}...")
+      {:ok, signed_event}
+    else
+      {:error, reason} = error ->
+        Logger.error("Failed to publish trade offer: #{inspect(reason)}")
+        error
+    end
+  end
+
+  @doc """
+  Publish trade execution event (32124).
+  """
+  @spec publish_trade_execution(String.t(), map(), String.t()) :: {:ok, Event.t()} | {:error, term}
+  def publish_trade_execution(user_pubkey, execution_data, user_privkey) do
+    with event <- Event.trade_execution(user_pubkey, execution_data),
+         {:ok, validated_event} <- Schema.validate(event),
+         {:ok, signed_event} <- Signer.sign(validated_event, user_privkey),
+         {:ok, _result} <- publish_to_relays(signed_event) do
+      Logger.info("Published trade execution for offer #{execution_data.offer_id} by #{String.slice(user_pubkey, 0, 8)}...")
+      {:ok, signed_event}
+    else
+      {:error, reason} = error ->
+        Logger.error("Failed to publish trade execution: #{inspect(reason)}")
+        error
+    end
+  end
+
+  @doc """
+  Publish trade cancel event (32127).
+  """
+  @spec publish_trade_cancel(String.t(), String.t(), String.t()) :: {:ok, Event.t()} | {:error, term}
+  def publish_trade_cancel(user_pubkey, offer_event_id, user_privkey) do
+    with event <- Event.trade_cancel(user_pubkey, offer_event_id),
+         {:ok, validated_event} <- Schema.validate(event),
+         {:ok, signed_event} <- Signer.sign(validated_event, user_privkey),
+         {:ok, _result} <- publish_to_relays(signed_event) do
+      Logger.info("Published trade cancel for offer #{offer_event_id} by #{String.slice(user_pubkey, 0, 8)}...")
+      {:ok, signed_event}
+    else
+      {:error, reason} = error ->
+        Logger.error("Failed to publish trade cancel: #{inspect(reason)}")
         error
     end
   end

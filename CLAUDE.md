@@ -493,3 +493,4 @@ mix phx.server
 
 *Last updated: Session 14 - Exchange card detail pages with pseudonym traders completed*
 - Use built-in ripgrep by default
+- please optimize token usage with: - no Code explanations and summaries  - no Detailed progress descriptions  - no Showing file contents  - no Multiple tool calls with verbose output

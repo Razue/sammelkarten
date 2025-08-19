@@ -1,0 +1,189 @@
+<div class="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6">
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-8">
+      <div>
+        <h1 class="text-display-md font-bold text-white mb-2">Nostr Trading Hub</h1>
+        <p class="text-body-lg text-gray-400">Decentralized collectible card trading</p>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2">
+          <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+          <span class="text-label-sm text-gray-400">Connected</span>
+        </div>
+        <button phx-click="refresh_data" class="btn-secondary">
+          Refresh Data
+        </button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+      <!-- Create Offer Panel -->
+      <div class="xl:col-span-1">
+        <div class="card-professional">
+          <div class="p-6">
+            <h2 class="text-heading-lg font-semibold text-white mb-6">Create Trade Offer</h2>
+
+            <!-- Card Selection -->
+            <div class="mb-6">
+              <label class="block text-label-md text-gray-300 mb-3">Select Card</label>
+              <div class="grid grid-cols-2 gap-3 max-h-60 overflow-y-auto">
+                <%= for card <- @cards do %>
+                  <button phx-click="select_card" phx-value-card_id={card.id}
+                    class={[ "p-3 rounded-lg border-2 text-left transition-all duration-200 hover:scale-105" ,
+                    if(@selected_card==card.id, do: "border-primary-500 bg-primary-500/20" ,
+                    else: "border-gray-600 bg-gray-700/50 hover:border-gray-500" ) ]}>
+                    <div class="text-body-sm font-medium text-white">
+                      <%= card.name %>
+                    </div>
+                    <div class="text-label-xs text-gray-400">
+                      <%= format_price(card.current_price) %>
+                    </div>
+                  </button>
+                  <% end %>
+              </div>
+            </div>
+
+            <!-- Offer Type -->
+            <div class="mb-6">
+              <label class="block text-label-md text-gray-300 mb-3">Offer Type</label>
+              <div class="flex gap-3">
+                <button phx-click="set_offer_type" phx-value-type="buy"
+                  class={[ "flex-1 py-3 px-4 rounded-lg border-2 transition-all duration-200" , if(@offer_type=="buy" ,
+                  do: "border-green-500 bg-green-500/20 text-green-300" ,
+                  else: "border-gray-600 bg-gray-700/50 text-gray-300 hover:border-gray-500" ) ]}>
+                  Buy
+                </button>
+                <button phx-click="set_offer_type" phx-value-type="sell"
+                  class={[ "flex-1 py-3 px-4 rounded-lg border-2 transition-all duration-200" , if(@offer_type=="sell" ,
+                  do: "border-red-500 bg-red-500/20 text-red-300" ,
+                  else: "border-gray-600 bg-gray-700/50 text-gray-300 hover:border-gray-500" ) ]}>
+                  Sell
+                </button>
+              </div>
+            </div>
+
+            <form phx-submit="create_offer">
+              <div class="grid grid-cols-2 gap-4 mb-6">
+                <div>
+                  <label class="block text-label-md text-gray-300 mb-2">Price (sats)</label>
+                  <input type="number" name="price" value={@offer_price} phx-input="update_offer_price"
+                    class="input-professional w-full" placeholder="1000" />
+                </div>
+                <div>
+                  <label class="block text-label-md text-gray-300 mb-2">Quantity</label>
+                  <input type="number" name="quantity" value={@offer_quantity} phx-input="update_offer_quantity"
+                    class="input-professional w-full" min="1" />
+                </div>
+              </div>
+
+              <!-- Validation Messages -->
+              <%= if @form_errors != [] do %>
+                <div class="mb-4 space-y-1">
+                  <%= for error <- @form_errors do %>
+                    <div class="text-xs text-red-400"><%= error %></div>
+                  <% end %>
+                </div>
+              <% end %>
+
+              <button type="submit" class="btn-primary w-full">
+                Create Offer
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Offers & Recent Executions -->
+      <div class="xl:col-span-2">
+        <!-- Active Offers -->
+        <div class="card-professional mb-8">
+          <div class="p-6">
+            <h2 class="text-heading-lg font-semibold text-white mb-6">Active Offers</h2>
+
+            <%= if Enum.empty?(@offers) do %>
+              <div class="text-center py-12">
+                <div class="text-6xl mb-4">📋</div>
+                <p class="text-body-lg text-gray-400">No active offers</p>
+                <p class="text-label-sm text-gray-500">Create an offer to start trading</p>
+              </div>
+              <% else %>
+                <div class="space-y-3">
+                  <%= for offer <- @offers do %>
+                    <div class="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+                      <div class="flex justify-between items-center">
+                        <div>
+                          <div class="flex items-center gap-3 mb-2">
+                            <span class={[ "px-2 py-1 rounded-full text-xs font-medium" , if(offer.offer_type=="buy" ,
+                              do: "bg-green-500/20 text-green-300" , else: "bg-red-500/20 text-red-300" ) ]}>
+                              <%= String.upcase(offer.offer_type) %>
+                            </span>
+                            <span class="text-body-md font-medium text-white">
+                              <%= get_card_name(@cards, offer.card_id) %>
+                            </span>
+                          </div>
+                          <div class="text-label-sm text-gray-400">
+                            Price: <%= format_price(offer.price) %> • Qty: <%= offer.quantity %> • <%=
+                                  format_time_ago(offer.created_at) %>
+                          </div>
+                        </div>
+                        <div class="flex gap-2">
+                          <button phx-click="execute_offer" phx-value-offer_id={offer.id}
+                            class="px-3 py-1 bg-primary-600 hover:bg-primary-700 text-white text-xs rounded-md transition-colors">
+                            Execute
+                          </button>
+                          <button phx-click="cancel_offer" phx-value-offer_id={offer.id}
+                            class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded-md transition-colors">
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <% end %>
+                </div>
+                <% end %>
+          </div>
+        </div>
+
+        <!-- Recent Executions -->
+        <div class="card-professional">
+          <div class="p-6">
+            <h2 class="text-heading-lg font-semibold text-white mb-6">Recent Executions</h2>
+
+            <%= if Enum.empty?(@executions) do %>
+              <div class="text-center py-12">
+                <div class="text-6xl mb-4">📈</div>
+                <p class="text-body-lg text-gray-400">No recent executions</p>
+                <p class="text-label-sm text-gray-500">Completed trades will appear here</p>
+              </div>
+              <% else %>
+                <div class="space-y-3">
+                  <%= for execution <- @executions do %>
+                    <div class="bg-gray-800/30 rounded-lg p-4 border border-gray-700/50">
+                      <div class="flex justify-between items-center">
+                        <div>
+                          <div class="flex items-center gap-3 mb-2">
+                            <span class="w-2 h-2 bg-green-400 rounded-full"></span>
+                            <span class="text-body-md font-medium text-white">
+                              <%= get_card_name(@cards, execution.card_id) %>
+                            </span>
+                          </div>
+                          <div class="text-label-sm text-gray-400">
+                            Price: <%= format_price(execution.price) %> • Qty: <%= execution.quantity %> • <%=
+                                  format_time_ago(execution.created_at) %>
+                          </div>
+                        </div>
+                        <div class="text-right">
+                          <div class="text-label-xs text-gray-500">Executed</div>
+                        </div>
+                      </div>
+                    </div>
+                    <% end %>
+                </div>
+                <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

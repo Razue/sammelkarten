@@ -263,6 +263,8 @@ defmodule Sammelkarten.Nostr.Indexer do
       PubSub.broadcast(Sammelkarten.PubSub, "nostr:cards", {:card_updated, card_data})
 
       Logger.debug("Indexed card definition: #{card_id}")
+    else
+      Logger.warning("Card definition event missing or invalid d tag: #{inspect(event.tags)}")
     end
 
     %{state | latest_timestamp: max(state.latest_timestamp, event.created_at)}

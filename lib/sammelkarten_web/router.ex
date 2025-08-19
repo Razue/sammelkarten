@@ -33,6 +33,7 @@ defmodule SammelkartenWeb.Router do
     live "/insights", MarketInsightsLive, :index
     live "/leaderboards", LeaderboardsLive, :index
     live "/trading", TradingLive, :index
+    live "/nostr", NostrLive, :index
 
     # Nostr authentication routes
     post "/nostr/session", NostrSessionController, :create

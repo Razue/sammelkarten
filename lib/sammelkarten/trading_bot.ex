@@ -1,7 +1,7 @@
 defmodule Sammelkarten.TradingBot do
   @moduledoc """
   Programmatic trading system that enables automated trading via Nostr events.
-  
+
   This module provides functionality for:
   - Processing automated trading commands via Nostr events
   - Bot authentication and permission management
@@ -15,15 +15,20 @@ defmodule Sammelkarten.TradingBot do
   alias Sammelkarten.{Cards, Nostr}
   alias Sammelkarten.Trading
 
-  # Bot-specific Nostr event kinds
-  @bot_command_kind 32126  # Bot trading commands
-  # @bot_status_kind 32127   # Bot status updates (unused)
-  @bot_response_kind 32128 # Bot execution responses
+  # Bot-specific Nostr event kinds (use separate range to avoid collision with core 32121-32127)
+  # Bot trading commands
+  @bot_command_kind 32140
+  # @bot_status_kind 32141   # Bot status updates (unused)
+  # Bot execution responses
+  @bot_response_kind 32242
 
   # Bot execution limits
-  @default_rate_limit 10  # Commands per minute
-  @max_trade_value 100_000  # Maximum trade value in cents
-  @cooldown_period 5_000   # Milliseconds between commands
+  # Commands per minute
+  @default_rate_limit 10
+  # Maximum trade value in cents
+  @max_trade_value 100_000
+  # Milliseconds between commands
+  @cooldown_period 5_000
 
   defstruct [
     :bot_pubkey,
@@ -87,11 +92,17 @@ defmodule Sammelkarten.TradingBot do
   def init(_) do
     # Subscribe to bot command events
     handler = fn event -> process_command(event) end
-    
-    Nostr.Client.subscribe("trading_bots", [%{
-      "kinds" => [@bot_command_kind],
-      "#t" => ["sammelkarten", "bot_command"]
-    }], handler)
+
+    Nostr.Client.subscribe(
+      "trading_bots",
+      [
+        %{
+          "kinds" => [@bot_command_kind],
+          "#t" => ["sammelkarten", "bot_command"]
+        }
+      ],
+      handler
+    )
 
     {:ok, %{bots: %{}, command_history: %{}}}
   end
@@ -119,7 +130,7 @@ defmodule Sammelkarten.TradingBot do
       :ok ->
         new_bots = Map.put(state.bots, bot_pubkey, bot)
         new_state = %{state | bots: new_bots}
-        
+
         Logger.info("Trading bot registered: #{bot_pubkey} for owner #{owner_pubkey}")
         {:reply, {:ok, bot}, new_state}
 
@@ -130,7 +141,7 @@ defmodule Sammelkarten.TradingBot do
 
   @impl true
   def handle_call({:get_user_bots, owner_pubkey}, _from, state) do
-    user_bots = 
+    user_bots =
       state.bots
       |> Enum.filter(fn {_pubkey, bot} -> bot.owner_pubkey == owner_pubkey end)
       |> Enum.map(fn {_pubkey, bot} -> bot end)
@@ -151,7 +162,7 @@ defmodule Sammelkarten.TradingBot do
 
         # Update in database
         store_bot(updated_bot)
-        
+
         Logger.info("Bot #{bot_pubkey} status changed to #{status}")
         {:reply, :ok, new_state}
     end
@@ -164,9 +175,9 @@ defmodule Sammelkarten.TradingBot do
         # Remove from state and database
         new_bots = Map.delete(state.bots, bot_pubkey)
         new_state = %{state | bots: new_bots}
-        
+
         remove_bot_from_db(bot_pubkey)
-        
+
         Logger.info("Bot #{bot_pubkey} removed by owner #{owner_pubkey}")
         {:reply, :ok, new_state}
 
@@ -201,7 +212,8 @@ defmodule Sammelkarten.TradingBot do
       can_sell: true,
       can_exchange: true,
       max_trade_value: @max_trade_value,
-      allowed_cards: :all,  # or list of card IDs
+      # or list of card IDs
+      allowed_cards: :all,
       max_daily_trades: 100
     }
   end
@@ -212,7 +224,6 @@ defmodule Sammelkarten.TradingBot do
          :ok <- validate_permissions(event, bot),
          {:ok, command} <- parse_command(event),
          {:ok, result} <- execute_command(command, bot) do
-      
       # Update bot state
       updated_bot = update_bot_after_command(bot)
       new_bots = Map.put(state.bots, bot.bot_pubkey, updated_bot)
@@ -227,7 +238,7 @@ defmodule Sammelkarten.TradingBot do
 
   defp get_bot_for_event(event, state) do
     bot_pubkey = event["pubkey"]
-    
+
     case Map.get(state.bots, bot_pubkey) do
       nil -> {:error, :bot_not_registered}
       %{status: :disabled} -> {:error, :bot_disabled}
@@ -238,7 +249,7 @@ defmodule Sammelkarten.TradingBot do
 
   defp validate_rate_limit(bot) do
     now = :os.system_time(:millisecond)
-    
+
     case bot.last_command do
       nil -> :ok
       last_time when now - last_time > @cooldown_period -> :ok
@@ -260,7 +271,7 @@ defmodule Sammelkarten.TradingBot do
   defp parse_command(event) do
     try do
       content = Jason.decode!(event["content"])
-      
+
       command = %{
         type: content["type"],
         card_id: content["card_id"],
@@ -268,7 +279,7 @@ defmodule Sammelkarten.TradingBot do
         price: content["price"],
         strategy_params: content["strategy_params"] || %{}
       }
-      
+
       {:ok, command}
     rescue
       _ -> {:error, :invalid_command_format}
@@ -279,7 +290,7 @@ defmodule Sammelkarten.TradingBot do
     try do
       content = Jason.decode!(event["content"])
       command_type = String.to_atom(content["type"])
-      
+
       if command_type in [:buy, :sell, :exchange] do
         {:ok, command_type}
       else
@@ -303,7 +314,7 @@ defmodule Sammelkarten.TradingBot do
   defp execute_buy_command(command, bot) do
     # Validate trade value against bot permissions
     trade_value = command.price * command.quantity
-    
+
     if trade_value <= bot.permissions.max_trade_value do
       # Create buy offer via Trading module
       offer_params = %{
@@ -312,9 +323,10 @@ defmodule Sammelkarten.TradingBot do
         type: "buy",
         quantity: command.quantity,
         price: command.price,
-        expires_at: :os.system_time(:second) + 86400  # 24 hours
+        # 24 hours
+        expires_at: :os.system_time(:second) + 86400
       }
-      
+
       case Trading.create_offer(offer_params) do
         {:ok, offer} -> {:ok, %{action: :buy_offer_created, offer_id: offer.id}}
         error -> error
@@ -336,13 +348,14 @@ defmodule Sammelkarten.TradingBot do
           price: command.price,
           expires_at: :os.system_time(:second) + 86400
         }
-        
+
         case Trading.create_offer(offer_params) do
           {:ok, offer} -> {:ok, %{action: :sell_offer_created, offer_id: offer.id}}
           error -> error
         end
-        
-      _ -> {:error, :insufficient_cards}
+
+      _ ->
+        {:error, :insufficient_cards}
     end
   end
 
@@ -356,72 +369,75 @@ defmodule Sammelkarten.TradingBot do
     case Cards.get_card(command.card_id) do
       {:ok, card} ->
         current_price = card.current_price
-        
+
         # Create buy order at 2% below market
         buy_price = trunc(current_price * 0.98)
+
         buy_offer = %{
           user_pubkey: bot.owner_pubkey,
           card_id: command.card_id,
           type: "buy",
           quantity: command.quantity,
           price: buy_price,
-          expires_at: :os.system_time(:second) + 43200  # 12 hours
+          # 12 hours
+          expires_at: :os.system_time(:second) + 43200
         }
-        
+
         # Create sell order at 2% above market (if user has cards)
         sell_price = trunc(current_price * 1.02)
         user_quantity = Trading.get_user_card_quantity(bot.owner_pubkey, command.card_id)
-        
+
         results = []
-        
+
         # Create buy offer
-        results = case Trading.create_offer(buy_offer) do
-          {:ok, offer} -> [{:buy_offer_created, offer.id} | results]
-          _ -> results
-        end
-        
-        # Create sell offer if user has cards
-        results = if user_quantity > 0 do
-          sell_quantity = min(user_quantity, command.quantity)
-          sell_offer = %{
-            user_pubkey: bot.owner_pubkey,
-            card_id: command.card_id,
-            type: "sell",
-            quantity: sell_quantity,
-            price: sell_price,
-            expires_at: :os.system_time(:second) + 43200
-          }
-          
-          case Trading.create_offer(sell_offer) do
-            {:ok, offer} -> [{:sell_offer_created, offer.id} | results]
+        results =
+          case Trading.create_offer(buy_offer) do
+            {:ok, offer} -> [{:buy_offer_created, offer.id} | results]
             _ -> results
           end
-        else
-          results
-        end
-        
+
+        # Create sell offer if user has cards
+        results =
+          if user_quantity > 0 do
+            sell_quantity = min(user_quantity, command.quantity)
+
+            sell_offer = %{
+              user_pubkey: bot.owner_pubkey,
+              card_id: command.card_id,
+              type: "sell",
+              quantity: sell_quantity,
+              price: sell_price,
+              expires_at: :os.system_time(:second) + 43200
+            }
+
+            case Trading.create_offer(sell_offer) do
+              {:ok, offer} -> [{:sell_offer_created, offer.id} | results]
+              _ -> results
+            end
+          else
+            results
+          end
+
         {:ok, %{action: :market_make_completed, results: results}}
-        
+
       {:error, _reason} ->
         {:error, :card_not_found}
     end
   end
 
   defp update_bot_after_command(bot) do
-    %{bot | 
-      last_command: :os.system_time(:millisecond),
-      command_count: bot.command_count + 1
-    }
+    %{bot | last_command: :os.system_time(:millisecond), command_count: bot.command_count + 1}
   end
 
   defp create_response(original_event, result) do
     %{
       kind: @bot_response_kind,
-      content: Jason.encode!(%{
-        original_id: original_event["id"],
-        result: result,
-        timestamp: :os.system_time(:second)
-      }),
+      content:
+        Jason.encode!(%{
+          original_id: original_event["id"],
+          result: result,
+          timestamp: :os.system_time(:second)
+        }),
       tags: [
         ["e", original_event["id"]],
         ["p", original_event["pubkey"]],
@@ -441,11 +457,12 @@ defmodule Sammelkarten.TradingBot do
   defp publish_error_response(original_event, reason) do
     error_response = %{
       kind: @bot_response_kind,
-      content: Jason.encode!(%{
-        original_id: original_event["id"],
-        error: reason,
-        timestamp: :os.system_time(:second)
-      }),
+      content:
+        Jason.encode!(%{
+          original_id: original_event["id"],
+          error: reason,
+          timestamp: :os.system_time(:second)
+        }),
       tags: [
         ["e", original_event["id"]],
         ["p", original_event["pubkey"]],
@@ -453,7 +470,7 @@ defmodule Sammelkarten.TradingBot do
         ["t", "bot_error"]
       ]
     }
-    
+
     Nostr.Client.publish_event(error_response)
   end
 

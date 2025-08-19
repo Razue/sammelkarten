@@ -36,12 +36,14 @@ defmodule Sammelkarten.Nostr.Event do
     end
   end
 
-  # Custom event kinds for Sammelkarten
-  @card_collection_kind 32121
-  @trade_offer_kind 32122
-  @trade_execution_kind 32123
-  @price_alert_kind 32124
-  @portfolio_snapshot_kind 32125
+  # Custom event kinds for Sammelkarten (synchronized with Sammelkarten.Nostr.Schema)
+  @card_definition_kind 32121
+  @user_collection_kind 32122
+  @trade_offer_kind 32123
+  @trade_execution_kind 32124
+  @price_alert_kind 32125
+  @portfolio_snapshot_kind 32126
+  @trade_cancel_kind 32127
 
   # Standard Nostr kinds
   # @metadata_kind 0
@@ -62,14 +64,32 @@ defmodule Sammelkarten.Nostr.Event do
   end
 
   @doc """
-  Create a card collection event.
+  Create a card definition event (parameterized replaceable; one per card id).
+  Expects map with at least: :card_id, :name, :rarity. Optional fields go into content.
   """
-  def card_collection(pubkey, collection_data) do
-    content = Jason.encode!(collection_data)
-    # NIP-33 replaceable event
-    tags = [["d", "collection"]]
+  def card_definition(pubkey, card) do
+    %{card_id: card_id} = card
+    content = Jason.encode!(card)
 
-    new(pubkey, @card_collection_kind, content, tags)
+    tags =
+      [["d", "card:#{card_id}"], ["name", card.name], ["rarity", card.rarity]] ++
+        if(Map.get(card, :set), do: [["set", card.set]], else: []) ++
+        if(Map.get(card, :image), do: [["image", card.image]], else: []) ++
+        if Map.get(card, :slug), do: [["slug", card.slug]], else: []
+
+    new(pubkey, @card_definition_kind, content, tags)
+  end
+
+  @doc """
+  Create a user collection snapshot event (parameterized replaceable per user).
+  tags: d=collection:<pubkey prefix or user id>
+  content: JSON map card_id -> quantity.
+  """
+  def user_collection(pubkey, collection_map, discriminator \\ nil) when is_map(collection_map) do
+    content = Jason.encode!(collection_map)
+    discriminator = discriminator || "#{String.slice(pubkey, 0, 8)}"
+    tags = [["d", "collection:#{discriminator}"]]
+    new(pubkey, @user_collection_kind, content, tags)
   end
 
   @doc """
@@ -87,13 +107,17 @@ defmodule Sammelkarten.Nostr.Event do
 
     content = Jason.encode!(offer_data)
 
-    tags = [
-      ["d", "trade_#{card_id}_#{System.unique_integer([:positive])}"],
-      ["card", card_id],
-      ["type", to_string(offer_type)],
-      ["price", to_string(price)],
-      ["expires", to_string(expires_at)]
-    ]
+    tags =
+      [
+        ["card", card_id],
+        ["type", to_string(offer_type)],
+        ["price", to_string(price)],
+        ["quantity", to_string(offer_data.quantity)],
+        ["expires_at", to_string(expires_at)]
+      ] ++
+        if Map.get(offer_data, :exchange_card),
+          do: [["exchange_card", offer_data.exchange_card]],
+          else: []
 
     new(pubkey, @trade_offer_kind, content, tags)
   end
@@ -103,47 +127,46 @@ defmodule Sammelkarten.Nostr.Event do
   """
   def trade_execution(pubkey, execution_data) do
     %{
-      trade_id: trade_id,
+      offer_id: offer_id,
       buyer_pubkey: buyer_pubkey,
       seller_pubkey: seller_pubkey,
-      card_id: card_id,
-      price: _price,
-      quantity: _quantity
+      card_id: card_id
     } = execution_data
 
     content = Jason.encode!(execution_data)
 
     tags = [
-      ["d", "execution_#{trade_id}"],
-      ["trade", trade_id],
+      ["offer_id", offer_id],
       ["buyer", buyer_pubkey],
       ["seller", seller_pubkey],
-      ["card", card_id]
+      ["card", card_id],
+      ["quantity", to_string(execution_data.quantity)],
+      ["price", to_string(execution_data.price)]
     ]
 
     new(pubkey, @trade_execution_kind, content, tags)
   end
 
   @doc """
+  Create a trade cancel event referencing an offer event id via e tag with marker "cancel".
+  """
+  def trade_cancel(pubkey, offer_event_id) do
+    tags = [["e", offer_event_id, "cancel"]]
+    new(pubkey, @trade_cancel_kind, "", tags)
+  end
+
+  @doc """
   Create a price alert event.
   """
   def price_alert(pubkey, alert_data) do
-    %{
-      card_id: card_id,
-      # "above" or "below"
-      alert_type: alert_type,
-      target_price: target_price,
-      active: active
-    } = alert_data
-
+    %{card_id: card_id, alert_type: alert_type, target_price: target_price} = alert_data
     content = Jason.encode!(alert_data)
 
     tags = [
-      ["d", "alert_#{card_id}"],
+      ["d", "alert:#{card_id}:#{alert_type}"],
       ["card", card_id],
-      ["type", to_string(alert_type)],
-      ["price", to_string(target_price)],
-      ["active", to_string(active)]
+      ["direction", to_string(alert_type)],
+      ["threshold", to_string(target_price)]
     ]
 
     new(pubkey, @price_alert_kind, content, tags)
@@ -155,11 +178,20 @@ defmodule Sammelkarten.Nostr.Event do
   def portfolio_snapshot(pubkey, portfolio_data) do
     content = Jason.encode!(portfolio_data)
 
-    tags = [
-      ["d", "portfolio"],
-      ["total_value", to_string(portfolio_data.total_value)],
-      ["card_count", to_string(length(portfolio_data.cards))]
-    ]
+    tags =
+      [
+        ["d", "portfolio:#{String.slice(pubkey, 0, 8)}"],
+        ["total_value", to_string(portfolio_data.total_value)],
+        [
+          "card_count",
+          to_string(
+            Map.get(portfolio_data, :card_count, length(Map.get(portfolio_data, :cards, [])))
+          )
+        ]
+      ] ++
+        if Map.get(portfolio_data, :unique_cards),
+          do: [["unique_cards", to_string(portfolio_data.unique_cards)]],
+          else: []
 
     new(pubkey, @portfolio_snapshot_kind, content, tags)
   end

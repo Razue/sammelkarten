@@ -265,9 +265,11 @@ Sprint 6: Hardening, Load, Monitoring, Docs
 
 **🔄 NEXT PHASES TO IMPLEMENT:**
 
-#### Phase 8: Portfolio Snapshot (Pending) 
-- Compute values / P&L locally → publish (32126)
-- UI LiveView subscribes & updates
+#### Phase 8: Portfolio Snapshot ✅ COMPLETE
+- ✅ Portfolio module with value calculations and P&L computation
+- ✅ Publisher integration with portfolio snapshot publishing (32126)
+- ✅ Indexer enhancement with portfolio event processing
+- ✅ Admin UI portfolio testing interface
 
 #### Phase 9: Indexer & Projection Layer Enhancement (Pending)
 - Subscription filters for offers/executions/cancels (32123/24/27)

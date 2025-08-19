@@ -189,6 +189,16 @@ defmodule SammelkartenWeb.Admin.NostrLive do
   end
 
   @impl true
+  def handle_event("test_portfolio_snapshot", %{"pubkey" => pubkey}, socket) do
+    case Publisher.publish_portfolio_snapshot(pubkey) do
+      {:ok, event} ->
+        {:noreply, put_flash(socket, :info, "Portfolio snapshot published for #{pubkey}: #{event.id}")}
+      {:error, reason} ->
+        {:noreply, put_flash(socket, :error, "Failed to publish portfolio: #{inspect(reason)}")}
+    end
+  end
+
+  @impl true
   def handle_event("test_trade_offer", params, socket) do
     # Generate test keys
     seller_privkey = Event.generate_private_key()

@@ -5,7 +5,7 @@ defmodule Sammelkarten.Nostr.Publisher do
   """
 
   alias Sammelkarten.Nostr.{Event, Signer, Schema}
-  alias Sammelkarten.UserCollection
+  alias Sammelkarten.{UserCollection, Portfolio}
 
   require Logger
 
@@ -176,6 +176,27 @@ defmodule Sammelkarten.Nostr.Publisher do
           {:ok, pubkey} -> {:ok, %{priv: privkey, pub: pubkey}}
           error -> error
         end
+    end
+  end
+
+  @doc """
+  Publish a portfolio snapshot event (32126) to relays.
+  """
+  @spec publish_portfolio_snapshot(String.t()) :: {:ok, Event.t()} | {:error, term}
+  def publish_portfolio_snapshot(user_pubkey) when is_binary(user_pubkey) do
+    with {:ok, portfolio_data} <- Portfolio.calculate_portfolio_values(user_pubkey),
+         {:ok, _json_content} <- Portfolio.encode_portfolio_snapshot(portfolio_data),
+         {:ok, admin_keys} <- get_admin_keys(),
+         event <- Event.portfolio_snapshot(admin_keys.pub, portfolio_data),
+         {:ok, validated_event} <- Schema.validate(event),
+         {:ok, signed_event} <- Signer.sign(validated_event, admin_keys.priv),
+         {:ok, _result} <- publish_to_relays(signed_event) do
+      Logger.info("Published portfolio snapshot for #{user_pubkey}")
+      {:ok, signed_event}
+    else
+      {:error, reason} = error ->
+        Logger.error("Failed to publish portfolio snapshot for #{user_pubkey}: #{inspect(reason)}")
+        error
     end
   end
 

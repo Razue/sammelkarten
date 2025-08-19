@@ -291,6 +291,13 @@
     </div>
   </div>
 
+  <div class="bg-white shadow rounded-lg p-6 mb-6">
+    <h2 class="text-lg font-medium text-gray-900 mb-4">Portfolio Snapshot Testing</h2>
+    <div class="space-y-4">
+      <button phx-click="test_portfolio_snapshot" phx-value-pubkey={@test_pubkey} class="btn-primary">Test Portfolio Snapshot</button>
+    </div>
+  </div>
+
   <!-- Trade Testing Result -->
   <%= if @trade_result do %>
     <div class={[

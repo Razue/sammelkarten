@@ -15,7 +15,7 @@ defmodule Sammelkarten.Nostr.Indexer do
   @user_collection 32122
   @trade_offer 32123
   @trade_execution 32124
-  @price_alert 32125
+  # @price_alert 32125
   @portfolio_snapshot 32126
   @trade_cancel 32127
 
@@ -24,7 +24,7 @@ defmodule Sammelkarten.Nostr.Indexer do
   @offers_table :nostr_offers
   @executions_table :nostr_executions
   @collections_table :nostr_collections
-  @portfolios_table :nostr_portfolios
+  @portfolio_table :nostr_portfolios
   @alerts_table :nostr_alerts
 
   defstruct [
@@ -138,7 +138,7 @@ defmodule Sammelkarten.Nostr.Indexer do
       offers_table: create_table(@offers_table),
       executions_table: create_table(@executions_table),
       collections_table: create_table(@collections_table),
-      portfolios_table: create_table(@portfolios_table),
+      portfolios_table: create_table(@portfolio_table),
       alerts_table: create_table(@alerts_table),
       latest_timestamp: 0
     }
@@ -155,19 +155,19 @@ defmodule Sammelkarten.Nostr.Indexer do
   @impl true
   def handle_call(:rebuild, _from, state) do
     Logger.info("Rebuilding Nostr indexes...")
-    
+
     # Clear all tables
     :ets.delete_all_objects(@cards_table)
     :ets.delete_all_objects(@offers_table)
     :ets.delete_all_objects(@executions_table)
     :ets.delete_all_objects(@collections_table)
-    :ets.delete_all_objects(@portfolios_table)
+    :ets.delete_all_objects(@portfolio_table)
     :ets.delete_all_objects(@alerts_table)
-    
+
     # TODO: In Phase 10, fetch events from relays and rebuild
     # For now, return empty state
     new_state = %{state | latest_timestamp: DateTime.utc_now() |> DateTime.to_unix()}
-    
+
     Logger.info("Nostr indexes rebuilt")
     {:reply, :ok, new_state}
   end
@@ -187,7 +187,7 @@ defmodule Sammelkarten.Nostr.Indexer do
 
   defp process_event(%Event{kind: @card_definition} = event, state) do
     card_id = Event.get_tag_value(event, "d") |> extract_card_id()
-    
+
     if card_id do
       # Parse card data from content and tags
       card_data = %{
@@ -202,15 +202,15 @@ defmodule Sammelkarten.Nostr.Indexer do
         created_at: event.created_at,
         pubkey: event.pubkey
       }
-      
+
       :ets.insert(@cards_table, {card_id, card_data})
-      
+
       # Broadcast update
       PubSub.broadcast(Sammelkarten.PubSub, "nostr:cards", {:card_updated, card_data})
-      
+
       Logger.debug("Indexed card definition: #{card_id}")
     end
-    
+
     %{state | latest_timestamp: max(state.latest_timestamp, event.created_at)}
   end
 
@@ -228,32 +228,32 @@ defmodule Sammelkarten.Nostr.Indexer do
       content: event.content,
       status: :open
     }
-    
+
     :ets.insert(@offers_table, {event.id, offer_data})
-    
+
     # Broadcast update
     PubSub.broadcast(Sammelkarten.PubSub, "nostr:offers", {:offer_created, offer_data})
-    
+
     Logger.debug("Indexed trade offer: #{event.id}")
     %{state | latest_timestamp: max(state.latest_timestamp, event.created_at)}
   end
 
   defp process_event(%Event{kind: @trade_execution} = event, state) do
     offer_id = Event.get_tag_values(event, "e") |> List.first()
-    
+
     # Update offer status to executed
     case :ets.lookup(@offers_table, offer_id) do
       [{^offer_id, offer_data}] ->
         updated_offer = %{offer_data | status: :executed}
         :ets.insert(@offers_table, {offer_id, updated_offer})
-        
+
         # Broadcast offer update
         PubSub.broadcast(Sammelkarten.PubSub, "nostr:offers", {:offer_executed, updated_offer})
-        
+
       [] ->
         Logger.warning("Execution references unknown offer: #{offer_id}")
     end
-    
+
     execution_data = %{
       event_id: event.id,
       pubkey: event.pubkey,
@@ -264,12 +264,16 @@ defmodule Sammelkarten.Nostr.Indexer do
       price: Event.get_tag_value(event, "price") |> safe_to_integer(),
       content: event.content
     }
-    
+
     :ets.insert(@executions_table, {event.id, execution_data})
-    
+
     # Broadcast execution
-    PubSub.broadcast(Sammelkarten.PubSub, "nostr:executions", {:execution_created, execution_data})
-    
+    PubSub.broadcast(
+      Sammelkarten.PubSub,
+      "nostr:executions",
+      {:execution_created, execution_data}
+    )
+
     Logger.debug("Indexed trade execution: #{event.id}")
     %{state | latest_timestamp: max(state.latest_timestamp, event.created_at)}
   end
@@ -277,7 +281,7 @@ defmodule Sammelkarten.Nostr.Indexer do
   defp process_event(%Event{kind: @user_collection} = event, state) do
     # Extract discriminator from d tag: collection:<pubkey_or_id>
     discriminator = Event.get_tag_value(event, "d") |> extract_collection_discriminator()
-    
+
     if discriminator do
       collection_data = %{
         pubkey: event.pubkey,
@@ -287,25 +291,29 @@ defmodule Sammelkarten.Nostr.Indexer do
         created_at: event.created_at,
         updated_at: DateTime.utc_now() |> DateTime.to_unix()
       }
-      
+
       # Store by pubkey for easy lookup
       :ets.insert(@collections_table, {event.pubkey, collection_data})
-      
+
       # Broadcast update
-      PubSub.broadcast(Sammelkarten.PubSub, "nostr:collections", {:collection_updated, collection_data})
-      
+      PubSub.broadcast(
+        Sammelkarten.PubSub,
+        "nostr:collections",
+        {:collection_updated, collection_data}
+      )
+
       Logger.debug("Indexed user collection: #{event.pubkey} (#{discriminator})")
     else
       Logger.warning("Invalid collection event: missing or invalid d tag")
     end
-    
+
     %{state | latest_timestamp: max(state.latest_timestamp, event.created_at)}
   end
 
   defp process_event(%Event{kind: @portfolio_snapshot} = event, state) do
     # Extract discriminator from d tag: portfolio:<pubkey_or_id>
     discriminator = Event.get_tag_value(event, "d") |> extract_portfolio_discriminator()
-    
+
     if discriminator do
       portfolio_data = %{
         pubkey: event.pubkey,
@@ -315,37 +323,41 @@ defmodule Sammelkarten.Nostr.Indexer do
         created_at: event.created_at,
         updated_at: DateTime.utc_now() |> DateTime.to_unix()
       }
-      
+
       # Store by pubkey for easy lookup
-      :ets.insert(@portfolios_table, {event.pubkey, portfolio_data})
-      
+      :ets.insert(@portfolio_table, {event.pubkey, portfolio_data})
+
       # Broadcast update
-      PubSub.broadcast(Sammelkarten.PubSub, "nostr:portfolios", {:portfolio_updated, portfolio_data})
-      
+      PubSub.broadcast(
+        Sammelkarten.PubSub,
+        "nostr:portfolios",
+        {:portfolio_updated, portfolio_data}
+      )
+
       Logger.debug("Indexed portfolio snapshot: #{event.pubkey} (#{discriminator})")
     else
       Logger.warning("Invalid portfolio event: missing or invalid d tag")
     end
-    
+
     %{state | latest_timestamp: max(state.latest_timestamp, event.created_at)}
   end
 
   defp process_event(%Event{kind: @trade_cancel} = event, state) do
     offer_id = Event.get_tag_values(event, "e") |> List.first()
-    
+
     # Update offer status to cancelled
     case :ets.lookup(@offers_table, offer_id) do
       [{^offer_id, offer_data}] ->
         updated_offer = %{offer_data | status: :cancelled}
         :ets.insert(@offers_table, {offer_id, updated_offer})
-        
+
         # Broadcast cancellation
         PubSub.broadcast(Sammelkarten.PubSub, "nostr:offers", {:offer_cancelled, updated_offer})
-        
+
       [] ->
         Logger.warning("Cancel references unknown offer: #{offer_id}")
     end
-    
+
     Logger.debug("Indexed trade cancel for offer: #{offer_id}")
     %{state | latest_timestamp: max(state.latest_timestamp, event.created_at)}
   end
@@ -365,6 +377,7 @@ defmodule Sammelkarten.Nostr.Indexer do
   defp extract_portfolio_discriminator(_), do: nil
 
   defp decode_json_content(""), do: %{}
+
   defp decode_json_content(content) do
     case Jason.decode(content) do
       {:ok, data} -> data
@@ -373,11 +386,13 @@ defmodule Sammelkarten.Nostr.Indexer do
   end
 
   defp safe_to_integer(nil), do: nil
+
   defp safe_to_integer(str) when is_binary(str) do
     case Integer.parse(str) do
       {int, ""} -> int
       _ -> nil
     end
   end
+
   defp safe_to_integer(int) when is_integer(int), do: int
 end
